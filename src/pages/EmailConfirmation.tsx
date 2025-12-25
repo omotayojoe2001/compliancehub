@@ -1,0 +1,110 @@
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Building2, CheckCircle, XCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+export default function EmailConfirmation() {
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const handleEmailConfirmation = async () => {
+      const accessToken = searchParams.get('access_token');
+      const refreshToken = searchParams.get('refresh_token');
+      const type = searchParams.get('type');
+
+      if (type === 'signup' && accessToken && refreshToken) {
+        try {
+          // Set the session with the tokens
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (error) {
+            setStatus('error');
+            setMessage('Failed to confirm email. Please try again.');
+          } else {
+            setStatus('success');
+            setMessage('Email confirmed successfully! You can now access your account.');
+            
+            // Redirect to dashboard after 3 seconds
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 3000);
+          }
+        } catch (error) {
+          setStatus('error');
+          setMessage('An error occurred while confirming your email.');
+        }
+      } else {
+        setStatus('error');
+        setMessage('Invalid confirmation link. Please check your email and try again.');
+      }
+    };
+
+    handleEmailConfirmation();
+  }, [searchParams]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-8">
+      <div className="w-full max-w-md text-center">
+        <div className="mb-8">
+          <div className="flex items-center justify-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" />
+            <span className="text-xl font-semibold">ComplianceHub</span>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          {status === 'loading' && (
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          )}
+          
+          {status === 'success' && (
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+          )}
+          
+          {status === 'error' && (
+            <XCircle className="h-16 w-16 text-red-500 mx-auto" />
+          )}
+        </div>
+
+        <h1 className="text-2xl font-semibold mb-4">
+          {status === 'loading' && 'Confirming your email...'}
+          {status === 'success' && 'Email Confirmed!'}
+          {status === 'error' && 'Confirmation Failed'}
+        </h1>
+
+        <p className="text-muted-foreground mb-8">
+          {status === 'loading' && 'Please wait while we verify your email address.'}
+          {message}
+        </p>
+
+        {status === 'success' && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Redirecting to your dashboard in a few seconds...
+            </p>
+            <Button asChild>
+              <Link to="/dashboard">Go to Dashboard</Link>
+            </Button>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="space-y-4">
+            <Button asChild>
+              <Link to="/login">Back to Login</Link>
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Need help? <Link to="/forgot-password" className="text-primary hover:underline">Reset your password</Link>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -53,13 +53,27 @@ export const freshDbService = {
     }
   },
 
-  // Tax obligations
+  // Get obligations with payment status
   async getObligations(userId: string) {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/tax_obligations?user_id=eq.${userId}`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/tax_obligations?user_id=eq.${userId}&order=next_due_date.asc`, {
       headers
     });
-    return await response.json();
+    const data = await response.json();
+    console.log('📊 Get obligations response:', response.status, data);
+    
+    // Map the data to include payment status
+    return data.map((item: any) => ({
+      id: item.id,
+      user_id: item.user_id,
+      obligation_type: item.obligation_type,
+      next_due_date: item.next_due_date,
+      tax_period: item.tax_period,
+      is_active: item.is_active,
+      created_at: item.created_at,
+      payment_status: item.payment_status || 'pending',
+      marked_paid_date: item.marked_paid_date
+    }));
   },
 
   async addObligation(userId: string, obligation: any) {

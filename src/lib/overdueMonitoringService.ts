@@ -161,7 +161,11 @@ export const overdueMonitoringService = {
 
   // Main daily job - run this every day
   async runDailyOverdueJob() {
+    const currentDate = new Date();
     console.log('🚀 Starting daily overdue monitoring job...');
+    console.log('📅 Current system date:', currentDate.toISOString());
+    console.log('📅 Current local date:', currentDate.toLocaleDateString());
+    console.log('📅 Current local time:', currentDate.toLocaleTimeString());
     
     // Update overdue status first
     await this.updateOverdueStatus();
@@ -169,6 +173,6 @@ export const overdueMonitoringService = {
     // Process overdue reminders
     await this.processOverdueObligations();
     
-    console.log('✅ Daily overdue monitoring job completed');
+    console.log('✅ Daily overdue monitoring job completed at:', new Date().toLocaleString());
   }
 };

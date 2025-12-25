@@ -22,7 +22,9 @@ import Monitoring from "./pages/Monitoring";
 import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
+import ForgotPasswordClean from "./pages/ForgotPasswordClean";
+import ResetPassword from "./pages/ResetPassword";
+import EmailConfirmation from "./pages/EmailConfirmation";
 import TestSystem from "./pages/TestSystem";
 import DatabaseTest from "./pages/DatabaseTest";
 import WhatsAppTest from "./pages/WhatsAppTest";
@@ -48,7 +50,9 @@ const App = () => (
             <Route path="/tax-calculator" element={<TaxCalculator />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/forgot-password" element={<ForgotPasswordClean />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/confirm-email" element={<EmailConfirmation />} />
             
             {/* Protected Dashboard Pages */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

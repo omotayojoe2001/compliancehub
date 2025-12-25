@@ -31,6 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Handle email confirmation
+        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+          // User has confirmed their email, redirect to dashboard
+          window.location.href = '/dashboard';
+        }
       }
     );
 
@@ -41,6 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: 'https://compliance.forecourtlimited.com/confirm-email'
+      }
     });
     return { data, error };
   };

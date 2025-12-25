@@ -31,16 +31,37 @@ export default function ObligationsWorking() {
     if (!confirmed) return;
     
     try {
+      console.log('💵 Marking obligation as paid:', obligationId);
       const success = await overdueMonitoringService.markAsPaid(obligationId, user.id);
+      
       if (success) {
-        alert('✅ Marked as paid! You will no longer receive reminders for this obligation.');
-        await loadObligations(); // Reload to show updated status
+        console.log('✅ Successfully marked as paid in database');
+        
+        // Show success message with more details
+        alert('✅ SUCCESS! This tax obligation has been marked as paid.\n\n• All overdue reminders will stop\n• No more notifications for this obligation\n• Status updated in database');
+        
+        // Reload obligations to show updated status
+        console.log('🔄 Reloading obligations to show updated status...');
+        await loadObligations();
+        
+        // Verify the update worked
+        const updatedObligations = await freshDbService.getObligations(user.id);
+        const updatedObligation = updatedObligations?.find(o => o.id === obligationId);
+        
+        if (updatedObligation?.payment_status === 'paid') {
+          console.log('✅ VERIFIED: Obligation status updated to paid in database');
+          console.log('📅 Marked paid date:', updatedObligation.marked_paid_date);
+        } else {
+          console.error('❌ WARNING: Obligation may not have been updated properly');
+          console.error('Current status:', updatedObligation?.payment_status);
+        }
       } else {
-        alert('❌ Failed to mark as paid. Please try again.');
+        console.error('❌ Failed to mark as paid');
+        alert('❌ Failed to mark as paid. Please try again or contact support.');
       }
     } catch (error) {
-      console.error('Error marking as paid:', error);
-      alert('❌ Failed to mark as paid. Please try again.');
+      console.error('❌ Error marking as paid:', error);
+      alert('❌ Error occurred. Please try again or contact support.');
     }
   };
 
@@ -226,17 +247,17 @@ export default function ObligationsWorking() {
                   const dueSoon = obligations.filter(obligation => {
                     const dueDate = new Date(obligation.next_due_date);
                     const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                    return daysUntilDue <= 30 && daysUntilDue > 0;
+                    return daysUntilDue <= 30 && daysUntilDue > 0 && obligation.payment_status !== 'paid';
                   });
                   
                   const overdue = obligations.filter(obligation => {
                     const dueDate = new Date(obligation.next_due_date);
-                    return dueDate < now;
+                    return dueDate < now && obligation.payment_status !== 'paid';
                   });
                   
                   const thisMonth = obligations.filter(obligation => {
                     const dueDate = new Date(obligation.next_due_date);
-                    return dueDate.getMonth() === currentMonth && dueDate.getFullYear() === currentYear;
+                    return dueDate.getMonth() === currentMonth && dueDate.getFullYear() === currentYear && obligation.payment_status !== 'paid';
                   });
                   
                   if (overdue.length > 0) {
@@ -261,12 +282,22 @@ export default function ObligationsWorking() {
                       </p>
                     );
                   } else if (obligations.length > 0) {
-                    return (
-                      <p className="text-green-700 font-medium">
-                        <CheckCircle className="h-4 w-4 inline mr-1" />
-                        Great! All your tax obligations are up to date. We'll notify you when deadlines approach.
-                      </p>
-                    );
+                    const allPaid = obligations.every(o => o.payment_status === 'paid');
+                    if (allPaid) {
+                      return (
+                        <p className="text-green-700 font-medium">
+                          <CheckCircle className="h-4 w-4 inline mr-1" />
+                          Excellent! All your tax obligations are marked as paid. You're fully compliant!
+                        </p>
+                      );
+                    } else {
+                      return (
+                        <p className="text-green-700 font-medium">
+                          <CheckCircle className="h-4 w-4 inline mr-1" />
+                          Great! All your tax obligations are up to date. We'll notify you when deadlines approach.
+                        </p>
+                      );
+                    }
                   } else {
                     return (
                       <p className="text-blue-700">
@@ -509,8 +540,17 @@ export default function ObligationsWorking() {
                             <span className="xs:hidden">Paid</span>
                           </Button>
                         )}
+                        {obligation.payment_status === 'paid' && (
+                          <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                            <CheckCircle className="h-3 w-3" />
+                            <span>Marked as Paid</span>
+                            <span className="text-green-600">({new Date(obligation.marked_paid_date || Date.now()).toLocaleDateString()})</span>
+                          </div>
+                        )}
                       </div>
-                      <span className="text-xs text-blue-600 flex items-center gap-1">
+                      <span className={`text-xs flex items-center gap-1 ${
+                        obligation.payment_status === 'paid' ? 'text-gray-500' : 'text-blue-600'
+                      }`}>
                         <AlertTriangle className="h-3 w-3" />
                         {obligation.payment_status === 'paid' ? 'Reminders Stopped' : 'Reminders On'}
                       </span>

@@ -37,7 +37,7 @@ export const notificationService = {
               </ul>
             </div>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://compliancehub.ng/dashboard" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Complete Your Setup</a>
+              <a href="https://compliance.forecourtlimited.com/dashboard" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Complete Your Setup</a>
             </div>
           </div>
         </div>
@@ -47,7 +47,7 @@ export const notificationService = {
       if (phone) {
         await twilioWhatsAppService.sendMessage(
           phone,
-          `🎉 Welcome to ComplianceHub, ${businessName}!\n\nYour account is ready. Complete your setup to start receiving tax reminders.\n\n✅ Never miss deadlines\n✅ Avoid penalties\n✅ Stay compliant\n\nGet started: https://compliancehub.ng/dashboard`
+          `🎉 Welcome to ComplianceHub, ${businessName}!\n\nYour account is ready. Complete your setup to start receiving tax reminders.\n\n✅ Never miss deadlines\n✅ Avoid penalties\n✅ Stay compliant\n\nGet started: https://compliance.forecourtlimited.com/dashboard`
         );
       }
     } catch (error) {
@@ -70,7 +70,7 @@ export const notificationService = {
               <p style="color: #92400e; margin: 0; font-weight: 600;">⚠️ Without completing your profile, we can't send you important deadline reminders!</p>
             </div>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://compliancehub.ng/dashboard" style="background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Complete Setup Now (2 mins)</a>
+              <a href="https://compliance.forecourtlimited.com/dashboard" style="background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Complete Setup Now (2 mins)</a>
             </div>
           </div>
         </div>
@@ -79,7 +79,7 @@ export const notificationService = {
       if (phone) {
         await twilioWhatsAppService.sendMessage(
           phone,
-          `⏰ Hi ${businessName}!\n\nQuick reminder: Complete your ComplianceHub setup to start receiving tax deadline alerts.\n\n⚠️ Without setup, you might miss important deadlines!\n\nTakes 2 minutes: https://compliancehub.ng/dashboard`
+          `⏰ Hi ${businessName}!\n\nQuick reminder: Complete your ComplianceHub setup to start receiving tax deadline alerts.\n\n⚠️ Without setup, you might miss important deadlines!\n\nTakes 2 minutes: https://compliance.forecourtlimited.com/dashboard`
         );
       }
     } catch (error) {
@@ -114,7 +114,7 @@ export const notificationService = {
               </div>
             </div>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://compliancehub.ng/dashboard" style="background: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Start Tracking Your Deadlines</a>
+              <a href="https://compliance.forecourtlimited.com/dashboard" style="background: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Start Tracking Your Deadlines</a>
             </div>
           </div>
         </div>
@@ -123,7 +123,7 @@ export const notificationService = {
       if (phone) {
         await twilioWhatsAppService.sendMessage(
           phone,
-          `📚 ${businessName}, here are key Nigerian tax deadlines:\n\n📅 VAT: 21st monthly\n📅 PAYE: 10th monthly\n📅 WHT: 21st monthly\n📅 CAC: 42 days after anniversary\n\nLet ComplianceHub track these for you automatically! 🎯\n\nhttps://compliancehub.ng/dashboard`
+          `📚 ${businessName}, here are key Nigerian tax deadlines:\n\n📅 VAT: 21st monthly\n📅 PAYE: 10th monthly\n📅 WHT: 21st monthly\n📅 CAC: 42 days after anniversary\n\nLet ComplianceHub track these for you automatically! 🎯\n\nhttps://compliance.forecourtlimited.com/dashboard`
         );
       }
     } catch (error) {
@@ -152,7 +152,7 @@ export const notificationService = {
             </div>
             <p style="color: #374151;"><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString()}</p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://compliancehub.ng/dashboard" style="background: ${urgencyColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View Dashboard</a>
+              <a href="https://compliance.forecourtlimited.com/dashboard" style="background: ${urgencyColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View Dashboard</a>
             </div>
           </div>
         </div>
@@ -178,16 +178,16 @@ export const notificationService = {
       
       if (daysUntilExpiry === 7) {
         subject = '⏰ Your ComplianceHub subscription expires in 7 days';
-        emailContent = `<h2>Hi ${businessName}!</h2><p>Your <strong>${planType.toUpperCase()}</strong> plan expires in 7 days.</p><p>Don't miss your tax deadlines! Renew now to continue receiving:</p><ul><li>✅ Automated tax deadline reminders</li><li>✅ Compliance guides and calculators</li><li>✅ Peace of mind for your business</li></ul><p><a href="https://compliancehub.ng/subscription" style="background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Renew Now</a></p>`;
-        whatsappMessage = `⏰ Hi ${businessName}!\n\nYour ${planType.toUpperCase()} plan expires in 7 days.\n\nRenew now to keep receiving tax reminders and avoid penalties!\n\nhttps://compliancehub.ng/subscription`;
+        emailContent = `<h2>Hi ${businessName}!</h2><p>Your <strong>${planType.toUpperCase()}</strong> plan expires in 7 days.</p><p>Don't miss your tax deadlines! Renew now to continue receiving:</p><ul><li>✅ Automated tax deadline reminders</li><li>✅ Compliance guides and calculators</li><li>✅ Peace of mind for your business</li></ul><p><a href="https://compliance.forecourtlimited.com/subscription" style="background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Renew Now</a></p>`;
+        whatsappMessage = `⏰ Hi ${businessName}!\n\nYour ${planType.toUpperCase()} plan expires in 7 days.\n\nRenew now to keep receiving tax reminders and avoid penalties!\n\nhttps://compliance.forecourtlimited.com/subscription`;
       } else if (daysUntilExpiry === 3) {
         subject = '🚨 URGENT: Your subscription expires in 3 days';
-        emailContent = `<h2>Hi ${businessName}!</h2><p><strong>URGENT:</strong> Your ${planType.toUpperCase()} plan expires in just 3 days!</p><p>After expiry, you'll lose access to tax deadline reminders and risk missing important deadlines!</p><p><a href="https://compliancehub.ng/subscription" style="background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Renew Immediately</a></p>`;
-        whatsappMessage = `🚨 URGENT ${businessName}!\n\nYour ${planType.toUpperCase()} plan expires in 3 days!\n\nDon't risk missing tax deadlines and facing penalties!\n\nRenew now: https://compliancehub.ng/subscription`;
+        emailContent = `<h2>Hi ${businessName}!</h2><p><strong>URGENT:</strong> Your ${planType.toUpperCase()} plan expires in just 3 days!</p><p>After expiry, you'll lose access to tax deadline reminders and risk missing important deadlines!</p><p><a href="https://compliance.forecourtlimited.com/subscription" style="background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Renew Immediately</a></p>`;
+        whatsappMessage = `🚨 URGENT ${businessName}!\n\nYour ${planType.toUpperCase()} plan expires in 3 days!\n\nDon't risk missing tax deadlines and facing penalties!\n\nRenew now: https://compliance.forecourtlimited.com/subscription`;
       } else if (daysUntilExpiry === 1) {
         subject = '⚠️ FINAL NOTICE: Subscription expires tomorrow';
-        emailContent = `<h2>Hi ${businessName}!</h2><p><strong>FINAL NOTICE:</strong> Your ${planType.toUpperCase()} plan expires TOMORROW!</p><p>This is your last chance to renew before losing access to all compliance reminders.</p><p><a href="https://compliancehub.ng/subscription" style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">RENEW NOW - Last Chance!</a></p>`;
-        whatsappMessage = `⚠️ FINAL NOTICE ${businessName}!\n\nYour ${planType.toUpperCase()} plan expires TOMORROW!\n\nLast chance to renew before losing all tax reminders!\n\nhttps://compliancehub.ng/subscription`;
+        emailContent = `<h2>Hi ${businessName}!</h2><p><strong>FINAL NOTICE:</strong> Your ${planType.toUpperCase()} plan expires TOMORROW!</p><p>This is your last chance to renew before losing access to all compliance reminders.</p><p><a href="https://compliance.forecourtlimited.com/subscription" style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">RENEW NOW - Last Chance!</a></p>`;
+        whatsappMessage = `⚠️ FINAL NOTICE ${businessName}!\n\nYour ${planType.toUpperCase()} plan expires TOMORROW!\n\nLast chance to renew before losing all tax reminders!\n\nhttps://compliance.forecourtlimited.com/subscription`;
       }
 
       await sendEmail(email, subject, emailContent);

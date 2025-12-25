@@ -12,7 +12,7 @@ import MasterAutomationTest from "./pages/MasterAutomationTest";
 import TestAutomation from "./pages/TestAutomation";
 import TestEmailDirect from "./pages/TestEmailDirect";
 import TestNotifications from "./pages/TestNotifications";
-import PublicLanding from "./pages/PublicLanding";
+import PublicLandingEnhanced from "./pages/PublicLandingEnhanced";
 import TaxCalculator from "./pages/TaxCalculator";
 import CalculatorNew from "./pages/CalculatorNew";
 import Guides from "./pages/Guides";
@@ -43,7 +43,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public Pages */}
-            <Route path="/" element={<PublicLanding />} />
+            <Route path="/" element={<PublicLandingEnhanced />} />
             <Route path="/tax-calculator" element={<TaxCalculator />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

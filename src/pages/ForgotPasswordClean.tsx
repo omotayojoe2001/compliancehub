@@ -14,7 +14,9 @@ export default function ForgotPassword() {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://compliance.forecourtlimited.com/reset-password'
+    });
     
     if (error) {
       setMessage(error.message);
