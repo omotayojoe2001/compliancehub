@@ -91,6 +91,16 @@ export const freshDbService = {
   },
 
   // Reminder logs
+  async getReminderLogs(userId: string) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/reminder_logs?user_id=eq.${userId}&select=*,tax_obligations(obligation_type)&order=created_at.desc`, {
+      headers
+    });
+    const data = await response.json();
+    console.log('📋 Get reminder logs response:', response.status, data);
+    return data;
+  },
+
   async addReminderLog(userId: string, log: any) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${SUPABASE_URL}/rest/v1/reminder_logs`, {
@@ -99,5 +109,22 @@ export const freshDbService = {
       body: JSON.stringify({ ...log, user_id: userId })
     });
     return response.ok;
+  },
+
+  // Tax obligations with better naming
+  async getTaxObligations(userId: string) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/tax_obligations?user_id=eq.${userId}&order=next_due_date.asc`, {
+      headers
+    });
+    const data = await response.json();
+    console.log('📊 Get tax obligations response:', response.status, data);
+    return data.map((item: any) => ({
+      id: item.id,
+      obligation_type: item.obligation_type,
+      due_date: item.next_due_date,
+      status: item.is_active ? 'active' : 'inactive',
+      tax_period: item.tax_period
+    }));
   }
 };

@@ -1,10 +1,10 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { CheckCircle, XCircle, Mail, MessageSquare } from "lucide-react";
+import { CheckCircle, XCircle, Mail, MessageSquare, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
-import { supabase } from "@/lib/supabase";
+import { freshDbService } from "@/lib/freshDbService";
 
 interface ReminderLog {
   id: string;
@@ -18,39 +18,53 @@ interface ReminderLog {
   };
 }
 
+interface UpcomingReminder {
+  id: string;
+  obligation_type: string;
+  due_date: string;
+  next_reminder_date: string;
+  status: string;
+}
+
 export default function Reminders() {
   const { user } = useAuth();
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
+  const [upcomingReminders, setUpcomingReminders] = useState<UpcomingReminder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Use static demo data immediately
-    setReminderLogs([
-      {
-        id: 'demo-1',
-        reminder_type: 'email',
-        scheduled_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        sent_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'sent',
-        message_content: 'VAT filing reminder: Your VAT return is due in 7 days',
-        tax_obligations: {
-          obligation_type: 'VAT'
-        }
-      },
-      {
-        id: 'demo-2',
-        reminder_type: 'email',
-        scheduled_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        sent_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'sent',
-        message_content: 'PAYE reminder: Your PAYE return is due in 3 days',
-        tax_obligations: {
-          obligation_type: 'PAYE'
-        }
-      }
-    ]);
-    setLoading(false);
-  }, []);
+    if (user) {
+      loadReminderData();
+    }
+  }, [user]);
+
+  const loadReminderData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load sent reminders
+      const logs = await freshDbService.getReminderLogs(user!.id);
+      setReminderLogs(logs || []);
+      
+      // Load upcoming reminders from tax obligations
+      const obligations = await freshDbService.getTaxObligations(user!.id);
+      const upcoming = obligations
+        ?.filter(o => o.status === 'active')
+        .map(o => ({
+          id: o.id,
+          obligation_type: o.obligation_type,
+          due_date: o.due_date,
+          next_reminder_date: new Date(new Date(o.due_date).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'scheduled'
+        })) || [];
+      
+      setUpcomingReminders(upcoming);
+    } catch (error) {
+      console.error('Error loading reminder data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -64,12 +78,16 @@ export default function Reminders() {
           <div>
             <h1 className="text-lg font-semibold text-foreground">Proof We're Working</h1>
             <p className="text-sm text-muted-foreground">
-              Every reminder we've sent you (or tried to send)
+              Every reminder we've sent you (or tried to send) and what's coming up
             </p>
           </div>
         </HelpWrapper>
 
+        {/* Sent Reminders */}
         <div className="border border-border bg-card">
+          <div className="px-4 py-3 border-b border-border bg-secondary">
+            <h2 className="text-sm font-semibold text-foreground">Sent Reminders</h2>
+          </div>
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
           ) : reminderLogs.length === 0 ? (
@@ -142,6 +160,62 @@ export default function Reminders() {
                           {log.status === "failed" && "✗ Failed"}
                           {log.status === "pending" && "⏳ Waiting"}
                         </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Upcoming Reminders */}
+        <div className="border border-border bg-card">
+          <div className="px-4 py-3 border-b border-border bg-secondary">
+            <h2 className="text-sm font-semibold text-foreground">Upcoming Reminders</h2>
+          </div>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">Loading...</div>
+          ) : upcomingReminders.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              No upcoming reminders scheduled.
+              <br />
+              Add tax obligations to see scheduled reminders.
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-secondary">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Tax Type
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Due Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Reminder Scheduled
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {upcomingReminders.map((reminder) => (
+                  <tr key={reminder.id} className="hover:bg-secondary/50">
+                    <td className="px-4 py-3 text-sm font-medium text-foreground">
+                      {reminder.obligation_type}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {new Date(reminder.due_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {new Date(reminder.next_reminder_date).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="inline-flex items-center gap-1 text-xs font-medium text-blue-600">
+                        <Clock className="h-3 w-3" />
+                        <span>Scheduled</span>
                       </div>
                     </td>
                   </tr>
