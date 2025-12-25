@@ -199,14 +199,15 @@ export default function ObligationsWorking() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Tax Obligations</h1>
-            <p className="text-muted-foreground">Track your Nigerian business tax filing deadlines and get automatic reminders</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Tax Obligations</h1>
+            <p className="text-sm text-muted-foreground">Track your Nigerian business tax filing deadlines and get automatic reminders</p>
           </div>
-          <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+          <Button onClick={() => setShowForm(true)} className="flex items-center gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" />
-            Add Tax Period
+            <span className="sm:hidden">Add Tax Period</span>
+            <span className="hidden sm:inline">Add Tax Period</span>
           </Button>
         </div>
 
@@ -294,42 +295,42 @@ export default function ObligationsWorking() {
         </div>
 
         {/* Tax Types Guide */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-card p-4 rounded-lg border">
-            <h4 className="font-semibold text-green-700 mb-2 flex items-center gap-2">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="bg-card p-3 sm:p-4 rounded-lg border">
+            <h4 className="font-semibold text-green-700 mb-2 flex items-center gap-2 text-sm">
               <FileText className="h-4 w-4" />
               VAT
             </h4>
             <p className="text-xs text-muted-foreground mb-2">Value Added Tax</p>
-            <p className="text-sm">Monthly filing for businesses with ₦25M+ annual turnover</p>
-            <p className="text-xs text-green-600 font-medium">Due: 21st of following month</p>
+            <p className="text-xs sm:text-sm">Monthly filing for businesses with ₦25M+ annual turnover</p>
+            <p className="text-xs text-green-600 font-medium mt-1">Due: 21st of following month</p>
           </div>
-          <div className="bg-card p-4 rounded-lg border">
-            <h4 className="font-semibold text-blue-700 mb-2 flex items-center gap-2">
+          <div className="bg-card p-3 sm:p-4 rounded-lg border">
+            <h4 className="font-semibold text-blue-700 mb-2 flex items-center gap-2 text-sm">
               <Users className="h-4 w-4" />
               PAYE
             </h4>
             <p className="text-xs text-muted-foreground mb-2">Pay As You Earn</p>
-            <p className="text-sm">Monthly employee income tax remittance</p>
-            <p className="text-xs text-blue-600 font-medium">Due: 10th of following month</p>
+            <p className="text-xs sm:text-sm">Monthly employee income tax remittance</p>
+            <p className="text-xs text-blue-600 font-medium mt-1">Due: 10th of following month</p>
           </div>
-          <div className="bg-card p-4 rounded-lg border">
-            <h4 className="font-semibold text-purple-700 mb-2 flex items-center gap-2">
+          <div className="bg-card p-3 sm:p-4 rounded-lg border">
+            <h4 className="font-semibold text-purple-700 mb-2 flex items-center gap-2 text-sm">
               <CreditCard className="h-4 w-4" />
               WHT
             </h4>
             <p className="text-xs text-muted-foreground mb-2">Withholding Tax</p>
-            <p className="text-sm">Tax deducted from payments to suppliers/contractors</p>
-            <p className="text-xs text-purple-600 font-medium">Due: 21st of following month</p>
+            <p className="text-xs sm:text-sm">Tax deducted from payments to suppliers/contractors</p>
+            <p className="text-xs text-purple-600 font-medium mt-1">Due: 21st of following month</p>
           </div>
-          <div className="bg-card p-4 rounded-lg border">
-            <h4 className="font-semibold text-orange-700 mb-2 flex items-center gap-2">
+          <div className="bg-card p-3 sm:p-4 rounded-lg border">
+            <h4 className="font-semibold text-orange-700 mb-2 flex items-center gap-2 text-sm">
               <Building className="h-4 w-4" />
               CAC
             </h4>
             <p className="text-xs text-muted-foreground mb-2">Annual Returns</p>
-            <p className="text-sm">Yearly company information filing</p>
-            <p className="text-xs text-orange-600 font-medium">Due: 42 days after anniversary</p>
+            <p className="text-xs sm:text-sm">Yearly company information filing</p>
+            <p className="text-xs text-orange-600 font-medium mt-1">Due: 42 days after anniversary</p>
           </div>
         </div>
 
@@ -449,60 +450,70 @@ export default function ObligationsWorking() {
               };
               const info = taxTypeInfo[obligation.obligation_type] || { icon: FileText, color: 'text-gray-700', desc: 'Tax obligation' };
               const IconComponent = info.icon;
+              const statusInfo = getObligationStatus(obligation);
+              const StatusIcon = statusInfo.icon;
               
               return (
-                <div key={obligation.id} className="bg-card p-4 rounded-lg border hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <IconComponent className="h-4 w-4" />
-                        <h3 className={`font-semibold ${info.color}`}>{obligation.obligation_type}</h3>
+                <div key={obligation.id} className="bg-card p-3 sm:p-4 rounded-lg border hover:shadow-md transition-shadow">
+                  {/* Mobile-first layout */}
+                  <div className="space-y-3">
+                    {/* Header with icon and type */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <IconComponent className="h-4 w-4 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className={`font-semibold text-sm sm:text-base ${info.color} truncate`}>
+                            {obligation.obligation_type}
+                          </h3>
+                          <p className="text-xs text-muted-foreground hidden sm:block">{info.desc}</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-2">{info.desc}</p>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span className="text-muted-foreground">
-                          <strong>Tax Period:</strong> {new Date(obligation.tax_period + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      {/* Status badge */}
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${statusInfo.color}`}>
+                        <StatusIcon className="h-3 w-3" />
+                        <span className="hidden xs:inline">{statusInfo.text}</span>
+                        <span className="xs:hidden">{statusInfo.status === 'overdue' ? 'Overdue' : statusInfo.status === 'paid' ? 'Paid' : 'Due'}</span>
+                      </span>
+                    </div>
+
+                    {/* Tax period and due date */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        <span className="text-muted-foreground text-xs">Period:</span>
+                        <span className="font-medium text-xs sm:text-sm">
+                          {new Date(obligation.tax_period + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
+                        <span className="text-muted-foreground text-xs">Due:</span>
+                        <span className="font-medium text-red-600 text-xs sm:text-sm">
+                          {new Date(obligation.next_due_date).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 text-sm mb-1">
-                        <Calendar className="h-4 w-4 text-red-500" />
-                        <span className="font-medium text-red-600">
-                          Due: {new Date(obligation.next_due_date).toLocaleDateString()}
-                        </span>
+
+                    {/* Actions and reminder status */}
+                    <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {obligation.payment_status !== 'paid' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleMarkAsPaid(obligation.id)}
+                            className="text-xs h-7 px-2 flex-shrink-0"
+                          >
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            <span className="hidden xs:inline">Mark as Paid</span>
+                            <span className="xs:hidden">Paid</span>
+                          </Button>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Added: {new Date(obligation.created_at || Date.now()).toLocaleDateString()}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const statusInfo = getObligationStatus(obligation);
-                            const StatusIcon = statusInfo.icon;
-                            return (
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs flex items-center gap-1 ${statusInfo.color}`}>
-                                <StatusIcon className="h-3 w-3" /> {statusInfo.text}
-                              </span>
-                            );
-                          })()}
-                          {obligation.payment_status !== 'paid' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => handleMarkAsPaid(obligation.id)}
-                              className="text-xs h-6 px-2"
-                            >
-                              <DollarSign className="h-3 w-3 mr-1" />
-                              Mark as Paid
-                            </Button>
-                          )}
-                        </div>
-                        <span className="text-xs text-blue-600 flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          {obligation.payment_status === 'paid' ? 'Reminders Stopped' : 'Reminders On'}
-                        </span>
-                      </div>
+                      <span className="text-xs text-blue-600 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        {obligation.payment_status === 'paid' ? 'Reminders Stopped' : 'Reminders On'}
+                      </span>
                     </div>
                   </div>
                 </div>

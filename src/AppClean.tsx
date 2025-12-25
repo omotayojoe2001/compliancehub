@@ -16,7 +16,8 @@ import PublicLanding from "./pages/PublicLanding";
 import TaxCalculator from "./pages/TaxCalculator";
 import CalculatorNew from "./pages/CalculatorNew";
 import Guides from "./pages/Guides";
-import Subscription from "./pages/Subscription";
+import SubscriptionTest from "./pages/SubscriptionTest";
+import SubscriptionEnhanced from "./pages/SubscriptionEnhanced";
 import Reminders from "./pages/Reminders";
 import DashboardClean from "./pages/DashboardClean";
 import SettingsClean from "./pages/SettingsClean";
@@ -54,7 +55,8 @@ const App = () => (
             <Route path="/obligations" element={<ProtectedRoute><ObligationsWorking /></ProtectedRoute>} />
             <Route path="/calculator" element={<ProtectedRoute><CalculatorNew /></ProtectedRoute>} />
             <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />
-            <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+            <Route path="/subscription" element={<ProtectedRoute><SubscriptionEnhanced /></ProtectedRoute>} />
+            <Route path="/subscription-test" element={<ProtectedRoute><SubscriptionTest /></ProtectedRoute>} />
             <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
             
             {/* Test Pages */}

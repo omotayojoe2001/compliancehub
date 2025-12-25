@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { subscriptionVerificationService } from './subscriptionVerificationService';
 
 declare global {
   interface Window {
@@ -93,12 +94,12 @@ export const paymentService = {
                   }
                 }
                 
-                // CRITICAL FIX: Update profile with CORRECT plan
+                // CRITICAL: Update profile with CORRECT plan
                 console.log('💳 Updating profile with plan:', plan);
                 const { error: profileError } = await supabase
                   .from('profiles')
                   .update({
-                    plan: plan, // Use the actual plan from payment, not hardcoded
+                    plan: plan, // Use the actual plan from payment
                     subscription_status: 'active'
                   })
                   .eq('id', user.user.id);
@@ -108,9 +109,28 @@ export const paymentService = {
                 } else {
                   console.log('💳 Profile updated successfully with plan:', plan);
                 }
+                
+                // VERIFY SUBSCRIPTION UPDATE
+                console.log('🔍 Starting subscription verification...');
+                const verification = await subscriptionVerificationService.verifySubscriptionUpdate(
+                  user.user.id, 
+                  plan, 
+                  response.reference
+                );
+                
+                if (verification.success) {
+                  console.log('✅ SUBSCRIPTION VERIFIED SUCCESSFULLY!');
+                  console.log('✅ Plan in database:', verification.profile?.plan);
+                  console.log('✅ Status in database:', verification.profile?.subscription_status);
+                  alert(`✅ SUCCESS! You are now subscribed to ${plan.toUpperCase()} plan. Your reminders are active!`);
+                } else {
+                  console.error('❌ SUBSCRIPTION VERIFICATION FAILED:', verification.error);
+                  alert(`⚠️ Payment successful but verification failed: ${verification.error}. Please contact support.`);
+                }
               }
             } catch (error) {
               console.error('💳 Payment processing error:', error);
+              alert('❌ Error processing payment. Please contact support.');
             }
           })();
           

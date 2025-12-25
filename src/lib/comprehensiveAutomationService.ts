@@ -80,7 +80,7 @@ class ComprehensiveAutomationService {
     } catch (error) {
       console.error('❌ Error processing upcoming reminders:', error);
     }
-  },
+  }
 
   async sendUpcomingReminder(obligation: any, daysUntilDue: number) {
     const profile = obligation.profiles;
@@ -117,7 +117,7 @@ class ComprehensiveAutomationService {
     } catch (error) {
       console.error(`❌ Failed to send upcoming reminder for ${obligation.id}:`, error);
     }
-  },
+  }
 
   // Process subscription reminders
   async processSubscriptionReminders() {
@@ -151,7 +151,7 @@ class ComprehensiveAutomationService {
     } catch (error) {
       console.error('❌ Error processing subscription reminders:', error);
     }
-  },
+  }
 
   async sendSubscriptionReminder(subscription: any, daysUntilRenewal: number) {
     const profile = subscription.profiles;
@@ -176,7 +176,7 @@ class ComprehensiveAutomationService {
     } catch (error) {
       console.error(`❌ Failed to send subscription reminder:`, error);
     }
-  },
+  }
 
   // Check tax deadlines for all users
   private async checkAllUserTaxDeadlines() {
