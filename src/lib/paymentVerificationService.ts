@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const PAYSTACK_SECRET_KEY = "PAYSTACK_SECRET_KEY_PLACEHOLDER";
+const PAYSTACK_SECRET_KEY = import.meta.env.VITE_PAYSTACK_SECRET_KEY;
 
 export const paymentVerificationService = {
   async verifyPayment(reference: string) {
