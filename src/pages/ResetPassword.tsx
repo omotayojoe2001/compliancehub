@@ -13,9 +13,13 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have the required tokens
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
+    // Check for tokens in URL hash (Supabase format) or query params
+    const hash = window.location.hash.substring(1);
+    const hashParams = new URLSearchParams(hash);
+    
+    let accessToken = searchParams.get('access_token') || hashParams.get('access_token');
+    let refreshToken = searchParams.get('refresh_token') || hashParams.get('refresh_token');
+    let type = searchParams.get('type') || hashParams.get('type');
     
     if (!accessToken || !refreshToken) {
       setMessage("Invalid reset link. Please request a new password reset.");
