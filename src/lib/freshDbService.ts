@@ -93,12 +93,18 @@ export const freshDbService = {
   // Reminder logs
   async getReminderLogs(userId: string) {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/reminder_logs?user_id=eq.${userId}&select=*,tax_obligations(obligation_type)&order=created_at.desc`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/reminder_logs?user_id=eq.${userId}&order=created_at.desc`, {
       headers
     });
     const data = await response.json();
     console.log('📋 Get reminder logs response:', response.status, data);
-    return data;
+    
+    if (!response.ok) {
+      console.error('❌ Failed to fetch reminder logs:', data);
+      return [];
+    }
+    
+    return Array.isArray(data) ? data : [];
   },
 
   async addReminderLog(userId: string, log: any) {

@@ -44,23 +44,27 @@ export default function Reminders() {
       
       // Load sent reminders
       const logs = await freshDbService.getReminderLogs(user!.id);
-      setReminderLogs(logs || []);
+      setReminderLogs(Array.isArray(logs) ? logs : []);
       
       // Load upcoming reminders from tax obligations
       const obligations = await freshDbService.getTaxObligations(user!.id);
-      const upcoming = obligations
-        ?.filter(o => o.status === 'active')
-        .map(o => ({
-          id: o.id,
-          obligation_type: o.obligation_type,
-          due_date: o.due_date,
-          next_reminder_date: new Date(new Date(o.due_date).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          status: 'scheduled'
-        })) || [];
+      const upcoming = Array.isArray(obligations)
+        ? obligations
+            .filter(o => o.status === 'active')
+            .map(o => ({
+              id: o.id,
+              obligation_type: o.obligation_type,
+              due_date: o.due_date,
+              next_reminder_date: new Date(new Date(o.due_date).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              status: 'scheduled'
+            }))
+        : [];
       
       setUpcomingReminders(upcoming);
     } catch (error) {
       console.error('Error loading reminder data:', error);
+      setReminderLogs([]);
+      setUpcomingReminders([]);
     } finally {
       setLoading(false);
     }
@@ -121,7 +125,7 @@ export default function Reminders() {
                 {reminderLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-secondary/50">
                     <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {log.tax_obligations?.obligation_type || 'Tax Reminder'}
+                      {log.obligation_type || 'Tax Reminder'}
                       {log.message_content && (
                         <div className="text-xs text-gray-500 mt-1 italic">
                           "{log.message_content.substring(0, 80)}..."

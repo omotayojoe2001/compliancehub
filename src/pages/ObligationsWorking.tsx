@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContextClean";
 import { freshDbService } from "@/lib/freshDbService";
 import { twilioWhatsAppService } from "@/lib/twilioWhatsAppService";
+import { overdueMonitoringService } from "@/lib/overdueMonitoringService";
 import { supabase } from "@/lib/supabase";
-import { Plus, Calendar, AlertCircle, FileText, Users, CreditCard, Building, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Plus, Calendar, AlertCircle, FileText, Users, CreditCard, Building, AlertTriangle, CheckCircle, Clock, DollarSign } from "lucide-react";
 
 export default function ObligationsWorking() {
   const { user } = useAuth();
@@ -22,6 +23,42 @@ export default function ObligationsWorking() {
     tax_period: '',
     due_date: ''
   });
+
+  const handleMarkAsPaid = async (obligationId: string) => {
+    if (!user?.id) return;
+    
+    const confirmed = confirm('Mark this tax obligation as paid? This will stop all overdue reminders.');
+    if (!confirmed) return;
+    
+    try {
+      const success = await overdueMonitoringService.markAsPaid(obligationId, user.id);
+      if (success) {
+        alert('✅ Marked as paid! You will no longer receive reminders for this obligation.');
+        await loadObligations(); // Reload to show updated status
+      } else {
+        alert('❌ Failed to mark as paid. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      alert('❌ Failed to mark as paid. Please try again.');
+    }
+  };
+
+  const getObligationStatus = (obligation: any) => {
+    const now = new Date();
+    const dueDate = new Date(obligation.next_due_date);
+    const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (obligation.payment_status === 'paid') {
+      return { status: 'paid', color: 'bg-green-100 text-green-800', icon: CheckCircle, text: 'Paid' };
+    } else if (daysUntilDue < 0) {
+      return { status: 'overdue', color: 'bg-red-100 text-red-800', icon: AlertTriangle, text: `${Math.abs(daysUntilDue)} days overdue` };
+    } else if (daysUntilDue <= 7) {
+      return { status: 'due_soon', color: 'bg-yellow-100 text-yellow-800', icon: Clock, text: `Due in ${daysUntilDue} days` };
+    } else {
+      return { status: 'pending', color: 'bg-blue-100 text-blue-800', icon: Calendar, text: `Due in ${daysUntilDue} days` };
+    }
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -438,23 +475,32 @@ export default function ObligationsWorking() {
                       <p className="text-xs text-muted-foreground mb-2">
                         Added: {new Date(obligation.created_at || Date.now()).toLocaleDateString()}
                       </p>
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs flex items-center gap-1 ${
-                          obligation.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {obligation.is_active ? (
-                            <>
-                              <CheckCircle className="h-3 w-3" /> Active
-                            </>
-                          ) : (
-                            <>
-                              <AlertCircle className="h-3 w-3" /> Inactive
-                            </>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const statusInfo = getObligationStatus(obligation);
+                            const StatusIcon = statusInfo.icon;
+                            return (
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs flex items-center gap-1 ${statusInfo.color}`}>
+                                <StatusIcon className="h-3 w-3" /> {statusInfo.text}
+                              </span>
+                            );
+                          })()}
+                          {obligation.payment_status !== 'paid' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleMarkAsPaid(obligation.id)}
+                              className="text-xs h-6 px-2"
+                            >
+                              <DollarSign className="h-3 w-3 mr-1" />
+                              Mark as Paid
+                            </Button>
                           )}
-                        </span>
+                        </div>
                         <span className="text-xs text-blue-600 flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3" />
-                          Reminders On
+                          {obligation.payment_status === 'paid' ? 'Reminders Stopped' : 'Reminders On'}
                         </span>
                       </div>
                     </div>

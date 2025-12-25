@@ -50,6 +50,134 @@ class ComprehensiveAutomationService {
     console.log('🛑 Comprehensive automation system stopped');
   }
 
+  // Process upcoming reminders (7, 3, 1 days before due date)
+  async processUpcomingReminders() {
+    try {
+      console.log('🔍 Processing upcoming tax deadline reminders...');
+      
+      // Get all active obligations that need reminders
+      const response = await fetch(`https://fyhhcqjclcedpylhyjwy.supabase.co/rest/v1/tax_obligations?payment_status=neq.paid&is_active=eq.true&select=*,profiles(business_name,email,phone_number)`, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const obligations = await response.json();
+      const today = new Date();
+      
+      for (const obligation of obligations) {
+        const dueDate = new Date(obligation.next_due_date);
+        const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Send reminders at 7, 3, and 1 days before
+        if ([7, 3, 1].includes(daysUntilDue)) {
+          await this.sendUpcomingReminder(obligation, daysUntilDue);
+        }
+      }
+      
+      console.log('✅ Upcoming reminders processed');
+    } catch (error) {
+      console.error('❌ Error processing upcoming reminders:', error);
+    }
+  },
+
+  async sendUpcomingReminder(obligation: any, daysUntilDue: number) {
+    const profile = obligation.profiles;
+    const message = `📅 Reminder: Your ${obligation.obligation_type} payment is due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}. Due date: ${new Date(obligation.next_due_date).toLocaleDateString()}. Don't forget to file and pay on time!`;
+    
+    try {
+      // Send email
+      await notificationServiceFixed.sendEmail({
+        to: profile.email,
+        subject: `📅 ${daysUntilDue}-Day Reminder: ${obligation.obligation_type} Due Soon`,
+        message: message,
+        business_name: profile.business_name
+      });
+      
+      // Send WhatsApp
+      if (profile.phone_number) {
+        await notificationServiceFixed.sendWhatsApp({
+          to: profile.phone_number,
+          message: message
+        });
+      }
+      
+      // Log the reminder
+      await freshDbService.addReminderLog(obligation.user_id, {
+        obligation_id: obligation.id,
+        reminder_type: `${daysUntilDue}_day_reminder`,
+        message_content: message,
+        status: 'sent',
+        scheduled_date: new Date().toISOString(),
+        sent_date: new Date().toISOString()
+      });
+      
+      console.log(`✅ Sent ${daysUntilDue}-day reminder for ${obligation.obligation_type} to ${profile.business_name}`);
+    } catch (error) {
+      console.error(`❌ Failed to send upcoming reminder for ${obligation.id}:`, error);
+    }
+  },
+
+  // Process subscription reminders
+  async processSubscriptionReminders() {
+    try {
+      console.log('💳 Processing subscription reminders...');
+      
+      // Get subscriptions expiring soon
+      const response = await fetch(`https://fyhhcqjclcedpylhyjwy.supabase.co/rest/v1/subscriptions?status=eq.active&select=*,profiles(business_name,email,phone_number)`, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const subscriptions = await response.json();
+      const today = new Date();
+      
+      for (const subscription of subscriptions) {
+        if (!subscription.next_payment_date) continue;
+        
+        const renewalDate = new Date(subscription.next_payment_date);
+        const daysUntilRenewal = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Send reminders at 7, 3, and 1 days before renewal
+        if ([7, 3, 1].includes(daysUntilRenewal)) {
+          await this.sendSubscriptionReminder(subscription, daysUntilRenewal);
+        }
+      }
+      
+      console.log('✅ Subscription reminders processed');
+    } catch (error) {
+      console.error('❌ Error processing subscription reminders:', error);
+    }
+  },
+
+  async sendSubscriptionReminder(subscription: any, daysUntilRenewal: number) {
+    const profile = subscription.profiles;
+    const message = `💳 Your ${subscription.plan_type} subscription renews in ${daysUntilRenewal} day${daysUntilRenewal > 1 ? 's' : ''}. Amount: ₦${(subscription.amount / 100).toLocaleString()}. Renewal date: ${new Date(subscription.next_payment_date).toLocaleDateString()}.`;
+    
+    try {
+      await notificationServiceFixed.sendEmail({
+        to: profile.email,
+        subject: `💳 Subscription Renewal in ${daysUntilRenewal} Day${daysUntilRenewal > 1 ? 's' : ''}`,
+        message: message,
+        business_name: profile.business_name
+      });
+      
+      if (profile.phone_number) {
+        await notificationServiceFixed.sendWhatsApp({
+          to: profile.phone_number,
+          message: message
+        });
+      }
+      
+      console.log(`✅ Sent subscription reminder to ${profile.business_name}`);
+    } catch (error) {
+      console.error(`❌ Failed to send subscription reminder:`, error);
+    }
+  },
+
   // Check tax deadlines for all users
   private async checkAllUserTaxDeadlines() {
     try {
