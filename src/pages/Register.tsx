@@ -86,12 +86,13 @@ export default function Register() {
           subscription_status: 'active'
         });
         
-        // Schedule complete onboarding notification sequence
+        // Schedule complete onboarding notification sequence (but skip welcome email until verified)
         await comprehensiveAutomationService.scheduleUserOnboarding(
           data.user.id,
           formData.email,
           formData.clientName || formData.businessName,
-          formData.phone
+          formData.phone,
+          false // Email not verified yet
         );
       } catch (notificationError) {
         console.error('Welcome notifications failed:', notificationError);

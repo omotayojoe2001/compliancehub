@@ -3,6 +3,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Building2, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { comprehensiveAutomationService } from "@/lib/comprehensiveAutomationService";
+import { freshDbService } from "@/lib/freshDbService";
 
 export default function EmailConfirmation() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -29,6 +31,27 @@ export default function EmailConfirmation() {
           } else {
             setStatus('success');
             setMessage('Email confirmed successfully! You can now access your account.');
+            
+            // Get user session to trigger welcome email
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              try {
+                // Get user profile
+                const profile = await freshDbService.getProfile(session.user.id);
+                if (profile) {
+                  // Now trigger welcome email since email is verified
+                  await comprehensiveAutomationService.scheduleUserOnboarding(
+                    session.user.id,
+                    session.user.email || '',
+                    profile.business_name || 'Your Business',
+                    profile.phone || undefined,
+                    true // Email is now verified
+                  );
+                }
+              } catch (profileError) {
+                console.log('Could not load profile for welcome email:', profileError);
+              }
+            }
             
             // Redirect to dashboard after 3 seconds
             setTimeout(() => {

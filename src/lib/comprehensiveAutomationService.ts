@@ -288,12 +288,18 @@ class ComprehensiveAutomationService {
     }
   }
 
-  // Schedule onboarding notifications for new users
-  async scheduleUserOnboarding(userId: string, email: string, businessName: string, phone?: string) {
+  // Schedule onboarding notifications for new users (only after email verification)
+  async scheduleUserOnboarding(userId: string, email: string, businessName: string, phone?: string, isEmailVerified: boolean = false) {
     try {
-      console.log(`📅 Scheduling onboarding for: ${businessName}`);
+      console.log(`📅 Scheduling onboarding for: ${businessName} (Email verified: ${isEmailVerified})`);
       
-      // 1. Send welcome immediately
+      // Only send welcome email if user has verified their email
+      if (!isEmailVerified) {
+        console.log('⏳ Skipping welcome email - user email not verified yet');
+        return;
+      }
+      
+      // 1. Send welcome immediately (only for verified users)
       await notificationServiceFixed.sendWelcomeNotifications(email, businessName, phone);
       
       // 2. Schedule follow-up after 30 minutes
@@ -306,7 +312,7 @@ class ComprehensiveAutomationService {
         await notificationServiceFixed.sendEducationalNotifications(email, businessName, phone);
       }, 2 * 60 * 60 * 1000); // 2 hours
       
-      console.log('✅ Onboarding notifications scheduled');
+      console.log('✅ Onboarding notifications scheduled for verified user');
     } catch (error) {
       console.error('❌ Failed to schedule onboarding:', error);
     }
