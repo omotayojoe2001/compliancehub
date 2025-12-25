@@ -57,7 +57,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3 overflow-y-auto h-[calc(100vh-112px)]">
+      <nav className="flex-1 space-y-1 p-3 overflow-y-auto h-[calc(100vh-168px)]">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -77,10 +77,22 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             </NavLink>
           );
         })}
+        
+        {/* Logout button in navigation for mobile */}
+        <button 
+          onClick={() => {
+            signOut();
+            onClose?.();
+          }}
+          className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground rounded-md lg:hidden"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
       </nav>
 
-      {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-border p-3 bg-card">
+      {/* Footer - Desktop only */}
+      <div className="hidden lg:block absolute bottom-0 left-0 right-0 border-t border-border p-3 bg-card">
         <button 
           onClick={() => signOut()}
           className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground rounded-md"
