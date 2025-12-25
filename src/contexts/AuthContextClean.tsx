@@ -31,12 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Handle email confirmation
-        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-          // User has confirmed their email, redirect to dashboard
-          window.location.href = '/dashboard';
-        }
       }
     );
 
