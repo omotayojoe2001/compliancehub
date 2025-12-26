@@ -171,7 +171,7 @@ export default function PublicLanding() {
               </div>
               <h3 className="text-xl font-semibold mb-3">CAC Annual Returns</h3>
               <p className="text-gray-600 mb-4">42 days after company anniversary</p>
-              <div className="text-sm text-orange-600 font-medium">Never miss renewals</div>
+              <div className="text-sm text-orange-600 font-medium">Never miss filing your returns</div>
             </Card>
             
             <Card className="p-8 text-center hover:shadow-lg transition-shadow border-0 shadow-sm">

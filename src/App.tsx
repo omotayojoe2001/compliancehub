@@ -52,6 +52,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPasswordClean />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/confirm-email" element={<EmailConfirmation />} />
             
             {/* Protected Dashboard Pages */}

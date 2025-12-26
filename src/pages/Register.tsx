@@ -82,8 +82,8 @@ export default function Register() {
           cac_date: formData.cacDate,
           vat_status: formData.vatStatus,
           paye_status: formData.payeStatus,
-          plan: 'basic',
-          subscription_status: 'active'
+          plan: 'free',
+          subscription_status: 'inactive'
         });
         
         // Schedule complete onboarding notification sequence (but skip welcome email until verified)

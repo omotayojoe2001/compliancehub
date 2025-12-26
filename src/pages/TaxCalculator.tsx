@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Building2, ArrowLeft, Info } from "lucide-react";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 
 interface TaxBreakdown {
   band: string;
@@ -109,7 +110,8 @@ export default function TaxCalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <SubscriptionGate feature="Tax Calculator">
+      <div className="min-h-screen bg-background">
       {/* Navigation */}
       <header className="sticky top-0 z-50 border-b border-border bg-background">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
@@ -389,5 +391,6 @@ export default function TaxCalculator() {
         </div>
       </div>
     </div>
+    </SubscriptionGate>
   );
 }
