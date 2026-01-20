@@ -25,6 +25,7 @@ import Register from "./pages/Register";
 import ForgotPasswordClean from "./pages/ForgotPasswordClean";
 import ResetPassword from "./pages/ResetPassword";
 import EmailConfirmation from "./pages/EmailConfirmation";
+import ExpenseManagement from "./pages/ExpenseManagement";
 import TestSystem from "./pages/TestSystem";
 import DatabaseTest from "./pages/DatabaseTest";
 import WhatsAppTest from "./pages/WhatsAppTest";
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />
             <Route path="/monitoring" element={<ProtectedRoute><div>Monitoring disabled</div></ProtectedRoute>} />
             <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+            <Route path="/expenses" element={<ProtectedRoute><ExpenseManagement /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/test" element={<ProtectedRoute><TestSystem /></ProtectedRoute>} />
             <Route path="/db-test" element={<DatabaseTest />} />

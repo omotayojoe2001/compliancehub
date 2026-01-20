@@ -146,7 +146,7 @@ export default function PublicLanding() {
             <h2 className="text-4xl font-bold mb-4">What We Watch For You</h2>
             <p className="text-xl text-gray-600">Comprehensive tax compliance monitoring for Nigerian businesses</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
             <Card className="p-8 text-center hover:shadow-lg transition-shadow border-0 shadow-sm">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="h-8 w-8 text-blue-600" />
@@ -175,6 +175,19 @@ export default function PublicLanding() {
             </Card>
             
             <Card className="p-8 text-center hover:shadow-lg transition-shadow border-0 shadow-sm">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Shield className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">SCUML Registration</h3>
+              <p className="text-gray-600 mb-4">For designated businesses</p>
+              <div className="text-sm text-red-600 font-medium">
+                <a href="https://scuml.gov.ng" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  Visit SCUML Portal
+                </a>
+              </div>
+            </Card>
+            
+            <Card className="p-8 text-center hover:shadow-lg transition-shadow border-0 shadow-sm">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Calculator className="h-8 w-8 text-purple-600" />
               </div>
@@ -182,6 +195,54 @@ export default function PublicLanding() {
               <p className="text-gray-600 mb-4">Instant Nigerian tax calculations</p>
               <div className="text-sm text-purple-600 font-medium">Always up-to-date rates</div>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* State Revenue Services */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Connect with Revenue Services</h2>
+            <p className="text-gray-600">Direct links to Nigerian Revenue Service and State Internal Revenue Services</p>
+          </div>
+          
+          {/* NRS Link */}
+          <div className="text-center mb-8">
+            <a href="https://nrs.gov.ng" target="_blank" rel="noopener noreferrer" 
+               className="inline-flex items-center gap-3 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+              <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                <span className="text-green-600 font-bold text-sm">NRS</span>
+              </div>
+              <span className="font-semibold">Nigerian Revenue Service Portal</span>
+            </a>
+          </div>
+          
+          {/* State Revenue Services Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[
+              { name: 'Lagos', url: 'https://lirs.gov.ng', code: 'LIRS' },
+              { name: 'Kano', url: 'https://kanoirs.gov.ng', code: 'KIRS' },
+              { name: 'Rivers', url: 'https://rirs.gov.ng', code: 'RIRS' },
+              { name: 'Ogun', url: 'https://ogirs.gov.ng', code: 'OGIRS' },
+              { name: 'Kaduna', url: 'https://kadirs.gov.ng', code: 'KADIRS' },
+              { name: 'Oyo', url: 'https://oyoirs.gov.ng', code: 'OYOIRS' },
+              { name: 'Delta', url: 'https://dirs.gov.ng', code: 'DIRS' },
+              { name: 'Edo', url: 'https://eirs.gov.ng', code: 'EIRS' },
+              { name: 'Imo', url: 'https://iirs.gov.ng', code: 'IIRS' },
+              { name: 'Anambra', url: 'https://airs.gov.ng', code: 'AIRS' },
+              { name: 'Akwa Ibom', url: 'https://akirs.gov.ng', code: 'AKIRS' },
+              { name: 'Cross River', url: 'https://crs-irs.gov.ng', code: 'CRIRS' }
+            ].map((state) => (
+              <a key={state.code} href={state.url} target="_blank" rel="noopener noreferrer"
+                 className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center group">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-blue-200 transition-colors">
+                  <span className="text-blue-600 font-bold text-xs">{state.code}</span>
+                </div>
+                <p className="text-sm font-medium text-gray-900">{state.name}</p>
+                <p className="text-xs text-gray-500">{state.code}</p>
+              </a>
+            ))}
           </div>
         </div>
       </section>
@@ -223,11 +284,12 @@ export default function PublicLanding() {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <Card className="p-8 hover:shadow-xl transition-shadow">
               <h3 className="text-2xl font-bold mb-2">Basic</h3>
-              <div className="text-4xl font-bold text-blue-600 mb-6">₦3,000<span className="text-lg text-gray-600">/month</span></div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">₦12,000<span className="text-lg text-gray-600">/month</span></div>
+              <div className="text-sm text-gray-500 mb-4">+ 7.5% VAT = ₦12,900</div>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Up to 3 tax obligations</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Email reminders</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Basic tax calculator</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />PAYE & VAT Calculator</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Basic compliance tracking</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Email support</li>
               </ul>
               <Link to="/register">
@@ -240,12 +302,13 @@ export default function PublicLanding() {
                 Most Popular
               </div>
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
-              <div className="text-4xl font-bold text-blue-600 mb-6">₦7,000<span className="text-lg text-gray-600">/month</span></div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">₦30,000<span className="text-lg text-gray-600">/month</span></div>
+              <div className="text-sm text-gray-500 mb-4">+ 7.5% VAT = ₦32,250</div>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Unlimited tax obligations</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email reminders</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Advanced tax calculator</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Reminder history & logs</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />PAYE, VAT, Withholding, CIT Calculator</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Expense management system</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Advanced compliance tracking</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Priority support</li>
               </ul>
               <Link to="/register">
@@ -254,14 +317,14 @@ export default function PublicLanding() {
             </Card>
             
             <Card className="p-8 hover:shadow-xl transition-shadow">
-              <h3 className="text-2xl font-bold mb-2">Annual</h3>
-              <div className="text-4xl font-bold text-blue-600 mb-2">₦30,000<span className="text-lg text-gray-600">/year</span></div>
-              <div className="text-sm text-green-600 font-medium mb-4">Save ₦54,000 annually</div>
+              <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
+              <div className="text-4xl font-bold text-blue-600 mb-2">₦50,000<span className="text-lg text-gray-600">/month</span></div>
+              <div className="text-sm text-gray-500 mb-4">+ 7.5% VAT = ₦53,750</div>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Everything in Pro</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Multi-user access</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />API access</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Custom integrations</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Everything in Pro + Capital Gains</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />In-house Tax Consultant</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Advanced expense management</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Dedicated account manager</li>
               </ul>
               <Link to="/register">

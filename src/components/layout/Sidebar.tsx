@@ -10,28 +10,30 @@ import {
   Building2,
   BookOpen,
   X,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContextClean";
-
-const navigation = [
-  { name: "Home", href: "/dashboard", icon: LayoutDashboard },
-  { name: "What We Watch", href: "/obligations", icon: FileText },
-  { name: "Proof We Work", href: "/reminders", icon: Bell },
-  { name: "Tax Calculator", href: "/calculator", icon: Calculator },
-  { name: "How-To Guides", href: "/guides", icon: BookOpen },
-  { name: "Payment", href: "/subscription", icon: CreditCard },
-  { name: "Settings", href: "/settings", icon: Settings },
-];
-
-interface SidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-}
+import { useProfile } from "@/hooks/useProfileClean";
 
 export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { profile } = useProfile();
+
+  // Check if user has Pro or Enterprise plan for expense management
+  const hasExpenseAccess = profile?.plan === 'pro' || profile?.plan === 'enterprise';
+
+  const navigation = [
+    { name: "Home", href: "/dashboard", icon: LayoutDashboard },
+    { name: "What We Watch", href: "/obligations", icon: FileText },
+    { name: "Proof We Work", href: "/reminders", icon: Bell },
+    { name: "Tax Calculator", href: "/calculator", icon: Calculator },
+    ...(hasExpenseAccess ? [{ name: "Expenses", href: "/expenses", icon: Receipt }] : []),
+    { name: "How-To Guides", href: "/guides", icon: BookOpen },
+    { name: "Payment", href: "/subscription", icon: CreditCard },
+    { name: "Settings", href: "/settings", icon: Settings },
+  ];
 
   return (
     <aside className={cn(

@@ -191,58 +191,33 @@ export default function Subscription() {
 
   // Plan hierarchy for determining upgrades/downgrades
   const planHierarchy = {
-    test100: 1,
-    test200: 2,
-    basic: 3,
-    pro: 4,
-    annual: 5
+    free: 0,
+    basic: 1,
+    pro: 2,
+    enterprise: 3
   };
 
   // Get plan display name
   const getPlanDisplayName = (planKey: string) => {
     const planNames = {
-      test100: 'Test ₦100 (plan little)',
-      test200: 'Upgrade to more (₦200)',
+      free: 'Free',
       basic: 'Basic',
       pro: 'Professional',
-      annual: 'Annual'
+      enterprise: 'Enterprise'
     };
     return planNames[planKey as keyof typeof planNames] || planKey;
   };
 
   const plans = [
     {
-      name: "Test ₦100",
-      price: "₦100",
-      period: "/month",
-      features: [
-        "Testing the system",
-        "1 obligation tracked",
-        "Email reminders only",
-      ],
-      current: profile?.plan === 'test100',
-      planKey: 'test100' as const,
-    },
-    {
-      name: "Test ₦200",
-      price: "₦200",
-      period: "/month",
-      features: [
-        "More testing features",
-        "2 obligations tracked",
-        "Email reminders only",
-      ],
-      current: profile?.plan === 'test200',
-      planKey: 'test200' as const,
-    },
-    {
       name: "Basic",
-      price: "₦3,000",
+      price: "₦12,000",
       period: "/month",
+      vatPrice: "₦12,900",
       features: [
-        "Up to 3 obligations tracked",
-        "Email reminders only",
-        "Basic tax calculator",
+        "PAYE & VAT Calculator",
+        "WhatsApp + Email alerts",
+        "Basic compliance tracking",
         "Email support",
       ],
       current: profile?.plan === 'basic',
@@ -250,31 +225,33 @@ export default function Subscription() {
     },
     {
       name: "Pro",
-      price: "₦7,000",
+      price: "₦30,000",
       period: "/month",
+      vatPrice: "₦32,250",
       features: [
-        "Unlimited obligations tracked",
-        "Email & WhatsApp reminders",
-        "Advanced tax calculator",
-        "Reminder logs & history",
+        "PAYE, VAT, Withholding, CIT Calculator",
+        "WhatsApp + Email alerts",
+        "Expense management system",
+        "Advanced compliance tracking",
         "Priority support",
       ],
       current: profile?.plan === 'pro',
       planKey: 'pro' as const,
     },
     {
-      name: "Annual",
-      price: "₦30,000",
-      period: "/year",
+      name: "Enterprise",
+      price: "₦50,000",
+      period: "/month",
+      vatPrice: "₦53,750",
       features: [
-        "Everything in Pro",
-        "Multi-user access",
-        "API access",
-        "Custom integrations",
+        "Everything in Pro + Capital Gains",
+        "In-house Tax Consultant",
+        "Advanced expense management",
+        "WhatsApp + Email alerts",
         "Dedicated account manager",
       ],
-      current: profile?.plan === 'annual',
-      planKey: 'annual' as const,
+      current: profile?.plan === 'enterprise',
+      planKey: 'enterprise' as const,
     },
   ];
 
@@ -320,7 +297,7 @@ export default function Subscription() {
     }
   };
 
-  const handleUpgrade = async (planType: 'test100' | 'test200' | 'basic' | 'pro' | 'annual') => {
+  const handleUpgrade = async (planType: 'basic' | 'pro' | 'enterprise') => {
     if (!user || !profile) return;
     
     setLoading(planType);
@@ -443,13 +420,18 @@ export default function Subscription() {
                   {plan.name}
                 </h3>
                 
-                <div className="mt-2 flex items-baseline">
-                  <span className="text-2xl font-semibold text-foreground">
-                    {plan.price}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {plan.period}
-                  </span>
+                <div className="mt-2 flex flex-col">
+                  <div className="flex items-baseline">
+                    <span className="text-2xl font-semibold text-foreground">
+                      {plan.price}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {plan.period}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    + VAT = <span className="font-semibold">{plan.vatPrice}</span>
+                  </div>
                 </div>
 
                 <ul className="mt-6 space-y-3">
