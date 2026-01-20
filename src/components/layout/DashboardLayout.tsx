@@ -1,5 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Sidebar } from "./Sidebar";
+import { Footer } from "./Footer";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,9 +23,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <main className="flex-1 lg:ml-60 overflow-auto">
+      <main className="flex-1 lg:ml-60 overflow-auto flex flex-col">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
+          <span className="text-lg font-semibold">ComplianceHub</span>
           <Button
             variant="ghost"
             size="sm"
@@ -33,11 +35,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="text-sm font-semibold">ComplianceHub</span>
-          <div className="w-9" /> {/* Spacer */}
         </div>
         
-        <div className="p-4 lg:p-6">{children}</div>
+        <div className="flex-1 p-4 lg:p-6">{children}</div>
+        <Footer />
       </main>
     </div>
   );

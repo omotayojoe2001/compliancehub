@@ -1,14 +1,16 @@
 import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContextClean";
+import { supabaseService } from "@/lib/supabaseService";
+import { realtimeService } from "@/lib/realtimeService";
 
 interface Obligation {
   id: string;
   obligation_type: string;
   next_due_date: string;
   tax_period?: string;
+  payment_status?: string;
 }
 
 export function UpcomingObligations() {
@@ -18,33 +20,47 @@ export function UpcomingObligations() {
 
   useEffect(() => {
     if (user?.id) {
-      fetchObligations();
+      loadObligations();
+      
+      // Subscribe to real-time updates
+      const subscription = realtimeService.subscribeToObligations(
+        user.id,
+        (payload) => {
+          console.log('📡 Real-time obligation update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setObligations(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setObligations(prev => 
+              prev.map(item => 
+                item.id === payload.new.id ? payload.new : item
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setObligations(prev => 
+              prev.filter(item => item.id !== payload.old.id)
+            );
+          }
+        }
+      );
+
+      return () => subscription.unsubscribe();
     }
   }, [user?.id]);
 
-  const fetchObligations = async () => {
+  const loadObligations = async () => {
+    if (!user?.id) return;
+    
     try {
-      const { data, error } = await supabase
-        .from('tax_obligations')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('is_active', true)
-        .order('next_due_date', { ascending: true });
-
-      if (!error && data) {
-        setObligations(data);
-      } else {
-        console.error('Tax obligations error:', error);
-        setObligations([]);
-      }
+      const data = await supabaseService.getObligations(user.id);
+      setObligations(data || []);
     } catch (error) {
-      console.error('Tax obligations fetch failed:', error);
+      console.error('Failed to load obligations:', error);
       setObligations([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-
 
   const getStatus = (dueDate: string) => {
     const due = new Date(dueDate);
@@ -60,13 +76,14 @@ export function UpcomingObligations() {
     <div className="border border-border bg-card">
       <div className="border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">
-          Upcoming Obligations
+          What We Watch ({obligations.length})
         </h3>
       </div>
       <div className="divide-y divide-border">
         {loading ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Loading...
+            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+            Loading obligations...
           </div>
         ) : obligations.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
@@ -89,13 +106,18 @@ export function UpcomingObligations() {
                       {obligation.obligation_type} {obligation.tax_period ? `(${obligation.tax_period})` : ''}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Due: {new Date(obligation.next_due_date).toLocaleString()}
+                      Due: {new Date(obligation.next_due_date).toLocaleDateString()}
                     </p>
+                    {obligation.payment_status && (
+                      <p className="text-xs text-blue-600">
+                        Status: {obligation.payment_status}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <span
                   className={cn(
-                    "px-2 py-1 text-xs font-medium border",
+                    "px-2 py-1 text-xs font-medium border rounded",
                     status === "upcoming" &&
                       "border-border bg-secondary text-muted-foreground",
                     status === "due-soon" &&

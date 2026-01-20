@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./AppClean.tsx";
+import App from "./App-working.tsx";
 import "./index.css";
 import { dailyScheduler } from "./lib/dailyScheduler";
 

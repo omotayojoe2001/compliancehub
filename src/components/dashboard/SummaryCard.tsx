@@ -17,15 +17,15 @@ export function SummaryCard({
   variant = "default",
 }: SummaryCardProps) {
   return (
-    <div className="border border-border bg-card p-4">
+    <div className="border border-border bg-card p-3 sm:p-4">
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
+        <div className="space-y-0.5 sm:space-y-1">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {title}
           </p>
           <p
             className={cn(
-              "text-xl font-semibold",
+              "text-lg sm:text-xl font-semibold leading-tight",
               variant === "success" && "text-primary",
               variant === "warning" && "text-warning",
               variant === "error" && "text-destructive",
@@ -35,11 +35,11 @@ export function SummaryCard({
             {value}
           </p>
           {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-xs text-muted-foreground leading-tight">{description}</p>
           )}
         </div>
         {icon && (
-          <div className="text-muted-foreground">{icon}</div>
+          <div className="text-muted-foreground flex-shrink-0">{icon}</div>
         )}
       </div>
     </div>

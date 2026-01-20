@@ -101,54 +101,98 @@ export default function Reminders() {
               Reminders will appear here when we send them for your tax obligations.
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    What Tax
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    How We Sent It
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    When Planned
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    When Actually Sent
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Did It Work?
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        What Tax
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        How We Sent It
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        When Planned
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        When Actually Sent
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Did It Work?
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {reminderLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-secondary/50">
+                        <td className="px-4 py-3 text-sm font-medium text-foreground">
+                          {log.obligation_type || 'Tax Reminder'}
+                          {log.message_content && (
+                            <div className="text-xs text-gray-500 mt-1 italic">
+                              "{log.message_content.substring(0, 80)}..."
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            {log.reminder_type === "email" ? (
+                              <Mail className="h-4 w-4" />
+                            ) : (
+                              <MessageSquare className="h-4 w-4" />
+                            )}
+                            {log.reminder_type === "email" ? "Email" : "WhatsApp"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {new Date(log.scheduled_date).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {log.sent_date ? new Date(log.sent_date).toLocaleString() : "Not yet"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div
+                            className={cn(
+                              "inline-flex items-center gap-1 text-xs font-medium",
+                              log.status === "sent" && "text-green-600",
+                              log.status === "failed" && "text-red-600",
+                              log.status === "pending" && "text-yellow-600"
+                            )}
+                          >
+                            {log.status === "sent" && <CheckCircle className="h-3 w-3" />}
+                            {log.status === "failed" && <XCircle className="h-3 w-3" />}
+                            <span>
+                              {log.status === "sent" && "✓ Success"}
+                              {log.status === "failed" && "✗ Failed"}
+                              {log.status === "pending" && "⏳ Waiting"}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-border">
                 {reminderLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-secondary/50">
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {log.obligation_type || 'Tax Reminder'}
-                      {log.message_content && (
-                        <div className="text-xs text-gray-500 mt-1 italic">
-                          "{log.message_content.substring(0, 80)}..."
+                  <div key={log.id} className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-foreground">
+                          {log.obligation_type || 'Tax Reminder'}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                          {log.reminder_type === "email" ? (
+                            <Mail className="h-3 w-3" />
+                          ) : (
+                            <MessageSquare className="h-3 w-3" />
+                          )}
+                          {log.reminder_type === "email" ? "Email" : "WhatsApp"}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {log.reminder_type === "email" ? (
-                          <Mail className="h-4 w-4" />
-                        ) : (
-                          <MessageSquare className="h-4 w-4" />
-                        )}
-                        {log.reminder_type === "email" ? "Email" : "WhatsApp"}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(log.scheduled_date).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {log.sent_date ? new Date(log.sent_date).toLocaleString() : "Not yet"}
-                    </td>
-                    <td className="px-4 py-3">
                       <div
                         className={cn(
                           "inline-flex items-center gap-1 text-xs font-medium",
@@ -159,17 +203,20 @@ export default function Reminders() {
                       >
                         {log.status === "sent" && <CheckCircle className="h-3 w-3" />}
                         {log.status === "failed" && <XCircle className="h-3 w-3" />}
-                        <span>
-                          {log.status === "sent" && "✓ Success"}
-                          {log.status === "failed" && "✗ Failed"}
-                          {log.status === "pending" && "⏳ Waiting"}
+                        <span className="hidden sm:inline">
+                          {log.status === "sent" && "Success"}
+                          {log.status === "failed" && "Failed"}
+                          {log.status === "pending" && "Waiting"}
                         </span>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Sent: {log.sent_date ? new Date(log.sent_date).toLocaleDateString() : "Not yet"}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -187,45 +234,75 @@ export default function Reminders() {
               Add tax obligations to see scheduled reminders.
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Tax Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Due Date
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Reminder Scheduled
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Tax Type
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Due Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Reminder Scheduled
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {upcomingReminders.map((reminder) => (
+                      <tr key={reminder.id} className="hover:bg-secondary/50">
+                        <td className="px-4 py-3 text-sm font-medium text-foreground">
+                          {reminder.obligation_type}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {new Date(reminder.due_date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {new Date(reminder.next_reminder_date).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="inline-flex items-center gap-1 text-xs font-medium text-blue-600">
+                            <Clock className="h-3 w-3" />
+                            <span>Scheduled</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-border">
                 {upcomingReminders.map((reminder) => (
-                  <tr key={reminder.id} className="hover:bg-secondary/50">
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {reminder.obligation_type}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(reminder.due_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(reminder.next_reminder_date).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
+                  <div key={reminder.id} className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-foreground">
+                          {reminder.obligation_type}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Due: {new Date(reminder.due_date).toLocaleDateString()}
+                        </p>
+                      </div>
                       <div className="inline-flex items-center gap-1 text-xs font-medium text-blue-600">
                         <Clock className="h-3 w-3" />
-                        <span>Scheduled</span>
+                        <span className="hidden sm:inline">Scheduled</span>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Reminder: {new Date(reminder.next_reminder_date).toLocaleDateString()}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       </div>

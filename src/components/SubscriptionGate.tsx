@@ -12,6 +12,10 @@ interface SubscriptionGateProps {
 }
 
 export function SubscriptionGate({ children, feature }: SubscriptionGateProps) {
+  // TEMPORARILY DISABLED - Direct access for testing
+  return <>{children}</>
+  
+  /* COMMENTED OUT FOR TESTING
   const { user } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -140,4 +144,5 @@ export function SubscriptionGate({ children, feature }: SubscriptionGateProps) {
   }
 
   return <>{children}</>;
+  */
 }

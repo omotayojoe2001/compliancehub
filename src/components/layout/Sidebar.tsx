@@ -11,24 +11,35 @@ import {
   BookOpen,
   X,
   Receipt,
+  BookOpenCheck,
+  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useProfile } from "@/hooks/useProfileClean";
 
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
 export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const location = useLocation();
-  const { signOut } = useAuth();
-  const { profile } = useProfile();
+  // TEMPORARILY DISABLED AUTH
+  // const { signOut } = useAuth();
+  // const { profile } = useProfile();
 
-  // Check if user has Pro or Enterprise plan for expense management
-  const hasExpenseAccess = profile?.plan === 'pro' || profile?.plan === 'enterprise';
+  // TEMPORARILY SHOW ALL FEATURES FOR TESTING
+  const hasExpenseAccess = true; // profile?.plan === 'pro' || profile?.plan === 'enterprise';
+  const hasInvoicingAccess = true; // ['basic', 'pro', 'enterprise'].includes(profile?.plan || '');
 
   const navigation = [
     { name: "Home", href: "/dashboard", icon: LayoutDashboard },
     { name: "What We Watch", href: "/obligations", icon: FileText },
     { name: "Proof We Work", href: "/reminders", icon: Bell },
-    { name: "Tax Calculator", href: "/calculator", icon: Calculator },
+    { name: "Smart Calculator", href: "/calculator", icon: Calculator },
+    ...(hasExpenseAccess ? [{ name: "Digital Cashbook", href: "/cashbook", icon: BookOpenCheck }] : []),
+    ...(hasInvoicingAccess ? [{ name: "E-Invoicing", href: "/invoicing", icon: FileSpreadsheet }] : []),
     ...(hasExpenseAccess ? [{ name: "Expenses", href: "/expenses", icon: Receipt }] : []),
     { name: "How-To Guides", href: "/guides", icon: BookOpen },
     { name: "Payment", href: "/subscription", icon: CreditCard },
@@ -80,7 +91,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           );
         })}
         
-        {/* Logout button in navigation for mobile */}
+        {/* Logout button in navigation for mobile - TEMPORARILY DISABLED
         <button 
           onClick={() => {
             signOut();
@@ -91,9 +102,10 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           <LogOut className="h-4 w-4" />
           Logout
         </button>
+        */}
       </nav>
 
-      {/* Footer - Desktop only */}
+      {/* Footer - Desktop only - TEMPORARILY DISABLED
       <div className="hidden lg:block absolute bottom-0 left-0 right-0 border-t border-border p-3 bg-card">
         <button 
           onClick={() => signOut()}
@@ -103,6 +115,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           Logout
         </button>
       </div>
+      */}
     </aside>
   );
 }

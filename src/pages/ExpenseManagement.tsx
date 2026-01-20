@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Plus, Calendar, DollarSign, Tag, Trash2, Download, TrendingUp } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useAuth } from '@/contexts/AuthContextClean';
-import { freshDbService } from '@/lib/freshDbService';
+import { supabaseService } from '@/lib/supabaseService';
+import { realtimeService } from '@/lib/realtimeService';
 
 interface Expense {
   id: string;
@@ -14,6 +15,7 @@ interface Expense {
   category: string;
   description: string;
   receipt_url?: string;
+  user_id: string;
 }
 
 export default function ExpenseManagement() {
@@ -43,32 +45,42 @@ export default function ExpenseManagement() {
   ];
 
   useEffect(() => {
-    loadExpenses();
-  }, []);
+    if (user?.id) {
+      loadExpenses();
+      
+      // Subscribe to real-time updates
+      const subscription = realtimeService.subscribeToExpenses(
+        user.id,
+        (payload) => {
+          console.log('📊 Real-time expense update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setExpenses(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setExpenses(prev => 
+              prev.map(item => 
+                item.id === payload.new.id ? payload.new : item
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setExpenses(prev => 
+              prev.filter(item => item.id !== payload.old.id)
+            );
+          }
+        }
+      );
+
+      return () => subscription.unsubscribe();
+    }
+  }, [user?.id]);
 
   const loadExpenses = async () => {
-    if (!user) return;
+    if (!user?.id) return;
     
     setLoading(true);
     try {
-      // Mock data for now - in production, this would come from database
-      const mockExpenses: Expense[] = [
-        {
-          id: '1',
-          date: '2024-12-20',
-          amount: 15000,
-          category: 'Office Supplies',
-          description: 'Printer paper and ink cartridges'
-        },
-        {
-          id: '2',
-          date: '2024-12-18',
-          amount: 45000,
-          category: 'Professional Services',
-          description: 'Legal consultation fees'
-        }
-      ];
-      setExpenses(mockExpenses);
+      const data = await supabaseService.getExpenses(user.id);
+      setExpenses(data || []);
     } catch (error) {
       console.error('Error loading expenses:', error);
     } finally {
@@ -78,28 +90,36 @@ export default function ExpenseManagement() {
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user?.id) return;
 
-    const newExpense: Expense = {
-      id: Date.now().toString(),
+    const newExpense = {
+      user_id: user.id,
       date: formData.date,
       amount: parseFloat(formData.amount),
       category: formData.category,
       description: formData.description
     };
 
-    setExpenses([newExpense, ...expenses]);
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      amount: '',
-      category: '',
-      description: ''
-    });
-    setShowAddForm(false);
+    try {
+      await supabaseService.createExpense(newExpense);
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        amount: '',
+        category: '',
+        description: ''
+      });
+      setShowAddForm(false);
+    } catch (error) {
+      console.error('Error adding expense:', error);
+    }
   };
 
-  const handleDeleteExpense = (id: string) => {
-    setExpenses(expenses.filter(expense => expense.id !== id));
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      await supabaseService.deleteExpense(id);
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+    }
   };
 
   const getTotalExpenses = (period: 'month' | 'year') => {
@@ -132,7 +152,7 @@ export default function ExpenseManagement() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Expense Management</h1>
-              <p className="text-muted-foreground">Track and manage your business expenses</p>
+              <p className="text-muted-foreground">Track and manage your business expenses in real-time</p>
             </div>
             <Button onClick={() => setShowAddForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -141,39 +161,39 @@ export default function ExpenseManagement() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">This Month</p>
-                  <p className="text-2xl font-bold">{formatCurrency(getTotalExpenses('month'))}</p>
+                  <p className="text-xs text-muted-foreground">This Month</p>
+                  <p className="text-lg font-bold">{formatCurrency(getTotalExpenses('month'))}</p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Calendar className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Calendar className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">This Year</p>
-                  <p className="text-2xl font-bold">{formatCurrency(getTotalExpenses('year'))}</p>
+                  <p className="text-xs text-muted-foreground">This Year</p>
+                  <p className="text-lg font-bold">{formatCurrency(getTotalExpenses('year'))}</p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
+                <div className="p-2 bg-green-100 rounded-full">
+                  <TrendingUp className="h-4 w-4 text-green-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-4 md:col-span-1 col-span-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Expenses</p>
-                  <p className="text-2xl font-bold">{expenses.length}</p>
+                  <p className="text-xs text-muted-foreground">Total Expenses</p>
+                  <p className="text-lg font-bold">{expenses.length}</p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <DollarSign className="h-6 w-6 text-purple-600" />
+                <div className="p-2 bg-purple-100 rounded-full">
+                  <DollarSign className="h-4 w-4 text-purple-600" />
                 </div>
               </div>
             </Card>
@@ -257,7 +277,10 @@ export default function ExpenseManagement() {
             </div>
             
             {loading ? (
-              <div className="text-center py-8">Loading expenses...</div>
+              <div className="text-center py-8">
+                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                Loading expenses...
+              </div>
             ) : expenses.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No expenses recorded yet. Add your first expense to get started.

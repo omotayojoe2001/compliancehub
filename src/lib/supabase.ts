@@ -7,12 +7,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Create client with correct redirect URLs
+// Create client with simplified configuration for login fix
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: false,
+    autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    redirectTo: 'https://compliance.forecourtlimited.com/login'
+    redirectTo: window.location.origin + '/dashboard'
   }
 })

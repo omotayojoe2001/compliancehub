@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { supabaseService } from './supabaseService';
 import { subscriptionVerificationService } from './subscriptionVerificationService';
 
 declare global {
@@ -15,9 +16,9 @@ interface PaymentData {
 }
 
 const PLAN_PRICES = {
-  basic: 1290000,    // ₦12,900 (₦12,000 + 7.5% VAT) in kobo
-  pro: 3225000,      // ₦32,250 (₦30,000 + 7.5% VAT) in kobo
-  enterprise: 5375000 // ₦53,750 (₦50,000 + 7.5% VAT) in kobo
+  basic: 1200000,    // ₦12,000 in kobo (no VAT added)
+  pro: 3000000,      // ₦30,000 in kobo (no VAT added)
+  enterprise: 5000000 // ₦50,000 in kobo (no VAT added)
 };
 
 export const paymentService = {
@@ -40,73 +41,45 @@ export const paymentService = {
           // Handle async operations after resolving
           (async () => {
             try {
-              // Save subscription to database
+              // Get current user
               const { data: user } = await supabase.auth.getUser();
               console.log('💳 Current user:', user.user?.id);
               
               if (user.user) {
                 // Check if user already has a subscription
-                const { data: existingSubscription } = await supabase
-                  .from('subscriptions')
-                  .select('*')
-                  .eq('user_id', user.user.id)
-                  .maybeSingle();
-
+                const existingSubscription = await supabaseService.getSubscription(user.user.id);
                 console.log('💳 Existing subscription:', existingSubscription);
 
                 if (existingSubscription) {
                   // Update existing subscription
-                  const { error } = await supabase
-                    .from('subscriptions')
-                    .update({
-                      plan_type: plan,
-                      status: 'active',
-                      paystack_subscription_code: response.reference,
-                      amount: amount,
-                      next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                    })
-                    .eq('user_id', user.user.id);
-
-                  if (error) {
-                    console.error('💳 Subscription update failed:', error);
-                  } else {
-                    console.log('💳 Subscription updated successfully');
-                  }
+                  await supabaseService.updateSubscription(user.user.id, {
+                    plan_type: plan,
+                    status: 'active',
+                    paystack_subscription_code: response.reference,
+                    amount: amount,
+                    next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                  });
+                  console.log('💳 Subscription updated successfully');
                 } else {
                   // Create new subscription
-                  const { error } = await supabase
-                    .from('subscriptions')
-                    .insert({
-                      user_id: user.user.id,
-                      plan_type: plan,
-                      status: 'active',
-                      paystack_subscription_code: response.reference,
-                      amount: amount,
-                      next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                    });
-
-                  if (error) {
-                    console.error('💳 Subscription save failed:', error);
-                  } else {
-                    console.log('💳 Subscription saved successfully');
-                  }
+                  await supabaseService.createSubscription({
+                    user_id: user.user.id,
+                    plan_type: plan,
+                    status: 'active',
+                    paystack_subscription_code: response.reference,
+                    amount: amount,
+                    next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                  });
+                  console.log('💳 Subscription saved successfully');
                 }
                 
-                // CRITICAL: Update profile with CORRECT plan
+                // Update profile with correct plan
                 console.log('💳 Updating profile with plan:', plan);
-                const { error: profileError } = await supabase
-                  .from('profiles')
-                  .update({
-                    plan: plan, // Use the actual plan from payment
-                    subscription_status: 'active'
-                  })
-                  .eq('id', user.user.id);
-
-                if (profileError) {
-                  console.error('💳 Profile update failed:', profileError);
-                } else {
-                  console.log('💳 Profile updated successfully with plan:', plan);
-                }
+                await supabaseService.updateProfile(user.user.id, {
+                  plan: plan,
+                  subscription_status: 'active'
+                });
+                console.log('💳 Profile updated successfully with plan:', plan);
                 
                 // VERIFY SUBSCRIPTION UPDATE
                 console.log('🔍 Starting subscription verification...');

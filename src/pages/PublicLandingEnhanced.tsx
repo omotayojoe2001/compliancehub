@@ -286,11 +286,12 @@ export default function PublicLanding() {
               <h3 className="text-2xl font-bold mb-2">Basic</h3>
               <div className="text-4xl font-bold text-blue-600 mb-2">₦12,000<span className="text-lg text-gray-600">/month</span></div>
               <div className="text-sm text-gray-500 mb-4">+ 7.5% VAT = ₦12,900</div>
+              <div className="text-sm text-green-600 mb-4">Annual: ₦15,000/year (Save ₦39,800)</div>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />PAYE & VAT Calculator</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />VAT Calculator only</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />E-Invoicing with company logo</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Basic compliance tracking</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Email support</li>
               </ul>
               <Link to="/register">
                 <Button className="w-full py-3">Get Started</Button>
@@ -304,12 +305,13 @@ export default function PublicLanding() {
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
               <div className="text-4xl font-bold text-blue-600 mb-2">₦30,000<span className="text-lg text-gray-600">/month</span></div>
               <div className="text-sm text-gray-500 mb-4">+ 7.5% VAT = ₦32,250</div>
+              <div className="text-sm text-green-600 mb-4">Annual: ₦50,000/year (Save ₦336,000)</div>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />PAYE, VAT, Withholding, CIT Calculator</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />VAT, PAYE, CIT, Withholding Calculator</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Digital Cashbook with VAT auto-calculation</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />E-Invoicing with company logo</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Expense management system</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Advanced compliance tracking</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Priority support</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
               </ul>
               <Link to="/register">
                 <Button className="w-full py-3 bg-blue-600 hover:bg-blue-700">Get Started</Button>
@@ -320,12 +322,13 @@ export default function PublicLanding() {
               <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
               <div className="text-4xl font-bold text-blue-600 mb-2">₦50,000<span className="text-lg text-gray-600">/month</span></div>
               <div className="text-sm text-gray-500 mb-4">+ 7.5% VAT = ₦53,750</div>
+              <div className="text-sm text-green-600 mb-4">Custom Annual Pricing Available</div>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Everything in Pro + Capital Gains</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />All Pro features + Capital Gains Calculator</li>
                 <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />In-house Tax Consultant</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Advanced expense management</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />WhatsApp + Email alerts</li>
-                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Dedicated account manager</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Advanced Digital Cashbook</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Priority E-Invoicing</li>
+                <li className="flex items-center gap-3"><Check className="h-5 w-5 text-green-600" />Optional Filing Service (+₦10,000/month)</li>
               </ul>
               <Link to="/register">
                 <Button className="w-full py-3">Get Started</Button>

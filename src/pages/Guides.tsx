@@ -193,7 +193,7 @@ export default function Guides() {
           </div>
         </HelpWrapper>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {complianceGuides.map((guide) => (
             <Card key={guide.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => setSelectedGuide(guide)}>
@@ -206,13 +206,13 @@ export default function Guides() {
                 </div>
               </div>
               
-              <h3 className="font-semibold mb-2">{guide.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{guide.description}</p>
+              <h3 className="font-semibold mb-2 text-sm sm:text-base">{guide.title}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">{guide.description}</p>
               
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {guide.estimatedTime}
+                  <span className="truncate">{guide.estimatedTime}</span>
                 </div>
                 <Badge className={getDifficultyColor(guide.difficulty)} variant="outline">
                   {guide.difficulty}
@@ -221,13 +221,13 @@ export default function Guides() {
               
               <div className="mt-3 pt-3 border-t">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground truncate">
                     {guide.steps.length} steps • {guide.requirements.length} requirements
                   </p>
                   {guide.steps.some(step => step.videoUrl) && (
                     <div className="flex items-center gap-1 text-xs text-blue-600">
                       <Play className="h-3 w-3" />
-                      Video included
+                      <span className="hidden sm:inline">Video included</span>
                     </div>
                   )}
                 </div>

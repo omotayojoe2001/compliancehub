@@ -97,41 +97,87 @@ export default function Obligations() {
             </div>
           </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Tax Type & Period
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Due Date
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Tax Type & Period
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Due Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {obligations.map((obligation) => (
+                      <tr key={obligation.id} className="hover:bg-secondary/50">
+                        <td className="px-4 py-3 text-sm font-medium text-foreground">
+                          {obligation.obligation_type}
+                          {obligation.tax_period && (
+                            <div className="text-xs text-muted-foreground">
+                              Period: {obligation.tax_period}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {new Date(obligation.next_due_date).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              "inline-flex px-2 py-1 text-xs font-medium border",
+                              obligation.is_active
+                                ? "border-green-200 bg-green-100 text-green-800"
+                                : "border-gray-200 bg-gray-100 text-gray-600"
+                            )}
+                          >
+                            {obligation.is_active ? "✓ Watching" : "⏸ Paused"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteObligation(obligation.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-border">
                 {obligations.map((obligation) => (
-                  <tr key={obligation.id} className="hover:bg-secondary/50">
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {obligation.obligation_type}
-                      {obligation.tax_period && (
-                        <div className="text-xs text-muted-foreground">
-                          Period: {obligation.tax_period}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(obligation.next_due_date).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
+                  <div key={obligation.id} className="p-3 hover:bg-secondary/50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-foreground">
+                          {obligation.obligation_type}
+                        </h4>
+                        {obligation.tax_period && (
+                          <p className="text-xs text-muted-foreground">
+                            Period: {obligation.tax_period}
+                          </p>
+                        )}
+                      </div>
                       <span
                         className={cn(
-                          "inline-flex px-2 py-1 text-xs font-medium border",
+                          "inline-flex px-2 py-1 text-xs font-medium border rounded",
                           obligation.is_active
                             ? "border-green-200 bg-green-100 text-green-800"
                             : "border-gray-200 bg-gray-100 text-gray-600"
@@ -139,22 +185,25 @@ export default function Obligations() {
                       >
                         {obligation.is_active ? "✓ Watching" : "⏸ Paused"}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">
+                        Due: {new Date(obligation.next_due_date).toLocaleDateString()}
+                      </p>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteObligation(obligation.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300 h-7 px-2"
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
+                        <Trash2 className="h-3 w-3 mr-1" />
                         Delete
                       </Button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       </div>

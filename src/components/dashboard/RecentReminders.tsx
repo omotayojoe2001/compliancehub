@@ -1,8 +1,9 @@
 import { Mail, MessageSquare, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContextClean";
+import { supabaseService } from "@/lib/supabaseService";
+import { realtimeService } from "@/lib/realtimeService";
 
 interface Reminder {
   id: string;
@@ -10,6 +11,7 @@ interface Reminder {
   reminder_type: string;
   sent_date: string;
   status: string;
+  message_content?: string;
   tax_obligations?: {
     obligation_type: string;
   };
@@ -22,51 +24,59 @@ export function RecentReminders() {
 
   useEffect(() => {
     if (user?.id) {
-      fetchReminders();
+      loadReminders();
+      
+      // Subscribe to real-time updates
+      const subscription = realtimeService.subscribeToReminders(
+        user.id,
+        (payload) => {
+          console.log('📡 Real-time reminder update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setReminders(prev => [payload.new, ...prev.slice(0, 19)]); // Keep only 20 latest
+          } else if (payload.eventType === 'UPDATE') {
+            setReminders(prev => 
+              prev.map(item => 
+                item.id === payload.new.id ? payload.new : item
+              )
+            );
+          }
+        }
+      );
+
+      return () => subscription.unsubscribe();
     }
   }, [user?.id]);
 
-  const fetchReminders = async () => {
+  const loadReminders = async () => {
+    if (!user?.id) return;
+    
     try {
-      const { data, error } = await supabase
-        .from('reminder_logs')
-        .select(`
-          *,
-          tax_obligations(obligation_type)
-        `)
-        .eq('user_id', user?.id)
-        .order('sent_date', { ascending: false })
-        .limit(10);
-
-      if (!error && data) {
-        setReminders(data);
-      } else {
-        console.error('Reminders error:', error);
-        setReminders([]);
-      }
+      const data = await supabaseService.getReminders(user.id);
+      setReminders(data || []);
     } catch (error) {
-      console.error('Reminders fetch failed:', error);
+      console.error('Failed to load reminders:', error);
       setReminders([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-
 
   return (
     <div className="border border-border bg-card">
       <div className="border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">
-          Recent Reminders
+          Proof We Work ({reminders.length})
         </h3>
       </div>
       <div className="divide-y divide-border">
         {loading ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Loading...
+          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+            Loading reminders...
           </div>
         ) : reminders.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
             No reminders sent yet.
             <br />
             Add tax periods and reminders will appear here when sent.
@@ -75,43 +85,43 @@ export function RecentReminders() {
           reminders.map((reminder) => (
             <div
               key={reminder.id}
-              className="flex items-center justify-between px-4 py-3"
+              className="flex items-start justify-between px-3 py-2 gap-2"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
                 {reminder.reminder_type === "email" ? (
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <Mail className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                 ) : (
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  <MessageSquare className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                 )}
-                <div>
-                  <p className="text-sm font-medium text-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-foreground truncate">
                     {reminder.tax_obligations?.obligation_type || 'Tax Reminder'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(reminder.sent_date).toLocaleString()} • {reminder.reminder_type === "email" ? "Email" : "WhatsApp"}
+                    {new Date(reminder.sent_date).toLocaleDateString()} • {reminder.reminder_type === "email" ? "Email" : "WhatsApp"}
                   </p>
                   {reminder.message_content && (
-                    <p className="text-xs text-gray-500 mt-1 italic">
-                      "{reminder.message_content.substring(0, 60)}..."
+                    <p className="text-xs text-gray-500 mt-1 italic truncate">
+                      "{reminder.message_content.substring(0, 40)}..."
                     </p>
                   )}
                 </div>
               </div>
               <div
                 className={cn(
-                  "flex items-center gap-1 text-xs font-medium",
+                  "flex items-center gap-1 text-xs font-medium flex-shrink-0",
                   reminder.status === "sent" ? "text-primary" : "text-destructive"
                 )}
               >
                 {reminder.status === "sent" ? (
                   <>
                     <CheckCircle className="h-3 w-3" />
-                    Sent
+                    <span className="hidden sm:inline">Sent</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-3 w-3" />
-                    Failed
+                    <span className="hidden sm:inline">Failed</span>
                   </>
                 )}
               </div>
