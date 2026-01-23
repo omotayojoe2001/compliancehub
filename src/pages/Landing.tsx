@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Bell,
@@ -116,6 +116,8 @@ const targetAudience = [
 ];
 
 export default function Landing() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -154,14 +156,12 @@ export default function Landing() {
             </a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">
-                Login
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm">Get Started</Button>
-            </Link>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+              Login
+            </Button>
+            <Button size="sm" onClick={() => navigate('/register')}>
+              Get Started
+            </Button>
           </div>
         </div>
       </header>
@@ -183,12 +183,10 @@ export default function Landing() {
               filing guides.
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/register">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
+                Start Free Trial
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
               <a href="#calculator">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
                   Try Tax Calculator

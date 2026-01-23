@@ -55,36 +55,51 @@ export const reminderService = {
   },
 
   // Manually add a tax obligation for a specific period (keep existing function)
-  async addTaxObligation(userId: string, obligationType: string, taxPeriod: string, userPlan: string = 'free') {
-    // Check plan limits
-    const { data: existingObligations } = await supabase
+  async addTaxObligation(userId: string, obligationType: string, taxPeriod: string, userPlan: string = 'free', companyId?: string) {
+    // Check plan limits - count obligations for this specific company only
+    let query = supabase
       .from('tax_obligations')
       .select('*')
       .eq('user_id', userId);
     
+    // If company_id is provided, only count obligations for this company
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    const { data: existingObligations } = await query;
     const obligationCount = existingObligations?.length || 0;
     
+    console.log(`📊 Plan check: ${userPlan} plan, ${obligationCount} existing obligations for company ${companyId}`);
+    
     if (!planRestrictionsService.canCreateObligation(userPlan, obligationCount)) {
-      throw new Error('Plan limit reached. Upgrade to add more tax obligations.');
+      throw new Error(`Plan limit reached. Your ${userPlan} plan allows limited obligations. Upgrade to add more.`);
     }
     
     // Calculate due date based on tax period
     const dueDate = this.calculateDueDateForPeriod(obligationType, taxPeriod);
     
+    const obligationData: any = {
+      user_id: userId,
+      obligation_type: obligationType,
+      frequency: obligationType === 'CAC' ? 'yearly' : 'monthly',
+      next_due_date: dueDate,
+      tax_period: taxPeriod,
+      is_active: true
+    };
+    
+    // Add company_id if provided
+    if (companyId) {
+      obligationData.company_id = companyId;
+    }
+    
     const { error } = await supabase
       .from('tax_obligations')
-      .insert({
-        user_id: userId,
-        obligation_type: obligationType,
-        frequency: obligationType === 'CAC' ? 'yearly' : 'monthly',
-        next_due_date: dueDate,
-        tax_period: taxPeriod,
-        is_active: true
-      });
+      .insert(obligationData);
     
     if (error) throw error;
     
-    console.log(`📅 Added ${obligationType} obligation for period ${taxPeriod}`);
+    console.log(`📅 Added ${obligationType} obligation for period ${taxPeriod}${companyId ? ` (Company: ${companyId})` : ''}`);
   },
 
   // Manually add a tax obligation for ongoing monitoring

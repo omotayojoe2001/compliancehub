@@ -2,6 +2,7 @@ import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
+import { useCompany } from "@/contexts/CompanyContext";
 import { supabaseService } from "@/lib/supabaseService";
 import { realtimeService } from "@/lib/realtimeService";
 
@@ -15,47 +16,31 @@ interface Obligation {
 
 export function UpcomingObligations() {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
+    console.log('📊 UpcomingObligations effect:', { userId: user?.id, companyId: currentCompany?.id, companyName: currentCompany?.name });
+    if (user?.id && currentCompany?.id) {
       loadObligations();
-      
-      // Subscribe to real-time updates
-      const subscription = realtimeService.subscribeToObligations(
-        user.id,
-        (payload) => {
-          console.log('📡 Real-time obligation update:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            setObligations(prev => [payload.new, ...prev]);
-          } else if (payload.eventType === 'UPDATE') {
-            setObligations(prev => 
-              prev.map(item => 
-                item.id === payload.new.id ? payload.new : item
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setObligations(prev => 
-              prev.filter(item => item.id !== payload.old.id)
-            );
-          }
-        }
-      );
-
-      return () => subscription.unsubscribe();
+    } else {
+      setObligations([]);
+      setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, currentCompany?.id]);
 
   const loadObligations = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
+    
+    console.log('📊 Loading obligations for company:', currentCompany.name, currentCompany.id);
     
     try {
-      const data = await supabaseService.getObligations(user.id);
+      const data = await supabaseService.getObligations(user.id, currentCompany.id);
       setObligations(data || []);
+      console.log('✅ Loaded', data?.length || 0, 'obligations for', currentCompany.name);
     } catch (error) {
-      console.error('Failed to load obligations:', error);
+      console.error('❌ Failed to load obligations:', error);
       setObligations([]);
     } finally {
       setLoading(false);

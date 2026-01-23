@@ -33,17 +33,13 @@ export function ProfileSetup() {
       
       // Simple direct insert/upsert approach
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .upsert({
           id: user?.id,
           business_name: formData.businessName,
           phone: formData.phone,
-          email: user?.email || '',
-          cac_date: formData.cacDate || null,
-          vat_status: formData.vatStatus,
-          paye_status: formData.payeStatus,
-          plan: 'basic',
-          subscription_status: 'inactive'
+          cac_number: formData.cacDate || null, // Use cac_number for CAC registration
+          created_at: new Date().toISOString()
         }, {
           onConflict: 'id'
         })

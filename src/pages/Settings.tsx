@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextClean";
+import { useCompany } from "@/contexts/CompanyContext";
 import { useProfile } from "@/hooks/useProfile";
 import { dataExportService } from "@/lib/dataExportService";
 import { supabase } from "@/lib/supabase";
@@ -12,9 +13,10 @@ export default function Settings() {
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const { profile, loading } = useProfile();
   
-  // Form states - use real profile data
+  // Form states - use current company data
   const [profileData, setProfileData] = useState({
     full_name: '',
     email: '',
@@ -28,23 +30,57 @@ export default function Settings() {
     industry: ''
   });
 
-  // Update form data when profile loads
+  // Update form data when current company changes
   useEffect(() => {
+    console.log('⚙️ SETTINGS DEBUG - Company changed:', {
+      currentCompany: currentCompany?.name || 'none',
+      companyId: currentCompany?.id || 'none',
+      companyTin: currentCompany?.tin || 'none'
+    });
+    
+    if (currentCompany && user) {
+      setBusinessData({
+        business_name: currentCompany.name || '',
+        rc_number: '',
+        tin: currentCompany.tin || '',
+        industry: ''
+      });
+      
+      // Load additional company data from database
+      loadCompanyData();
+    }
+    
     if (profile && user) {
       setProfileData({
         full_name: profile.full_name || profile.business_name || '',
         email: user.email || '',
         phone: profile.phone || ''
       });
-      
-      setBusinessData({
-        business_name: profile.business_name || '',
-        rc_number: profile.rc_number || '',
-        tin: profile.tin || '',
-        industry: profile.industry || ''
-      });
     }
-  }, [profile, user]);
+  }, [currentCompany, profile, user]);
+
+  const loadCompanyData = async () => {
+    if (!currentCompany?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('company_profiles')
+        .select('*')
+        .eq('id', currentCompany.id)
+        .single();
+      
+      if (data && !error) {
+        setBusinessData({
+          business_name: data.company_name || '',
+          rc_number: data.cac_number || '',
+          tin: data.tin || '',
+          industry: data.business_type || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading company data:', error);
+    }
+  };
 
 
 
@@ -69,9 +105,9 @@ export default function Settings() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
-          full_name: profileData.full_name,
+          business_name: profileData.full_name, // Use business_name instead of full_name
           phone: profileData.phone
         })
         .eq('id', user.id);
@@ -86,23 +122,28 @@ export default function Settings() {
   };
 
   const saveBusiness = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
     
     setSaving(true);
     try {
+      // Update the specific company, not the primary one
       const { error } = await supabase
-        .from('profiles')
+        .from('company_profiles')
         .update({
-          business_name: businessData.business_name,
-          rc_number: businessData.rc_number,
+          company_name: businessData.business_name,
+          cac_number: businessData.rc_number,
           tin: businessData.tin,
-          industry: businessData.industry
+          business_type: businessData.industry
         })
-        .eq('id', user.id);
+        .eq('id', currentCompany.id);
       
       if (error) throw error;
       alert('Business details updated successfully!');
+      
+      // Reload company data instead of full page refresh
+      await loadCompanyData();
     } catch (error) {
+      console.error('Update error:', error);
       alert('Failed to update business details');
     } finally {
       setSaving(false);

@@ -2,12 +2,17 @@ import { supabase } from './supabase';
 
 export const supabaseService = {
   // Tax Obligations
-  async getObligations(userId: string) {
-    const { data, error } = await supabase
+  async getObligations(userId: string, companyId?: string) {
+    let query = supabase
       .from('tax_obligations')
       .select('*')
-      .eq('user_id', userId)
-      .order('next_due_date', { ascending: true });
+      .eq('user_id', userId);
+    
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    const { data, error } = await query.order('next_due_date', { ascending: true });
     
     if (error) throw error;
     return data;
@@ -46,14 +51,17 @@ export const supabaseService = {
   },
 
   // Reminders
-  async getReminders(userId: string) {
-    const { data, error } = await supabase
+  async getReminders(userId: string, companyId?: string) {
+    let query = supabase
       .from('reminder_logs')
-      .select(`
-        *,
-        tax_obligations(obligation_type)
-      `)
-      .eq('user_id', userId)
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    const { data, error } = await query
       .order('sent_date', { ascending: false })
       .limit(20);
     
@@ -75,20 +83,55 @@ export const supabaseService = {
   // Profile
   async getProfile(userId: string) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', userId)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  },
+
+  async updateProfile(userId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
       .single();
     
     if (error) throw error;
     return data;
   },
 
-  async updateProfile(userId: string, updates: any) {
+  // Companies
+  async getUserCompanies(userId: string) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('company_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .order('is_primary', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async createCompany(company: any) {
+    const { data, error } = await supabase
+      .from('company_profiles')
+      .insert(company)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateCompany(companyId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('company_profiles')
       .update(updates)
-      .eq('id', userId)
+      .eq('id', companyId)
       .select()
       .single();
     
@@ -211,12 +254,17 @@ export const supabaseService = {
   },
 
   // Cashbook
-  async getCashbookEntries(userId: string) {
-    const { data, error } = await supabase
+  async getCashbookEntries(userId: string, companyId?: string) {
+    let query = supabase
       .from('cashbook_entries')
       .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false });
+      .eq('user_id', userId);
+    
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    const { data, error } = await query.order('date', { ascending: false });
     
     if (error) throw error;
     return data;

@@ -13,6 +13,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    redirectTo: window.location.origin + '/dashboard'
+    redirectTo: 'https://compliance.forecourtlimited.com/dashboard'
   }
 })

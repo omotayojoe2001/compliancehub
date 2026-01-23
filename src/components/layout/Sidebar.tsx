@@ -25,13 +25,11 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const location = useLocation();
-  // TEMPORARILY DISABLED AUTH
-  // const { signOut } = useAuth();
-  // const { profile } = useProfile();
+  const { signOut } = useAuth();
+  const { profile } = useProfile();
 
-  // TEMPORARILY SHOW ALL FEATURES FOR TESTING
-  const hasExpenseAccess = true; // profile?.plan === 'pro' || profile?.plan === 'enterprise';
-  const hasInvoicingAccess = true; // ['basic', 'pro', 'enterprise'].includes(profile?.plan || '');
+  const hasExpenseAccess = true;
+  const hasInvoicingAccess = true;
 
   const navigation = [
     { name: "Home", href: "/dashboard", icon: LayoutDashboard },
@@ -91,18 +89,17 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           );
         })}
         
-        {/* Logout button in navigation for mobile - TEMPORARILY DISABLED
+        {/* Logout button */}
         <button 
           onClick={() => {
             signOut();
             onClose?.();
           }}
-          className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground rounded-md lg:hidden"
+          className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground rounded-md"
         >
           <LogOut className="h-4 w-4" />
           Logout
         </button>
-        */}
       </nav>
 
       {/* Footer - Desktop only - TEMPORARILY DISABLED

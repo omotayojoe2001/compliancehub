@@ -26,6 +26,8 @@ interface UpcomingReminder {
   status: string;
 }
 
+import { SubscriptionGate } from "@/components/SubscriptionGate";
+
 export default function Reminders() {
   const { user } = useAuth();
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
@@ -73,7 +75,8 @@ export default function Reminders() {
 
 
   return (
-    <DashboardLayout>
+    <SubscriptionGate feature="Reminders">
+      <DashboardLayout>
       <div className="space-y-6">
         <HelpWrapper
           helpTitle="Why is this important?"
@@ -306,6 +309,7 @@ export default function Reminders() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+      </DashboardLayout>
+    </SubscriptionGate>
   );
 }

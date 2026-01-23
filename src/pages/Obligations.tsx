@@ -2,10 +2,12 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
 import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextClean";
+import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle } from "lucide-react";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 
 interface Obligation {
   id: string;
@@ -18,31 +20,49 @@ interface Obligation {
 
 export default function Obligations() {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
+    console.log('🔄 Obligations effect triggered:', { userId: user?.id, companyId: currentCompany?.id, companyName: currentCompany?.name });
+    if (user?.id && currentCompany?.id) {
       fetchObligations();
+    } else {
+      setObligations([]);
+      setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, currentCompany?.id]);
 
   const fetchObligations = async () => {
+    if (!currentCompany?.id) {
+      console.log('🚫 No company selected, clearing obligations');
+      setObligations([]);
+      setLoading(false);
+      return;
+    }
+    
+    console.log('📊 Fetching obligations for company:', currentCompany.name, currentCompany.id);
+    
     try {
       const { data, error } = await supabase
         .from('tax_obligations')
         .select('*')
         .eq('user_id', user?.id)
+        .eq('company_id', currentCompany.id)
         .order('next_due_date', { ascending: true });
+
+      console.log('📊 Obligations query result:', { data, error, companyId: currentCompany.id });
 
       if (!error && data) {
         setObligations(data);
+        console.log('✅ Loaded', data.length, 'obligations for', currentCompany.name);
       } else {
-        console.error('Obligations error:', error);
+        console.error('❌ Obligations error:', error);
         setObligations([]);
       }
     } catch (error) {
-      console.error('Obligations fetch failed:', error);
+      console.error('❌ Obligations fetch failed:', error);
       setObligations([]);
     }
     setLoading(false);
@@ -64,7 +84,8 @@ export default function Obligations() {
   };
 
   return (
-    <DashboardLayout>
+    <SubscriptionGate feature="Tax Obligations">
+      <DashboardLayout>
       <div className="space-y-6">
         <HelpWrapper
           helpTitle="What is this page?"
@@ -207,6 +228,7 @@ export default function Obligations() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+      </DashboardLayout>
+    </SubscriptionGate>
   );
 }

@@ -9,6 +9,7 @@ import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { WelcomePopup } from "@/components/onboarding/WelcomePopup";
 import { useProfile } from "@/hooks/useProfile";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
+import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -17,11 +18,14 @@ export default function Dashboard() {
   
   const { profile, loading } = useProfile();
   const { plan, limits, getObligationLimitMessage } = usePlanRestrictions();
+  const { currentCompany } = useCompany();
   const navigate = useNavigate();
 
   console.log('🏠 Dashboard state check:', {
     hasProfile: !!profile,
     profileBusinessName: profile?.business_name,
+    currentCompany: currentCompany?.name,
+    companyId: currentCompany?.id,
     loading,
     plan,
     timestamp: new Date().toISOString()
@@ -104,8 +108,8 @@ export default function Dashboard() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryCard
               title="Business"
-              value={profile?.business_name || "Loading..."}
-              description={`Phone: ${profile?.phone || "N/A"}`}
+              value={currentCompany?.name || profile?.business_name || "Loading..."}
+              description={`TIN: ${currentCompany?.tin || "Not set"}`}
               icon={<Building2 className="h-5 w-5" />}
             />
             <SummaryCard

@@ -62,7 +62,9 @@ export default function DigitalCashbook() {
   const outflowCategories = [
     'Office Supplies', 'Travel & Transport', 'Professional Services', 'Marketing & Advertising',
     'Utilities', 'Rent', 'Salaries & Wages', 'Equipment Purchase', 'Inventory', 'Insurance',
-    'Bank Charges', 'Taxes', 'Loan Payments', 'Other Expenses'
+    'Bank Charges', 'Taxes', 'Loan Payments', 'School Fees', 'Logistics', 'Salary',
+    'Medical Expenses', 'Legal Fees', 'Maintenance & Repairs', 'Fuel & Vehicle Expenses',
+    'Communication', 'Training & Development', 'Entertainment', 'Donations', 'Other Expenses'
   ];
 
   const paymentMethods = ['Cash', 'Bank Transfer', 'Cheque', 'Mobile Money', 'Card Payment', 'Online Transfer'];

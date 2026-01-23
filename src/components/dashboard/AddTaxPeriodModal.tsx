@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { HelpTooltip } from '@/components/ui/HelpTooltip';
 import { useAuth } from '@/contexts/AuthContextClean';
+import { useCompany } from '@/contexts/CompanyContext';
 import { useProfile } from '@/hooks/useProfileClean';
 import { reminderService } from '@/lib/reminderService';
 import { Plus, X } from 'lucide-react';
@@ -17,6 +18,7 @@ interface AddTaxPeriodModalProps {
 
 export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodModalProps) {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const { profile } = useProfile();
   const [loading, setLoading] = useState(false);
   const [obligationType, setObligationType] = useState('');
@@ -24,7 +26,12 @@ export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id || !obligationType || !taxPeriod) return;
+    if (!user?.id || !currentCompany?.id || !obligationType || !taxPeriod) {
+      alert('Please ensure you have selected a company and filled all fields');
+      return;
+    }
+
+    console.log('💾 Adding tax obligation for company:', currentCompany.name, currentCompany.id);
 
     setLoading(true);
     try {
@@ -32,14 +39,17 @@ export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodMo
         user.id, 
         obligationType, 
         taxPeriod, 
-        profile?.plan || 'free'
+        profile?.plan || 'free',
+        currentCompany.id  // Pass company ID
       );
       
+      console.log('✅ Tax obligation added successfully for', currentCompany.name);
       setObligationType('');
       setTaxPeriod('');
       onSuccess();
       onClose();
     } catch (error) {
+      console.error('❌ Failed to add tax obligation:', error);
       alert(error instanceof Error ? error.message : 'Failed to add obligation');
     }
     setLoading(false);

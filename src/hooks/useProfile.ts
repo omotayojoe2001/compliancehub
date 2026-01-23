@@ -73,7 +73,7 @@ export function useProfile() {
       console.log('👤 About to call supabase.from(profiles)...');
       
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('*')
         .eq('id', user?.id)
         .maybeSingle()
