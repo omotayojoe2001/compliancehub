@@ -51,78 +51,58 @@ export function useProfile() {
   const fetchProfile = async () => {
     console.log('👤 fetchProfile STARTING for user:', user?.id);
     
-    // Set timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      console.log('👤 Database query timeout - using fallback');
-      const fallbackProfile = {
-        id: user?.id || '',
-        business_name: 'Your Business',
-        phone: '',
-        email: user?.email || '',
-        cac_date: null,
-        vat_status: false,
-        paye_status: false,
-        plan: 'basic',
-        subscription_status: 'active'
-      };
-      setProfile(fallbackProfile);
-      setLoading(false);
-    }, 3000); // 3 second timeout
-    
     try {
-      console.log('👤 About to call supabase.from(profiles)...');
+      console.log('👤 About to call supabase.from(user_profiles)...');
       
-      const { data, error } = await supabase
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user?.id)
-        .maybeSingle()
-
-      clearTimeout(timeoutId);
+        .maybeSingle();
       
-      console.log('👤 Supabase query COMPLETED:', {
-        hasData: !!data,
-        data: data,
-        hasError: !!error,
-        error: error,
+      // Get subscription data
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      
+      console.log('👤 Database queries COMPLETED:', {
+        hasProfileData: !!profileData,
+        profileData,
+        hasSubscriptionData: !!subscriptionData,
+        subscriptionData,
+        profileError,
+        subscriptionError,
         userId: user?.id,
         timestamp: new Date().toISOString()
       });
 
-      if (error) {
-        console.error('👤 Profile fetch ERROR:', error);
-        const fallbackProfile = {
-          id: user?.id || '',
-          business_name: 'Your Business',
-          phone: '',
-          email: user?.email || '',
-          cac_date: null,
-          vat_status: false,
-          paye_status: false,
-          plan: 'basic',
-          subscription_status: 'active'
-        };
-        setProfile(fallbackProfile);
-      } else if (data) {
-        console.log('👤 Profile FOUND, setting profile:', data);
-        setProfile(data);
-      } else {
-        console.log('👤 No profile data returned, using fallback');
-        const fallbackProfile = {
-          id: user?.id || '',
-          business_name: 'Your Business',
-          phone: '',
-          email: user?.email || '',
-          cac_date: null,
-          vat_status: false,
-          paye_status: false,
-          plan: 'basic',
-          subscription_status: 'active'
-        };
-        setProfile(fallbackProfile);
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('👤 Profile fetch ERROR:', profileError);
       }
+      
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        console.error('👤 Subscription fetch ERROR:', subscriptionError);
+      }
+      
+      // Combine profile and subscription data
+      const combinedProfile = {
+        id: user?.id || '',
+        business_name: profileData?.business_name || 'Your Business',
+        phone: profileData?.phone || '',
+        email: user?.email || '',
+        cac_date: profileData?.cac_date || null,
+        vat_status: profileData?.vat_status || false,
+        paye_status: profileData?.paye_status || false,
+        plan: subscriptionData?.plan_type || 'free',
+        subscription_status: subscriptionData?.status || 'inactive'
+      };
+      
+      console.log('👤 Setting combined profile:', combinedProfile);
+      setProfile(combinedProfile);
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error('👤 fetchProfile EXCEPTION:', error);
       const fallbackProfile = {
         id: user?.id || '',
@@ -132,8 +112,8 @@ export function useProfile() {
         cac_date: null,
         vat_status: false,
         paye_status: false,
-        plan: 'basic',
-        subscription_status: 'active'
+        plan: 'free',
+        subscription_status: 'inactive'
       };
       setProfile(fallbackProfile);
     } finally {

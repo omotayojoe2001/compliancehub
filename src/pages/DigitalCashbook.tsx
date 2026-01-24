@@ -5,20 +5,20 @@ import { Card } from '@/components/ui/card';
 import { Plus, TrendingUp, TrendingDown, Calculator, FileText, Download, Calendar, Search, BarChart3, ArrowUpDown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useAuth } from '@/contexts/AuthContextClean';
+import { useCompany } from '@/contexts/CompanyContext';
 import { supabaseService } from '@/lib/supabaseService';
 import { realtimeService } from '@/lib/realtimeService';
 
 interface CashbookEntry {
   id: string;
   date: string;
-  type: 'inflow' | 'outflow';
+  entry_type: 'income' | 'expense';
   amount: number;
   description: string;
   category: string;
-  vatApplicable: boolean;
-  vatAmount?: number;
-  paymentMethod: string;
-  reference?: string;
+  vat_applicable: boolean;
+  vat_amount?: number;
+  payment_method: string;
   user_id: string;
 }
 
@@ -31,6 +31,7 @@ interface Account {
 
 export default function DigitalCashbook() {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const [entries, setEntries] = useState<CashbookEntry[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([
     { id: '1', name: 'Cash on Hand', type: 'cash', balance: 0 },
@@ -45,7 +46,7 @@ export default function DigitalCashbook() {
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    type: 'inflow' as 'inflow' | 'outflow',
+    type: 'income' as 'income' | 'expense',
     amount: '',
     description: '',
     category: '',
@@ -70,41 +71,19 @@ export default function DigitalCashbook() {
   const paymentMethods = ['Cash', 'Bank Transfer', 'Cheque', 'Mobile Money', 'Card Payment', 'Online Transfer'];
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && currentCompany?.id) {
       loadCashbookEntries();
-      
-      // Subscribe to real-time updates
-      const subscription = realtimeService.subscribeToCashbook(
-        user.id,
-        (payload) => {
-          console.log('💰 Real-time cashbook update:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            setEntries(prev => [payload.new, ...prev]);
-          } else if (payload.eventType === 'UPDATE') {
-            setEntries(prev => 
-              prev.map(item => 
-                item.id === payload.new.id ? payload.new : item
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setEntries(prev => 
-              prev.filter(item => item.id !== payload.old.id)
-            );
-          }
-        }
-      );
-
-      return () => subscription.unsubscribe();
+    } else {
+      setEntries([]);
     }
-  }, [user?.id]);
+  }, [user?.id, currentCompany?.id]);
 
   const loadCashbookEntries = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
     
     setLoading(true);
     try {
-      const data = await supabaseService.getCashbookEntries(user.id);
+      const data = await supabaseService.getCashbookEntries(user.id, currentCompany.id);
       setEntries(data || []);
     } catch (error) {
       console.error('Error loading cashbook entries:', error);
@@ -115,29 +94,29 @@ export default function DigitalCashbook() {
 
   const handleAddEntry = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
     
     const amount = parseFloat(formData.amount);
-    const vatAmount = formData.vatApplicable && formData.type === 'inflow' ? amount * 0.075 : 0;
+    const vatAmount = formData.vatApplicable && formData.type === 'income' ? amount * 0.075 : 0;
     
     const newEntry = {
       user_id: user.id,
+      company_id: currentCompany.id,
       date: formData.date,
-      type: formData.type,
+      entry_type: formData.type,
       amount,
       description: formData.description,
       category: formData.category,
       vat_applicable: formData.vatApplicable,
       vat_amount: vatAmount,
-      payment_method: formData.paymentMethod,
-      reference: formData.reference
+      payment_method: formData.paymentMethod
     };
 
     try {
       await supabaseService.createCashbookEntry(newEntry);
       setFormData({
         date: new Date().toISOString().split('T')[0],
-        type: 'inflow',
+        type: 'income',
         amount: '',
         description: '',
         category: '',
@@ -146,6 +125,7 @@ export default function DigitalCashbook() {
         reference: ''
       });
       setShowAddForm(false);
+      loadCashbookEntries(); // Reload entries after adding
     } catch (error) {
       console.error('Error adding cashbook entry:', error);
     }
@@ -153,20 +133,20 @@ export default function DigitalCashbook() {
 
   const getTotalInflow = () => {
     return entries
-      .filter(entry => entry.type === 'inflow')
+      .filter(entry => entry.entry_type === 'income')
       .reduce((total, entry) => total + entry.amount, 0);
   };
 
   const getTotalOutflow = () => {
     return entries
-      .filter(entry => entry.type === 'outflow')
+      .filter(entry => entry.entry_type === 'expense')
       .reduce((total, entry) => total + entry.amount, 0);
   };
 
   const getVATOwed = () => {
     return entries
-      .filter(entry => entry.vatApplicable && entry.type === 'inflow')
-      .reduce((total, entry) => total + (entry.vatAmount || 0), 0);
+      .filter(entry => entry.vat_applicable && entry.entry_type === 'income')
+      .reduce((total, entry) => total + (entry.vat_amount || 0), 0);
   };
 
   const formatCurrency = (amount: number) => {
@@ -290,12 +270,12 @@ export default function DigitalCashbook() {
                     <label className="block text-sm font-medium mb-2">Type</label>
                     <select
                       value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value as 'inflow' | 'outflow'})}
+                      onChange={(e) => setFormData({...formData, type: e.target.value as 'income' | 'expense'})}
                       className="w-full border border-border rounded-md px-3 py-2"
                       required
                     >
-                      <option value="inflow">💰 Cash In</option>
-                      <option value="outflow">💸 Cash Out</option>
+                      <option value="income">💰 Cash In</option>
+                      <option value="expense">💸 Cash Out</option>
                     </select>
                   </div>
                   
@@ -337,7 +317,7 @@ export default function DigitalCashbook() {
                       required
                     >
                       <option value="">Select category</option>
-                      {(formData.type === 'inflow' ? inflowCategories : outflowCategories).map(category => (
+                      {(formData.type === 'income' ? inflowCategories : outflowCategories).map(category => (
                         <option key={category} value={category}>{category}</option>
                       ))}
                     </select>
@@ -367,7 +347,7 @@ export default function DigitalCashbook() {
                   />
                 </div>
 
-                {formData.type === 'inflow' && (
+                {formData.type === 'income' && (
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -412,9 +392,9 @@ export default function DigitalCashbook() {
                   <div key={entry.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex items-center gap-4">
                       <div className={`p-2 rounded-full ${
-                        entry.type === 'inflow' ? 'bg-green-100' : 'bg-red-100'
+                        entry.entry_type === 'income' ? 'bg-green-100' : 'bg-red-100'
                       }`}>
-                        {entry.type === 'inflow' ? 
+                        {entry.entry_type === 'income' ? 
                           <TrendingUp className="h-4 w-4 text-green-600" /> : 
                           <TrendingDown className="h-4 w-4 text-red-600" />
                         }
@@ -423,12 +403,11 @@ export default function DigitalCashbook() {
                         <p className="font-medium">{entry.description}</p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>{entry.category}</span>
-                          <span>{entry.paymentMethod}</span>
+                          <span>{entry.payment_method}</span>
                           <span>{new Date(entry.date).toLocaleDateString()}</span>
-                          {entry.reference && <span>Ref: {entry.reference}</span>}
-                          {entry.vatApplicable && (
+                          {entry.vat_applicable && (
                             <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
-                              VAT: {formatCurrency(entry.vatAmount || 0)}
+                              VAT: {formatCurrency(entry.vat_amount || 0)}
                             </span>
                           )}
                         </div>
@@ -436,9 +415,9 @@ export default function DigitalCashbook() {
                     </div>
                     <div className="text-right">
                       <span className={`font-semibold ${
-                        entry.type === 'inflow' ? 'text-green-600' : 'text-red-600'
+                        entry.entry_type === 'income' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {entry.type === 'inflow' ? '+' : '-'}{formatCurrency(entry.amount)}
+                        {entry.entry_type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
                       </span>
                     </div>
                   </div>

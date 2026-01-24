@@ -11,14 +11,15 @@ declare global {
 interface PaymentData {
   email: string;
   amount: number; // in kobo
-  plan: 'basic' | 'pro' | 'enterprise';
+  plan: 'test200' | 'basic' | 'pro' | 'enterprise';
   businessName?: string;
 }
 
 const PLAN_PRICES = {
-  basic: 1200000,    // ₦12,000 in kobo (no VAT added)
-  pro: 3000000,      // ₦30,000 in kobo (no VAT added)
-  enterprise: 5000000 // ₦50,000 in kobo (no VAT added)
+  test200: 20000,    // ₦200 in kobo
+  basic: 1500000,    // ₦15,000 in kobo
+  pro: 5000000,      // ₦50,000 in kobo
+  enterprise: 15000000 // ₦150,000 in kobo
 };
 
 export const paymentService = {
@@ -57,7 +58,7 @@ export const paymentService = {
                     status: 'active',
                     paystack_subscription_code: response.reference,
                     amount: amount,
-                    next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    next_payment_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
                   });
                   console.log('💳 Subscription updated successfully');
                 } else {
@@ -68,7 +69,7 @@ export const paymentService = {
                     status: 'active',
                     paystack_subscription_code: response.reference,
                     amount: amount,
-                    next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    next_payment_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
                   });
                   console.log('💳 Subscription saved successfully');
                 }
@@ -117,7 +118,7 @@ export const paymentService = {
     });
   },
 
-  getPlanPrice(plan: 'basic' | 'pro' | 'enterprise'): number {
+  getPlanPrice(plan: 'test200' | 'basic' | 'pro' | 'enterprise'): number {
     return PLAN_PRICES[plan];
   },
 

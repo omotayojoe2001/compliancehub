@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
@@ -7,93 +7,113 @@ import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { paymentService } from "@/lib/paymentService";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useProfile } from "@/hooks/useProfileClean";
+import { supabaseService } from "@/lib/supabaseService";
 
 export default function Subscription() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const [loading, setLoading] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(true);
 
   // Get plan display name
   const getPlanDisplayName = (planKey: string) => {
     const planNames = {
-      test100: 'Test ₦100 (plan little)',
-      test200: 'Upgrade to more (₦200)',
+      test200: 'Test ₦200',
       basic: 'Basic',
-      pro: 'Professional',
-      annual: 'Annual'
+      pro: 'Professional', 
+      enterprise: 'Enterprise'
     };
     return planNames[planKey as keyof typeof planNames] || planKey;
   };
 
+  // Get actual subscription data instead of profile data
+  const [actualSubscription, setActualSubscription] = useState<any>(null);
+  
+  useEffect(() => {
+    if (user?.id) {
+      loadSubscriptionData();
+    }
+  }, [user?.id]);
+  
+  const loadSubscriptionData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const subscription = await supabaseService.getSubscription(user.id);
+      setActualSubscription(subscription);
+    } catch (error) {
+      console.error('Error loading subscription:', error);
+    }
+  };
+
 const plans = [
   {
-    name: "Test ₦100",
-    price: "₦100",
-    period: "/month",
+    name: "Test ₦200",
+    annualPrice: "₦2,400",
+    monthlyPrice: "₦200",
+    period: "/year",
+    monthlyPeriod: "/month",
     features: [
       "Testing the system",
-      "1 obligation tracked",
-      "Email reminders only",
-    ],
-    current: profile?.plan === 'test100',
-    planKey: 'test100' as const,
-  },
-  {
-    name: "Test ₦200",
-    price: "₦200",
-    period: "/month",
-    features: [
-      "More testing features",
       "2 obligations tracked",
       "Email reminders only",
     ],
-    current: profile?.plan === 'test200',
+    current: actualSubscription?.plan_type === 'test200',
     planKey: 'test200' as const,
   },
   {
     name: "Basic",
-    price: "₦3,000",
-    period: "/month",
+    annualPrice: "₦15,000",
+    monthlyPrice: "₦1,250",
+    period: "/year",
+    monthlyPeriod: "/month",
     features: [
-      "Up to 3 obligations tracked",
-      "Email reminders only",
-      "Basic tax calculator",
-      "Email support",
+      "1 Business Profile",
+      "WhatsApp Reminders",
+      "Email Reminders",
+      "Tax Calculator Access",
+      "Filing Guides",
     ],
-    current: profile?.plan === 'basic',
+    current: actualSubscription?.plan_type === 'basic',
     planKey: 'basic' as const,
   },
   {
     name: "Pro",
-    price: "₦7,000",
-    period: "/month",
+    annualPrice: "₦50,000",
+    monthlyPrice: "₦4,167",
+    period: "/year",
+    monthlyPeriod: "/month",
     features: [
-      "Unlimited obligations tracked",
-      "Email & WhatsApp reminders",
-      "Advanced tax calculator",
-      "Reminder logs & history",
-      "Priority support",
+      "Up to 5 Business Profiles",
+      "Priority WhatsApp Reminders",
+      "Email Reminders",
+      "Tax Calculator Access",
+      "Filing Guides",
+      "Annual Summary Reports",
     ],
-    current: profile?.plan === 'pro',
+    current: actualSubscription?.plan_type === 'pro',
     planKey: 'pro' as const,
   },
   {
-    name: "Annual",
-    price: "₦30,000",
+    name: "Enterprise",
+    annualPrice: "₦150,000",
+    monthlyPrice: "₦12,500",
     period: "/year",
+    monthlyPeriod: "/month",
     features: [
-      "Everything in Pro",
-      "Multi-user access",
-      "API access",
-      "Custom integrations",
-      "Dedicated account manager",
+      "Unlimited Business Profiles",
+      "Priority Support",
+      "Custom Integrations",
+      "Dedicated Account Manager",
+      "Advanced Analytics",
+      "API Access",
     ],
-    current: profile?.plan === 'annual',
-    planKey: 'annual' as const,
+    current: actualSubscription?.plan_type === 'enterprise',
+    planKey: 'enterprise' as const,
   },
 ];
 
-  const handleUpgrade = async (planType: 'test100' | 'test200' | 'basic' | 'pro' | 'annual') => {
+  const handleUpgrade = async (planType: 'test200' | 'basic' | 'pro' | 'enterprise') => {
     if (!user || !profile) return;
     
     setLoading(planType);
@@ -146,7 +166,7 @@ const plans = [
                   Your Plan
                 </p>
                 <p className="text-lg font-semibold text-foreground">
-                  {profile?.plan ? getPlanDisplayName(profile.plan) : 'No Plan'}
+                  {actualSubscription?.plan_type ? getPlanDisplayName(actualSubscription.plan_type) : 'No Plan'}
                 </p>
               </div>
               <div>
@@ -154,9 +174,9 @@ const plans = [
                   Are Reminders Working?
                 </p>
                 <p className={`text-sm font-medium ${
-                  profile?.subscription_status === 'active' ? 'text-green-600' : 'text-red-600'
+                  actualSubscription?.status === 'active' ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {profile?.subscription_status === 'active' ? '✓ Yes, Active' : '❌ No, Inactive'}
+                  {actualSubscription?.status === 'active' ? '✓ Yes, Active' : '❌ No, Inactive'}
                 </p>
               </div>
               <div>
@@ -164,7 +184,7 @@ const plans = [
                   Next Payment Due
                 </p>
                 <p className="text-sm font-medium text-foreground">
-                  {profile?.subscription_status === 'active' ? 'Next month' : 'No payment scheduled'}
+                  {actualSubscription?.status === 'active' ? 'Next year' : 'No payment scheduled'}
                 </p>
               </div>
             </div>
@@ -176,7 +196,34 @@ const plans = [
           helpTitle="Choose Your Plan"
           helpContent="Different plans give you different features. The more you pay, the more reminders and features you get. If you stop paying, ALL reminders stop - the system won't work for free."
         >
-          <div className="grid gap-4 lg:grid-cols-3">
+          {/* Billing Toggle */}
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <span className={`text-sm ${!isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+              Monthly
+            </span>
+            <button
+              onClick={() => setIsAnnual(!isAnnual)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isAnnual ? 'bg-primary' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isAnnual ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className={`text-sm ${isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+              Annual
+            </span>
+            {isAnnual && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                Save up to 25%
+              </span>
+            )}
+          </div>
+          
+          <div className="grid gap-4 lg:grid-cols-4">
             {plans.map((plan) => (
               <div
                 key={plan.name}
@@ -197,12 +244,17 @@ const plans = [
                 
                 <div className="mt-2 flex items-baseline">
                   <span className="text-2xl font-semibold text-foreground">
-                    {plan.price}
+                    {isAnnual ? plan.annualPrice : plan.monthlyPrice}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {plan.period}
+                    {isAnnual ? plan.period : plan.monthlyPeriod}
                   </span>
                 </div>
+                {isAnnual && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Billed annually
+                  </p>
+                )}
 
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature) => (

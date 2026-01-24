@@ -7,6 +7,8 @@ import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useProfile } from '@/hooks/useProfileClean';
 import { useAuth } from '@/contexts/AuthContextClean';
 import { comprehensiveDbService } from '@/lib/comprehensiveDbService';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface InvoiceItem {
   description: string;
@@ -17,16 +19,17 @@ interface InvoiceItem {
 
 interface Invoice {
   id: string;
-  invoiceNumber: string;
-  date: string;
-  dueDate: string;
-  clientName: string;
-  clientAddress: string;
-  items: InvoiceItem[];
+  invoice_number: string;
+  issue_date: string;
+  due_date: string;
+  client_name: string;
+  client_address: string;
+  items?: InvoiceItem[];
   subtotal: number;
-  vatAmount: number;
-  total: number;
+  vat_amount: number;
+  total_amount: number;
   status: 'draft' | 'sent' | 'paid';
+  company_logo_url?: string;
 }
 
 export default function EInvoicing() {
@@ -36,7 +39,9 @@ export default function EInvoicing() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const invoiceRef = useRef<HTMLDivElement>(null);
   
   const [formData, setFormData] = useState({
     clientName: '',
@@ -163,6 +168,46 @@ export default function EInvoicing() {
       style: 'currency',
       currency: 'NGN'
     }).format(amount);
+  };
+
+  const generatePDF = async (invoice: Invoice) => {
+    if (!invoiceRef.current) return;
+    
+    const canvas = await html2canvas(invoiceRef.current);
+    const imgData = canvas.toDataURL('image/png');
+    
+    const pdf = new jsPDF();
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    
+    let position = 0;
+    
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
+    pdf.save(`${invoice.invoice_number}.pdf`);
+  };
+
+  const viewInvoice = (invoice: Invoice) => {
+    setViewingInvoice(invoice);
+  };
+
+  const downloadInvoice = async (invoice: Invoice) => {
+    setViewingInvoice(invoice);
+    // Wait for the invoice to render
+    setTimeout(() => {
+      generatePDF(invoice);
+      setViewingInvoice(null);
+    }, 100);
   };
 
   const { subtotal, vatAmount, total } = calculateTotals();
@@ -340,6 +385,116 @@ export default function EInvoicing() {
             </Card>
           )}
 
+          {/* Invoice Preview/PDF Template */}
+          {viewingInvoice && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Invoice Preview</h3>
+                    <div className="flex gap-2">
+                      <Button onClick={() => generatePDF(viewingInvoice)} size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                      <Button variant="outline" onClick={() => setViewingInvoice(null)} size="sm">
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Invoice Template */}
+                  <div ref={invoiceRef} className="bg-white p-8 border" style={{ minHeight: '800px' }}>
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-8">
+                      <div>
+                        {companyLogo && (
+                          <img src={companyLogo} alt="Company Logo" className="h-16 w-auto mb-4" />
+                        )}
+                        <div>
+                          <h1 className="text-2xl font-bold text-gray-900">{profile?.business_name || 'Your Business'}</h1>
+                          <p className="text-gray-600">{profile?.business_address || 'Business Address'}</p>
+                          <p className="text-gray-600">{profile?.phone || 'Phone Number'}</p>
+                          <p className="text-gray-600">{profile?.email || 'Email Address'}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">INVOICE</h2>
+                        <p className="text-gray-600">Invoice #: {viewingInvoice.invoice_number}</p>
+                        <p className="text-gray-600">Date: {new Date(viewingInvoice.issue_date).toLocaleDateString()}</p>
+                        <p className="text-gray-600">Due Date: {new Date(viewingInvoice.due_date).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    {/* Bill To */}
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Bill To:</h3>
+                      <div className="text-gray-700">
+                        <p className="font-medium">{viewingInvoice.client_name}</p>
+                        <p className="whitespace-pre-line">{viewingInvoice.client_address}</p>
+                      </div>
+                    </div>
+
+                    {/* Items Table */}
+                    <div className="mb-8">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b-2 border-gray-300">
+                            <th className="text-left py-3 px-2 font-semibold text-gray-900">Description</th>
+                            <th className="text-center py-3 px-2 font-semibold text-gray-900">Qty</th>
+                            <th className="text-right py-3 px-2 font-semibold text-gray-900">Rate</th>
+                            <th className="text-right py-3 px-2 font-semibold text-gray-900">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {viewingInvoice.items?.map((item, index) => (
+                            <tr key={index} className="border-b border-gray-200">
+                              <td className="py-3 px-2 text-gray-700">{item.description}</td>
+                              <td className="py-3 px-2 text-center text-gray-700">{item.quantity}</td>
+                              <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(item.rate)}</td>
+                              <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(item.amount)}</td>
+                            </tr>
+                          )) || (
+                            <tr className="border-b border-gray-200">
+                              <td className="py-3 px-2 text-gray-700">Service/Product</td>
+                              <td className="py-3 px-2 text-center text-gray-700">1</td>
+                              <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(viewingInvoice.subtotal)}</td>
+                              <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(viewingInvoice.subtotal)}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Totals */}
+                    <div className="flex justify-end mb-8">
+                      <div className="w-64">
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-700">Subtotal:</span>
+                          <span className="text-gray-900 font-medium">{formatCurrency(viewingInvoice.subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b border-gray-200">
+                          <span className="text-gray-700">VAT (7.5%):</span>
+                          <span className="text-gray-900 font-medium">{formatCurrency(viewingInvoice.vat_amount)}</span>
+                        </div>
+                        <div className="flex justify-between py-3 border-b-2 border-gray-300">
+                          <span className="text-lg font-semibold text-gray-900">Total:</span>
+                          <span className="text-lg font-bold text-gray-900">{formatCurrency(viewingInvoice.total_amount)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="text-center text-gray-600 text-sm">
+                      <p>Thank you for your business!</p>
+                      <p className="mt-2">Payment is due within 30 days of invoice date.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Invoices List */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Your Invoices</h3>
@@ -374,10 +529,10 @@ export default function EInvoicing() {
                     <div className="flex items-center gap-3">
                       <span className="font-semibold">{formatCurrency(invoice.total_amount)}</span>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => viewInvoice(invoice)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => downloadInvoice(invoice)}>
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>

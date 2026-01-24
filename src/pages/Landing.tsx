@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,8 +65,10 @@ const howItWorks = [
 const pricing = [
   {
     name: "Basic",
-    price: "₦3,000",
+    monthlyPrice: "₦1,250",
+    annualPrice: "₦15,000",
     period: "/month",
+    annualPeriod: "/year",
     description: "Perfect for single business owners",
     features: [
       "1 Business Profile",
@@ -78,8 +81,10 @@ const pricing = [
   },
   {
     name: "Pro",
-    price: "₦7,000",
+    monthlyPrice: "₦4,167",
+    annualPrice: "₦50,000",
     period: "/month",
+    annualPeriod: "/year",
     description: "For agencies and multi-business owners",
     features: [
       "Up to 5 Business Profiles",
@@ -92,16 +97,19 @@ const pricing = [
     popular: true,
   },
   {
-    name: "Annual",
-    price: "₦30,000",
-    period: "/year",
-    description: "Best value - save ₦6,000",
+    name: "Enterprise",
+    monthlyPrice: "₦12,500",
+    annualPrice: "₦150,000",
+    period: "/month",
+    annualPeriod: "/year",
+    description: "For large organizations",
     features: [
-      "Everything in Pro",
-      "Up to 10 Business Profiles",
+      "Unlimited Business Profiles",
       "Priority Support",
-      "Early Access to Features",
-      "Done-for-you Filing (Coming Soon)",
+      "Custom Integrations",
+      "Dedicated Account Manager",
+      "Advanced Analytics",
+      "API Access",
     ],
     popular: false,
   },
@@ -117,6 +125,7 @@ const targetAudience = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [isAnnual, setIsAnnual] = useState(true);
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,10 +179,6 @@ export default function Landing() {
       <section className="border-b border-border bg-secondary py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              <Bell className="h-3 w-3" />
-              No app needed. No heavy dev.
-            </div>
             <h1 className="mb-4 text-3xl font-semibold text-foreground md:text-4xl lg:text-5xl">
               Never Miss a Tax Deadline Again
             </h1>
@@ -194,7 +199,7 @@ export default function Landing() {
               </a>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
-              Starting at ₦3,000/month. Cancel anytime.
+              Starting at ₦15,000/year. Cancel anytime.
             </p>
           </div>
         </div>
@@ -288,6 +293,33 @@ export default function Landing() {
             <p className="text-sm text-muted-foreground">
               Less than what you pay an accountant. More peace of mind.
             </p>
+            
+            {/* Billing Toggle */}
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <span className={`text-sm ${!isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                Monthly
+              </span>
+              <button
+                onClick={() => setIsAnnual(!isAnnual)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  isAnnual ? 'bg-primary' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isAnnual ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className={`text-sm ${isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                Annual
+              </span>
+              {isAnnual && (
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                  Save up to 25%
+                </span>
+              )}
+            </div>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {pricing.map((plan) => (
@@ -304,39 +336,44 @@ export default function Landing() {
                     Most Popular
                   </div>
                 )}
-                <h3 className="mb-1 text-lg font-semibold text-foreground">
-                  {plan.name}
-                </h3>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  {plan.description}
-                </p>
-                <div className="mb-6">
-                  <span className="text-2xl font-semibold text-foreground">
-                    {plan.price}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {plan.period}
-                  </span>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {plan.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
                 </div>
-                <ul className="mb-6 space-y-3">
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-foreground">
+                      {isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {isAnnual ? plan.annualPeriod : plan.period}
+                    </span>
+                  </div>
+                  {isAnnual && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Billed annually
+                    </p>
+                  )}
+                </div>
+                <ul className="mb-6 space-y-2">
                   {plan.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-2 text-sm text-muted-foreground"
-                    >
-                      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                      {feature}
+                    <li key={feature} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-muted-foreground">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <Link to="/register">
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                  >
-                    Get Started
-                  </Button>
-                </Link>
+                <Button 
+                  className="w-full" 
+                  variant={plan.popular ? "default" : "outline"}
+                  onClick={() => navigate('/register')}
+                >
+                  Get Started
+                </Button>
               </div>
             ))}
           </div>

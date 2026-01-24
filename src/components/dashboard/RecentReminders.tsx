@@ -2,6 +2,7 @@ import { Mail, MessageSquare, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
+import { useCompany } from "@/contexts/CompanyContext";
 import { supabaseService } from "@/lib/supabaseService";
 import { realtimeService } from "@/lib/realtimeService";
 
@@ -19,40 +20,24 @@ interface Reminder {
 
 export function RecentReminders() {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && currentCompany?.id) {
       loadReminders();
-      
-      // Subscribe to real-time updates
-      const subscription = realtimeService.subscribeToReminders(
-        user.id,
-        (payload) => {
-          console.log('📡 Real-time reminder update:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            setReminders(prev => [payload.new, ...prev.slice(0, 19)]); // Keep only 20 latest
-          } else if (payload.eventType === 'UPDATE') {
-            setReminders(prev => 
-              prev.map(item => 
-                item.id === payload.new.id ? payload.new : item
-              )
-            );
-          }
-        }
-      );
-
-      return () => subscription.unsubscribe();
+    } else {
+      setReminders([]);
+      setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, currentCompany?.id]);
 
   const loadReminders = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
     
     try {
-      const data = await supabaseService.getReminders(user.id);
+      const data = await supabaseService.getReminders(user.id, currentCompany.id);
       setReminders(data || []);
     } catch (error) {
       console.error('Failed to load reminders:', error);

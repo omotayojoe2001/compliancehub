@@ -12,6 +12,9 @@ import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContextClean";
+import { supabaseService } from "@/lib/supabaseService";
 
 export default function Dashboard() {
   console.log('🏠 Dashboard component RENDERING...');
@@ -19,7 +22,73 @@ export default function Dashboard() {
   const { profile, loading } = useProfile();
   const { plan, limits, getObligationLimitMessage } = usePlanRestrictions();
   const { currentCompany } = useCompany();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [obligations, setObligations] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState({
+    nextDue: 'None',
+    nextDueDescription: 'Add tax periods below',
+    overdueCount: 0,
+    overdueDescription: 'All up to date'
+  });
+
+  // Load obligations when company changes
+  useEffect(() => {
+    if (user?.id && currentCompany?.id) {
+      loadObligations();
+    }
+  }, [user?.id, currentCompany?.id]);
+
+  const loadObligations = async () => {
+    if (!user?.id || !currentCompany?.id) return;
+    
+    try {
+      const data = await supabaseService.getObligations(user.id, currentCompany.id);
+      setObligations(data || []);
+      calculateStats(data || []);
+    } catch (error) {
+      console.error('❌ Failed to load obligations:', error);
+      setObligations([]);
+      calculateStats([]);
+    }
+  };
+
+  const calculateStats = (obligationData: any[]) => {
+    const now = new Date();
+    let nextDue = 'None';
+    let nextDueDescription = 'Add tax periods below';
+    let overdueCount = 0;
+    
+    if (obligationData.length > 0) {
+      // Find overdue obligations
+      const overdue = obligationData.filter(o => {
+        const dueDate = new Date(o.next_due_date);
+        return dueDate < now && o.payment_status !== 'paid';
+      });
+      overdueCount = overdue.length;
+      
+      // Find next due obligation
+      const upcoming = obligationData
+        .filter(o => {
+          const dueDate = new Date(o.next_due_date);
+          return dueDate >= now && o.payment_status !== 'paid';
+        })
+        .sort((a, b) => new Date(a.next_due_date).getTime() - new Date(b.next_due_date).getTime());
+      
+      if (upcoming.length > 0) {
+        const nextObligation = upcoming[0];
+        nextDue = `${nextObligation.obligation_type}`;
+        nextDueDescription = new Date(nextObligation.next_due_date).toLocaleDateString();
+      }
+    }
+    
+    setDashboardStats({
+      nextDue,
+      nextDueDescription,
+      overdueCount,
+      overdueDescription: overdueCount > 0 ? `${overdueCount} overdue` : 'All up to date'
+    });
+  };
 
   console.log('🏠 Dashboard state check:', {
     hasProfile: !!profile,
@@ -121,14 +190,15 @@ export default function Dashboard() {
             />
             <SummaryCard
               title="Next Due"
-              value="None"
-              description="Add tax periods below"
+              value={dashboardStats.nextDue}
+              description={dashboardStats.nextDueDescription}
               icon={<Calendar className="h-5 w-5" />}
             />
             <SummaryCard
               title="Overdue"
-              value="0"
-              description="All up to date"
+              value={dashboardStats.overdueCount.toString()}
+              description={dashboardStats.overdueDescription}
+              variant={dashboardStats.overdueCount > 0 ? 'error' : 'default'}
               icon={<AlertTriangle className="h-5 w-5" />}
             />
           </div>

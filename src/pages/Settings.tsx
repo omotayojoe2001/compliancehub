@@ -30,6 +30,12 @@ export default function Settings() {
     industry: ''
   });
 
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    emailReminders: true,
+    whatsappReminders: false,
+    deadlineAlerts: true
+  });
+
   // Update form data when current company changes
   useEffect(() => {
     console.log('⚙️ SETTINGS DEBUG - Company changed:', {
@@ -50,14 +56,15 @@ export default function Settings() {
       loadCompanyData();
     }
     
-    if (profile && user) {
+    if (user) {
+      // Profile data should be user's personal info, not company info
       setProfileData({
-        full_name: profile.full_name || profile.business_name || '',
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
         email: user.email || '',
-        phone: profile.phone || ''
+        phone: profile?.phone || ''
       });
     }
-  }, [currentCompany, profile, user]);
+  }, [currentCompany, user, profile]);
 
   const loadCompanyData = async () => {
     if (!currentCompany?.id) return;
@@ -107,7 +114,6 @@ export default function Settings() {
       const { error } = await supabase
         .from('user_profiles')
         .update({
-          business_name: profileData.full_name, // Use business_name instead of full_name
           phone: profileData.phone
         })
         .eq('id', user.id);
@@ -282,23 +288,27 @@ export default function Settings() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Industry
+                    Business Address
                   </label>
-                  <select 
-                    value={businessData.industry}
-                    onChange={(e) => setBusinessData({...businessData, industry: e.target.value})}
+                  <textarea
+                    value={businessData.business_address || ''}
+                    onChange={(e) => setBusinessData({...businessData, business_address: e.target.value})}
                     className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="">Select industry</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Services">Services</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Education">Education</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    placeholder="Enter business address"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Business Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={businessData.business_phone || ''}
+                    onChange={(e) => setBusinessData({...businessData, business_phone: e.target.value})}
+                    className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Enter business phone"
+                  />
                 </div>
               </div>
             )}
@@ -316,79 +326,103 @@ export default function Settings() {
             <h3 className="mb-4 text-sm font-semibold text-foreground">
               Notification Preferences
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 p-4 rounded mb-4">
                 <p className="text-sm text-blue-700">
-                  <Calendar className="inline h-4 w-4 mr-1" /> Notification settings are controlled by your subscription plan.
-                  {profile?.plan === 'free' && ' Upgrade to get email and WhatsApp reminders.'}
-                  {profile?.plan !== 'free' && ' Your plan includes email reminders.'}
+                  <Calendar className="inline h-4 w-4 mr-1" /> Your current plan: {profile?.plan?.toUpperCase() || 'FREE'}
                 </p>
               </div>
               
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Email Reminders
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Receive obligation reminders via email
-                  </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Email Reminders
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Receive obligation reminders via email
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {profile?.plan !== 'free' ? (
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationPrefs.emailReminders}
+                          onChange={(e) => setNotificationPrefs({...notificationPrefs, emailReminders: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                        <X className="inline h-3 w-3 mr-1" />Upgrade Required
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded ${
-                  profile?.plan !== 'free' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {profile?.plan !== 'free' ? (
-                    <><CheckCircle className="inline h-3 w-3 mr-1" />Enabled</>
-                  ) : (
-                    <><X className="inline h-3 w-3 mr-1" />Upgrade Required</>
-                  )}
-                </span>
+                
+                <div className="flex items-center justify-between border-b border-border py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      WhatsApp Reminders
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Receive obligation reminders via WhatsApp
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {profile?.plan === 'pro' || profile?.plan === 'enterprise' ? (
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationPrefs.whatsappReminders}
+                          onChange={(e) => setNotificationPrefs({...notificationPrefs, whatsappReminders: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                        <X className="inline h-3 w-3 mr-1" />Pro Plan Required
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between py-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Deadline Alerts
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Get notified 7, 3, and 1 days before deadlines
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {profile?.plan !== 'free' ? (
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationPrefs.deadlineAlerts}
+                          onChange={(e) => setNotificationPrefs({...notificationPrefs, deadlineAlerts: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                        <X className="inline h-3 w-3 mr-1" />Upgrade Required
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    WhatsApp Reminders
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Receive obligation reminders via WhatsApp
-                  </p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded ${
-                  profile?.plan === 'pro' || profile?.plan === 'annual'
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {profile?.plan === 'pro' || profile?.plan === 'annual' ? (
-                    <><CheckCircle className="inline h-3 w-3 mr-1" />Enabled</>
-                  ) : (
-                    <><X className="inline h-3 w-3 mr-1" />Pro Plan Required</>
-                  )}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Deadline Alerts
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Get notified 7, 3, and 1 days before deadlines
-                  </p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded ${
-                  profile?.plan !== 'free' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {profile?.plan !== 'free' ? (
-                    <><CheckCircle className="inline h-3 w-3 mr-1" />Enabled</>
-                  ) : (
-                    <><X className="inline h-3 w-3 mr-1" />Upgrade Required</>
-                  )}
-                </span>
+              <div className="mt-6">
+                <Button onClick={() => alert('Notification preferences saved!')}>
+                  Save Notification Settings
+                </Button>
               </div>
             </div>
             

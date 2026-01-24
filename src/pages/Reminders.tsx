@@ -4,7 +4,9 @@ import { cn } from "@/lib/utils";
 import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
-import { freshDbService } from "@/lib/freshDbService";
+import { useCompany } from "@/contexts/CompanyContext";
+import { supabaseService } from "@/lib/supabaseService";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 
 interface ReminderLog {
   id: string;
@@ -26,38 +28,43 @@ interface UpcomingReminder {
   status: string;
 }
 
-import { SubscriptionGate } from "@/components/SubscriptionGate";
-
 export default function Reminders() {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [upcomingReminders, setUpcomingReminders] = useState<UpcomingReminder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id && currentCompany?.id) {
       loadReminderData();
+    } else {
+      setReminderLogs([]);
+      setUpcomingReminders([]);
+      setLoading(false);
     }
-  }, [user]);
+  }, [user?.id, currentCompany?.id]);
 
   const loadReminderData = async () => {
+    if (!user?.id || !currentCompany?.id) return;
+    
     try {
       setLoading(true);
       
-      // Load sent reminders
-      const logs = await freshDbService.getReminderLogs(user!.id);
+      // Load sent reminders for current company
+      const logs = await supabaseService.getReminders(user.id, currentCompany.id);
       setReminderLogs(Array.isArray(logs) ? logs : []);
       
-      // Load upcoming reminders from tax obligations
-      const obligations = await freshDbService.getTaxObligations(user!.id);
+      // Load upcoming reminders from tax obligations for current company
+      const obligations = await supabaseService.getObligations(user.id, currentCompany.id);
       const upcoming = Array.isArray(obligations)
         ? obligations
-            .filter(o => o.status === 'active')
+            .filter(o => o.payment_status !== 'paid')
             .map(o => ({
               id: o.id,
               obligation_type: o.obligation_type,
-              due_date: o.due_date,
-              next_reminder_date: new Date(new Date(o.due_date).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              due_date: o.next_due_date,
+              next_reminder_date: new Date(new Date(o.next_due_date).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
               status: 'scheduled'
             }))
         : [];
