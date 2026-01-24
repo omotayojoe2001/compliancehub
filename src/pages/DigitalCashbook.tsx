@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -40,7 +40,7 @@ export default function DigitalCashbook() {
   ]);
   const [activeView, setActiveView] = useState('summary');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [filterPeriod, setFilterPeriod] = useState('month');
+  const [filterPeriod, setFilterPeriod] = useState('this_month');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -162,6 +162,44 @@ export default function DigitalCashbook() {
     { id: 'accounts', name: 'All Accounts', icon: Calculator }
   ];
 
+  const filteredEntries = entries.filter((entry) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      const matches =
+        entry.description.toLowerCase().includes(term) ||
+        entry.category.toLowerCase().includes(term) ||
+        entry.payment_method.toLowerCase().includes(term);
+      if (!matches) return false;
+    }
+
+    if (filterPeriod === 'all') {
+      return true;
+    }
+
+    const entryDate = new Date(entry.date);
+    const today = new Date();
+
+    if (filterPeriod === 'today') {
+      return entryDate.toDateString() === today.toDateString();
+    }
+
+    if (filterPeriod === 'this_week') {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      return entryDate >= startOfWeek;
+    }
+
+    if (filterPeriod === 'this_month') {
+      return (
+        entryDate.getMonth() === today.getMonth() &&
+        entryDate.getFullYear() === today.getFullYear()
+      );
+    }
+
+    return false;
+  });
+
   return (
     <SubscriptionGate feature="Digital Cashbook">
       <DashboardLayout>
@@ -196,57 +234,6 @@ export default function DigitalCashbook() {
                 </button>
               ))}
             </nav>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Cash In</p>
-                  <p className="text-lg font-bold text-green-600">{formatCurrency(getTotalInflow())}</p>
-                </div>
-                <div className="p-2 bg-green-100 rounded-full">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Cash Out</p>
-                  <p className="text-lg font-bold text-red-600">{formatCurrency(getTotalOutflow())}</p>
-                </div>
-                <div className="p-2 bg-red-100 rounded-full">
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Net Balance</p>
-                  <p className="text-lg font-bold">{formatCurrency(getTotalInflow() - getTotalOutflow())}</p>
-                </div>
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Calculator className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">VAT Owed</p>
-                  <p className="text-lg font-bold text-orange-600">{formatCurrency(getVATOwed())}</p>
-                </div>
-                <div className="p-2 bg-orange-100 rounded-full">
-                  <FileText className="h-4 w-4 text-orange-600" />
-                </div>
-              </div>
-            </Card>
           </div>
 
           {/* Add Entry Form */}
@@ -372,59 +359,158 @@ export default function DigitalCashbook() {
             </Card>
           )}
 
-          {/* Transactions List */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Recent Transactions</h3>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
-            
-            {entries.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No transactions recorded yet. Add your first entry to get started.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {entries.map((entry) => (
-                  <div key={entry.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${
-                        entry.entry_type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
-                        {entry.entry_type === 'income' ? 
-                          <TrendingUp className="h-4 w-4 text-green-600" /> : 
-                          <TrendingDown className="h-4 w-4 text-red-600" />
-                        }
-                      </div>
-                      <div>
-                        <p className="font-medium">{entry.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{entry.category}</span>
-                          <span>{entry.payment_method}</span>
-                          <span>{new Date(entry.date).toLocaleDateString()}</span>
-                          {entry.vat_applicable && (
-                            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
-                              VAT: {formatCurrency(entry.vat_amount || 0)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+          {/* View Content */}
+          <div className="space-y-6">
+            {activeView === 'summary' && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Summary Cards */}
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Cash In</p>
+                      <p className="text-lg font-bold text-green-600">{formatCurrency(getTotalInflow())}</p>
                     </div>
-                    <div className="text-right">
-                      <span className={`font-semibold ${
-                        entry.entry_type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {entry.entry_type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
-                      </span>
+                    <div className="p-2 bg-green-100 rounded-full">
+                      <TrendingUp className="h-4 w-4 text-green-600" />
                     </div>
                   </div>
-                ))}
+                </Card>
+    
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Cash Out</p>
+                      <p className="text-lg font-bold text-red-600">{formatCurrency(getTotalOutflow())}</p>
+                    </div>
+                    <div className="p-2 bg-red-100 rounded-full">
+                      <TrendingDown className="h-4 w-4 text-red-600" />
+                    </div>
+                  </div>
+                </Card>
+    
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Net Balance</p>
+                      <p className="text-lg font-bold">{formatCurrency(getTotalInflow() - getTotalOutflow())}</p>
+                    </div>
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <Calculator className="h-4 w-4 text-blue-600" />
+                    </div>
+                  </div>
+                </Card>
+    
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">VAT Owed</p>
+                      <p className="text-lg font-bold text-orange-600">{formatCurrency(getVATOwed())}</p>
+                    </div>
+                    <div className="p-2 bg-orange-100 rounded-full">
+                      <FileText className="h-4 w-4 text-orange-600" />
+                    </div>
+                  </div>
+                </Card>
               </div>
             )}
-          </Card>
+
+            {activeView === 'transactions' && (
+              <Card className="p-6">
+                {/* Transactions List */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Recent Transactions</h3>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={filterPeriod}
+                      onChange={(e) => setFilterPeriod(e.target.value)}
+                      className="border border-border rounded-md px-3 py-2 text-sm"
+                    >
+                      <option value="all">All</option>
+                      <option value="today">Today</option>
+                      <option value="this_week">This Week</option>
+                      <option value="this_month">This Month</option>
+                    </select>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search"
+                        className="border border-border rounded-md pl-8 pr-3 py-2 text-sm"
+                      />
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
+                  </div>
+                </div>
+                
+                {filteredEntries.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No transactions recorded yet. Add your first entry to get started.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredEntries.map((entry) => (
+                      <div key={entry.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2 rounded-full ${
+                            entry.entry_type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                            {entry.entry_type === 'income' ? 
+                              <TrendingUp className="h-4 w-4 text-green-600" /> : 
+                              <TrendingDown className="h-4 w-4 text-red-600" />
+                            }
+                          </div>
+                          <div>
+                            <p className="font-medium">{entry.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>{entry.category}</span>
+                              <span>{entry.payment_method}</span>
+                              <span>{new Date(entry.date).toLocaleDateString()}</span>
+                              {entry.vat_applicable && (
+                                <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+                                  VAT: {formatCurrency(entry.vat_amount || 0)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`font-semibold ${
+                            entry.entry_type === 'income' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {entry.entry_type === 'income' ? '+' : '-'}{formatCurrency(entry.amount)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {activeView === 'accounts' && (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">All Accounts</h3>
+                <div className="space-y-4">
+                  {accounts.map(account => (
+                    <div key={account.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                      <div>
+                        <p className="font-medium">{account.name}</p>
+                        <p className="text-sm text-muted-foreground capitalize">{account.type}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(account.balance)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+            </div>
         </div>
       </DashboardLayout>
     </SubscriptionGate>

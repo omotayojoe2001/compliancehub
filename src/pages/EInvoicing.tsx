@@ -222,43 +222,43 @@ export default function EInvoicing() {
               <h1 className="text-xl sm:text-2xl font-bold">E-Invoicing System</h1>
               <p className="text-muted-foreground text-sm">Create professional invoices with your company branding</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="text-sm">
-                <Upload className="h-4 w-4 mr-2" />
-                <span className="truncate">Upload Logo</span>
-              </Button>
-              <Button onClick={() => setShowCreateForm(true)} className="text-sm">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="truncate">Create Invoice</span>
-              </Button>
-            </div>
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Invoice
+            </Button>
           </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleLogoUpload}
-            className="hidden"
-          />
-
-          {/* Company Logo Preview */}
-          {companyLogo && (
-            <Card className="p-4">
-              <div className="flex items-center gap-4">
-                <img src={companyLogo} alt="Company Logo" className="h-16 w-16 object-contain" />
-                <div>
-                  <p className="font-medium">Company Logo Uploaded</p>
-                  <p className="text-sm text-muted-foreground">This will appear on all your invoices</p>
-                </div>
-              </div>
-            </Card>
-          )}
 
           {/* Create Invoice Form */}
           {showCreateForm && (
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Create New Invoice</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Create New Invoice</h3>
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="text-sm">
+                  <Upload className="h-4 w-4 mr-2" />
+                  <span className="truncate">Upload Logo</span>
+                </Button>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+
+              {/* Company Logo Preview */}
+              {companyLogo && (
+                <Card className="p-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    <img src={companyLogo} alt="Company Logo" className="h-16 w-16 object-contain" />
+                    <div>
+                      <p className="font-medium">Company Logo Uploaded</p>
+                      <p className="text-sm text-muted-foreground">This will appear on all your invoices</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
               
               {/* Client Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
