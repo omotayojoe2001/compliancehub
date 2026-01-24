@@ -23,7 +23,6 @@ import Register from "./pages/Register";
 import ForgotPasswordClean from "./pages/ForgotPasswordClean";
 import ResetPassword from "./pages/ResetPassword";
 import EmailConfirmation from "./pages/EmailConfirmation";
-import ExpenseManagement from "./pages/ExpenseManagement";
 import DigitalCashbook from "./pages/DigitalCashbook";
 import EInvoicing from "./pages/EInvoicing";
 import SmartTaxCalculator from "./pages/SmartTaxCalculator";
@@ -34,6 +33,7 @@ import { useState } from "react";
 import TestPage from "./pages/TestPage";
 
 import Landing from "./pages/Landing";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -52,13 +52,13 @@ function AppContent() {
       <Route path="/forgot-password" element={<ForgotPasswordClean />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<EmailConfirmation />} />
+      <Route path="/terms" element={<Terms />} />
       
       <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
       <Route path="/obligations" element={<ProtectedRoute><Obligations /></ProtectedRoute>} />
       <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
       <Route path="/calculator" element={<ProtectedRoute><SmartTaxCalculator /></ProtectedRoute>} />
       <Route path="/test-route" element={<TestPage />} />
-      <Route path="/expenses" element={<ProtectedRoute><ExpenseManagement /></ProtectedRoute>} />
       <Route path="/cashbook" element={<ProtectedRoute><DigitalCashbook /></ProtectedRoute>} />
       <Route path="/invoicing" element={<ProtectedRoute><EInvoicing /></ProtectedRoute>} />
       <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />

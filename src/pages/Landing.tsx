@@ -601,6 +601,14 @@ export default function Landing() {
                     PAYE Deadlines
                   </a>
                 </li>
+                <li>
+                  <Link
+                    to="/terms"
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Terms and Conditions
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>

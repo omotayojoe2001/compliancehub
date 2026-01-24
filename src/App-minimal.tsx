@@ -3,7 +3,6 @@ import { AuthProvider } from "@/contexts/AuthContextClean";
 import { HelpProvider } from "@/components/onboarding/HelpProvider";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import DigitalCashbook from "./pages/DigitalCashbook";
-import ExpenseManagement from "./pages/ExpenseManagement";
 import EInvoicing from "./pages/EInvoicing";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
@@ -38,7 +37,6 @@ function App() {
             <Route path="/calculator" element={<SmartTaxCalculator />} />
             <Route path="/test" element={<TestPage />} />
             <Route path="/cashbook" element={<DigitalCashbook />} />
-            <Route path="/expenses" element={<ExpenseManagement />} />
             <Route path="/invoicing" element={<EInvoicing />} />
             <Route path="/guides" element={<Guides />} />
             <Route path="/subscription" element={<Subscription />} />

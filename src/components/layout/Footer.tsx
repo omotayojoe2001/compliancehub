@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Heart, ExternalLink } from 'lucide-react';
 
 export function Footer() {
@@ -35,7 +36,9 @@ export function Footer() {
             <h4 className="font-medium text-foreground mb-2">Legal</h4>
             <div className="space-y-1">
               <a href="#" className="text-muted-foreground hover:text-foreground">Privacy Policy</a>
-              <a href="#" className="text-muted-foreground hover:text-foreground">Terms of Service</a>
+              <Link to="/terms" className="text-muted-foreground hover:text-foreground">
+                Terms and Conditions
+              </Link>
             </div>
           </div>
           

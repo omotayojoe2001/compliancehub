@@ -7,7 +7,6 @@ import { HelpProvider } from "@/components/onboarding/HelpProvider";
 import { AuthProvider } from "@/contexts/AuthContextClean";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import DashboardSimple from "./pages/DashboardSimple";
-import ExpenseManagement from "./pages/ExpenseManagement";
 import DigitalCashbook from "./pages/DigitalCashbook";
 import EInvoicing from "./pages/EInvoicing";
 import SmartTaxCalculator from "./pages/SmartTaxCalculator";
@@ -47,7 +46,6 @@ const App = () => (
             <Route path="/calculator" element={<ProtectedRoute><SmartTaxCalculator /></ProtectedRoute>} />
             <Route path="/cashbook" element={<ProtectedRoute><DigitalCashbook /></ProtectedRoute>} />
             <Route path="/invoicing" element={<ProtectedRoute><EInvoicing /></ProtectedRoute>} />
-            <Route path="/expenses" element={<ProtectedRoute><ExpenseManagement /></ProtectedRoute>} />
             <Route path="/guides" element={<ProtectedRoute><GuidesClean /></ProtectedRoute>} />
             <Route path="/subscription" element={<ProtectedRoute><SubscriptionClean /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsClean /></ProtectedRoute>} />
