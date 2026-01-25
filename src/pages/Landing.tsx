@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -125,7 +124,6 @@ const targetAudience = [
 
 export default function Landing() {
   const navigate = useNavigate();
-  const [isAnnual, setIsAnnual] = useState(true);
 
   return (
     <div className="min-h-screen bg-background">
@@ -294,32 +292,6 @@ export default function Landing() {
               Less than what you pay an accountant. More peace of mind.
             </p>
             
-            {/* Billing Toggle */}
-            <div className="mt-6 flex items-center justify-center gap-4">
-              <span className={`text-sm ${!isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                Monthly
-              </span>
-              <button
-                onClick={() => setIsAnnual(!isAnnual)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isAnnual ? 'bg-primary' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isAnnual ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className={`text-sm ${isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                Annual
-              </span>
-              {isAnnual && (
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  Save up to 25%
-                </span>
-              )}
-            </div>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {pricing.map((plan) => (
@@ -347,17 +319,15 @@ export default function Landing() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold text-foreground">
-                      {isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                      {plan.annualPrice}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {isAnnual ? plan.annualPeriod : plan.period}
+                      {plan.annualPeriod}
                     </span>
                   </div>
-                  {isAnnual && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Billed annually
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Billed annually
+                  </p>
                 </div>
                 <ul className="mb-6 space-y-2">
                   {plan.features.map((feature) => (

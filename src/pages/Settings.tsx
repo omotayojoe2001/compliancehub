@@ -27,7 +27,14 @@ export default function Settings() {
     business_name: '',
     rc_number: '',
     tin: '',
-    industry: ''
+    industry: '',
+    business_address: '',
+    business_phone: ''
+  });
+  const [complianceData, setComplianceData] = useState({
+    cac_date: '',
+    vat_status: false,
+    paye_status: false
   });
 
   const [notificationPrefs, setNotificationPrefs] = useState({
@@ -49,7 +56,9 @@ export default function Settings() {
         business_name: currentCompany.name || '',
         rc_number: '',
         tin: currentCompany.tin || '',
-        industry: ''
+        industry: '',
+        business_address: '',
+        business_phone: ''
       });
       
       // Load additional company data from database
@@ -63,6 +72,7 @@ export default function Settings() {
         email: user.email || '',
         phone: profile?.phone || ''
       });
+      loadComplianceData();
     }
   }, [currentCompany, user, profile]);
 
@@ -81,11 +91,35 @@ export default function Settings() {
           business_name: data.company_name || '',
           rc_number: data.cac_number || '',
           tin: data.tin || '',
-          industry: data.business_type || ''
+          industry: data.business_type || '',
+          business_address: data.address || '',
+          business_phone: data.phone || ''
         });
       }
     } catch (error) {
       console.error('Error loading company data:', error);
+    }
+  };
+
+  const loadComplianceData = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('cac_date, vat_status, paye_status')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (data && !error) {
+        setComplianceData({
+          cac_date: data.cac_date || '',
+          vat_status: !!data.vat_status,
+          paye_status: !!data.paye_status
+        });
+      }
+    } catch (error) {
+      console.error('Error loading compliance data:', error);
     }
   };
 
@@ -139,15 +173,32 @@ export default function Settings() {
           company_name: businessData.business_name,
           cac_number: businessData.rc_number,
           tin: businessData.tin,
-          business_type: businessData.industry
+          business_type: businessData.industry,
+          address: businessData.business_address,
+          phone: businessData.business_phone
         })
         .eq('id', currentCompany.id);
       
       if (error) throw error;
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          business_name: businessData.business_name,
+          phone: businessData.business_phone || null,
+          cac_date: complianceData.cac_date || null,
+          vat_status: complianceData.vat_status,
+          paye_status: complianceData.paye_status
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
       alert('Business details updated successfully!');
       
       // Reload company data instead of full page refresh
       await loadCompanyData();
+      await loadComplianceData();
     } catch (error) {
       console.error('Update error:', error);
       alert('Failed to update business details');
@@ -309,6 +360,42 @@ export default function Settings() {
                     className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="Enter business phone"
                   />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    CAC Registration Date
+                  </label>
+                  <input
+                    type="date"
+                    value={complianceData.cac_date || ''}
+                    onChange={(e) => setComplianceData({...complianceData, cac_date: e.target.value})}
+                    className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Tax Status
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={complianceData.vat_status}
+                        onChange={(e) => setComplianceData({...complianceData, vat_status: e.target.checked})}
+                        className="h-4 w-4 border-border text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-foreground">VAT Registered</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={complianceData.paye_status}
+                        onChange={(e) => setComplianceData({...complianceData, paye_status: e.target.checked})}
+                        className="h-4 w-4 border-border text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-foreground">PAYE Registered</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             )}

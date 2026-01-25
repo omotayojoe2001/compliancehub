@@ -6,8 +6,9 @@ import { useAuth } from "@/contexts/AuthContextClean";
 import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckCircle } from "lucide-react";
+import { Trash2, CheckCircle, Calculator } from "lucide-react";
 import { SubscriptionGate } from "@/components/SubscriptionGate";
+import { Link } from "react-router-dom";
 
 interface Obligation {
   id: string;
@@ -81,6 +82,16 @@ export default function Obligations() {
     if (!error) {
       fetchObligations();
     }
+  };
+
+  const getCalculatorLink = (obligationType: string) => {
+    const taxType = obligationType.toLowerCase();
+    if (taxType.includes('paye')) return '/calculator?tax=paye';
+    if (taxType.includes('withholding') || taxType.includes('wht')) return '/calculator?tax=wht';
+    if (taxType.includes('company income') || taxType.includes('cit')) return '/calculator?tax=cit';
+    if (taxType.includes('capital gains')) return '/calculator?tax=cgt';
+    if (taxType.includes('vat')) return '/calculator?tax=vat';
+    return `/calculator?tax=${encodeURIComponent(obligationType)}`;
   };
 
   return (
@@ -165,15 +176,28 @@ export default function Obligations() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteObligation(obligation.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="border-border"
+                            >
+                              <Link to={getCalculatorLink(obligation.obligation_type)}>
+                                <Calculator className="h-4 w-4 mr-1" />
+                                Calculator
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteObligation(obligation.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -211,15 +235,28 @@ export default function Obligations() {
                       <p className="text-xs text-muted-foreground">
                         Due: {new Date(obligation.next_due_date).toLocaleDateString()}
                       </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteObligation(obligation.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300 h-7 px-2"
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="border-border h-7 px-2"
+                        >
+                          <Link to={getCalculatorLink(obligation.obligation_type)}>
+                            <Calculator className="h-3 w-3 mr-1" />
+                            Calc
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteObligation(obligation.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300 h-7 px-2"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

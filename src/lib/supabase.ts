@@ -9,6 +9,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Create client with simplified configuration for login fix
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: (input, init) => {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+      const nextInit = { ...init, signal: controller.signal };
+
+      return fetch(input, nextInit).finally(() => {
+        window.clearTimeout(timeoutId);
+      });
+    }
+  },
   auth: {
     autoRefreshToken: true,
     persistSession: true,

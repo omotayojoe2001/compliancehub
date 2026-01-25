@@ -309,6 +309,36 @@ class ComprehensiveDbService {
     return data || [];
   }
 
+  async deleteInvoiceItems(invoiceId: string): Promise<void> {
+    const { error } = await supabase
+      .from('invoice_items')
+      .delete()
+      .eq('invoice_id', invoiceId);
+    
+    if (error) throw error;
+  }
+
+  async updateInvoice(invoiceId: string, updates: Partial<Invoice>): Promise<Invoice | null> {
+    const { data, error } = await supabase
+      .from('invoices')
+      .update(updates)
+      .eq('id', invoiceId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteInvoice(invoiceId: string): Promise<void> {
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .eq('id', invoiceId);
+    
+    if (error) throw error;
+  }
+
   // Tax Obligation Management
   async getTaxObligations(userId: string): Promise<TaxObligation[]> {
     const { data, error } = await supabase

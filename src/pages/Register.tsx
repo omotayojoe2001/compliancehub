@@ -52,7 +52,14 @@ export default function Register() {
     }
 
     console.log('📝 Calling signUp function...')
-    const { data, error } = await signUp(formData.email, formData.password);
+    const { data, error } = await signUp(formData.email, formData.password, {
+      full_name: formData.clientName,
+      business_name: formData.businessName,
+      phone: formData.phone,
+      cac_date: formData.cacDate,
+      vat_status: formData.vatStatus,
+      paye_status: formData.payeStatus
+    });
     
     console.log('📝 Registration result:', {
       success: !error,
@@ -69,7 +76,12 @@ export default function Register() {
         status: error.status,
         name: error.name
       })
-      setError(error.message);
+      const message = error.message.toLowerCase();
+      if (message.includes('already registered') || message.includes('user already registered')) {
+        setError('This email already has an account. Please log in.');
+      } else {
+        setError(error.message);
+      }
     } else if (data.user && !data.session) {
       console.log('📝 Email confirmation required')
       
@@ -329,3 +341,4 @@ export default function Register() {
     </div>
   );
 }
+

@@ -21,6 +21,21 @@ export function useProfile() {
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 8000): Promise<T> => {
+    let timeoutId: number | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    }
+  };
+
   console.log('👤 useProfile initial state:', {
     hasProfile: !!profile,
     loading,
@@ -55,18 +70,26 @@ export function useProfile() {
       console.log('👤 About to call supabase.from(user_profiles)...');
       
       // Get user profile
-      const { data: profileData, error: profileError } = await supabase
+      const profilePromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user?.id)
         .maybeSingle();
       
       // Get subscription data
-      const { data: subscriptionData, error: subscriptionError } = await supabase
+      const subscriptionPromise = supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user?.id)
         .maybeSingle();
+
+      const [
+        { data: profileData, error: profileError },
+        { data: subscriptionData, error: subscriptionError }
+      ] = await Promise.all([
+        withTimeout(profilePromise),
+        withTimeout(subscriptionPromise)
+      ]);
       
       console.log('👤 Database queries COMPLETED:', {
         hasProfileData: !!profileData,

@@ -60,6 +60,16 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
     hasMultiUserAccess: false,
     hasPrioritySupport: true,
   },
+  enterprise: {
+    maxObligations: -1, // unlimited
+    hasWhatsAppReminders: true,
+    hasEmailReminders: true,
+    hasAdvancedCalculator: true,
+    hasReminderHistory: true,
+    hasApiAccess: true,
+    hasMultiUserAccess: true,
+    hasPrioritySupport: true,
+  },
   annual: {
     maxObligations: -1, // unlimited
     hasWhatsAppReminders: true,
@@ -105,7 +115,7 @@ export const planRestrictionsService = {
     } else if (plan === 'basic') {
       return `Upgrade to Pro plan to access ${featureName}`;
     } else if (plan === 'pro') {
-      return `Upgrade to Annual plan to access ${featureName}`;
+      return `Upgrade to Enterprise plan to access ${featureName}`;
     }
     
     return `This feature requires a paid plan`;

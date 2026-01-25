@@ -2,7 +2,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, Calculator, FileText, Download, Calendar, Search, BarChart3, ArrowUpDown } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, FileText, Download, Search, BarChart3, ArrowUpDown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useAuth } from '@/contexts/AuthContextClean';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -22,22 +22,11 @@ interface CashbookEntry {
   user_id: string;
 }
 
-interface Account {
-  id: string;
-  name: string;
-  type: 'cash' | 'bank' | 'mobile';
-  balance: number;
-}
 
 export default function DigitalCashbook() {
   const { user } = useAuth();
   const { currentCompany } = useCompany();
   const [entries, setEntries] = useState<CashbookEntry[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([
-    { id: '1', name: 'Cash on Hand', type: 'cash', balance: 0 },
-    { id: '2', name: 'Bank Account', type: 'bank', balance: 0 },
-    { id: '3', name: 'Mobile Money', type: 'mobile', balance: 0 }
-  ]);
   const [activeView, setActiveView] = useState('summary');
   const [showAddForm, setShowAddForm] = useState(false);
   const [filterPeriod, setFilterPeriod] = useState('this_month');
@@ -158,8 +147,7 @@ export default function DigitalCashbook() {
 
   const views = [
     { id: 'summary', name: 'Summary', icon: BarChart3 },
-    { id: 'transactions', name: 'Transactions', icon: ArrowUpDown },
-    { id: 'accounts', name: 'All Accounts', icon: Calculator }
+    { id: 'transactions', name: 'Transactions', icon: ArrowUpDown }
   ];
 
   const filteredEntries = entries.filter((entry) => {
@@ -394,9 +382,9 @@ export default function DigitalCashbook() {
                       <p className="text-xs text-muted-foreground">Net Balance</p>
                       <p className="text-lg font-bold">{formatCurrency(getTotalInflow() - getTotalOutflow())}</p>
                     </div>
-                    <div className="p-2 bg-blue-100 rounded-full">
-                      <Calculator className="h-4 w-4 text-blue-600" />
-                    </div>
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <BarChart3 className="h-4 w-4 text-blue-600" />
+                </div>
                   </div>
                 </Card>
     
@@ -492,24 +480,6 @@ export default function DigitalCashbook() {
               </Card>
             )}
 
-            {activeView === 'accounts' && (
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">All Accounts</h3>
-                <div className="space-y-4">
-                  {accounts.map(account => (
-                    <div key={account.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div>
-                        <p className="font-medium">{account.name}</p>
-                        <p className="text-sm text-muted-foreground capitalize">{account.type}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(account.balance)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
             </div>
         </div>
       </DashboardLayout>

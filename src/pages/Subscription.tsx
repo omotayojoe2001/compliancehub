@@ -13,7 +13,6 @@ export default function Subscription() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const [loading, setLoading] = useState<string | null>(null);
-  const [isAnnual, setIsAnnual] = useState(true);
 
   // Get plan display name
   const getPlanDisplayName = (planKey: string) => {
@@ -196,33 +195,6 @@ const plans = [
           helpTitle="Choose Your Plan"
           helpContent="Different plans give you different features. The more you pay, the more reminders and features you get. If you stop paying, ALL reminders stop - the system won't work for free."
         >
-          {/* Billing Toggle */}
-          <div className="mb-6 flex items-center justify-center gap-4">
-            <span className={`text-sm ${!isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isAnnual ? 'bg-primary' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isAnnual ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-            <span className={`text-sm ${isAnnual ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-              Annual
-            </span>
-            {isAnnual && (
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                Save up to 25%
-              </span>
-            )}
-          </div>
-          
           <div className="grid gap-4 lg:grid-cols-4">
             {plans.map((plan) => (
               <div
@@ -244,17 +216,15 @@ const plans = [
                 
                 <div className="mt-2 flex items-baseline">
                   <span className="text-2xl font-semibold text-foreground">
-                    {isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                    {plan.annualPrice}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {isAnnual ? plan.period : plan.monthlyPeriod}
+                    {plan.period}
                   </span>
                 </div>
-                {isAnnual && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Billed annually
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Billed annually
+                </p>
 
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature) => (

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calculator, Lock, Crown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
-import { useProfile } from '@/hooks/useProfileClean';
+import { useProfile } from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 
 interface TaxCalculation {

@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Download, Eye, Upload, Building2 } from 'lucide-react';
+import { Plus, Download, Eye, Upload, Building2, Trash2 } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useProfile } from '@/hooks/useProfileClean';
 import { useAuth } from '@/contexts/AuthContextClean';
+import { useCompany } from '@/contexts/CompanyContext';
+import { supabase } from '@/lib/supabase';
 import { comprehensiveDbService } from '@/lib/comprehensiveDbService';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -34,12 +36,22 @@ interface Invoice {
 
 export default function EInvoicing() {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const { profile } = useProfile();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  const [editingInvoiceStatus, setEditingInvoiceStatus] = useState<Invoice['status']>('draft');
+  const [companyDetails, setCompanyDetails] = useState<{
+    company_name?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
   
@@ -52,19 +64,61 @@ export default function EInvoicing() {
   useEffect(() => {
     if (user?.id) {
       loadInvoices();
+    } else {
+      setInvoices([]);
+      setLoading(false);
     }
   }, [user?.id]);
 
+  useEffect(() => {
+    if (currentCompany?.id) {
+      loadCompanyDetails();
+    }
+  }, [currentCompany?.id]);
+
   const loadInvoices = async () => {
     if (!user?.id) return;
-    
+
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setLoadError("Request timed out. Please try again.");
+      setLoading(false);
+    }, 8000);
+
+    setLoadError(null);
     try {
       const data = await comprehensiveDbService.getInvoices(user.id);
+      if (settled) return;
       setInvoices(data || []);
     } catch (error) {
+      if (settled) return;
       console.error('Error loading invoices:', error);
+      setInvoices([]);
+      setLoadError("Couldn't load invoices. Please try again.");
     } finally {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
       setLoading(false);
+    }
+  };
+
+  const loadCompanyDetails = async () => {
+    if (!currentCompany?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('company_profiles')
+        .select('company_name,address,phone,email')
+        .eq('id', currentCompany.id)
+        .single();
+
+      if (error) throw error;
+      setCompanyDetails(data || null);
+    } catch (error) {
+      console.error('Error loading company details:', error);
     }
   };
 
@@ -114,7 +168,7 @@ export default function EInvoicing() {
     return { subtotal, vatAmount, total };
   };
 
-  const generateInvoice = async () => {
+  const saveInvoice = async () => {
     if (!user?.id) return;
     
     const { subtotal, vatAmount, total } = calculateTotals();
@@ -135,18 +189,39 @@ export default function EInvoicing() {
     };
 
     try {
-      const createdInvoice = await comprehensiveDbService.createInvoice(newInvoice);
-      
-      // Create invoice items
-      const invoiceItems = formData.items.map(item => ({
-        invoice_id: createdInvoice.id!,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.rate,
-        total_price: item.amount
-      }));
-      
-      await comprehensiveDbService.createInvoiceItems(invoiceItems);
+      if (editingInvoiceId) {
+        await comprehensiveDbService.updateInvoice(editingInvoiceId, {
+          client_name: formData.clientName,
+          client_address: formData.clientAddress,
+          subtotal,
+          vat_amount: vatAmount,
+          total_amount: total,
+          status: editingInvoiceStatus,
+          company_logo_url: companyLogo
+        });
+
+        await comprehensiveDbService.deleteInvoiceItems(editingInvoiceId);
+        const updatedItems = formData.items.map(item => ({
+          invoice_id: editingInvoiceId,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.rate,
+          total_price: item.amount
+        }));
+        await comprehensiveDbService.createInvoiceItems(updatedItems);
+      } else {
+        const createdInvoice = await comprehensiveDbService.createInvoice(newInvoice);
+
+        const invoiceItems = formData.items.map(item => ({
+          invoice_id: createdInvoice.id!,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.rate,
+          total_price: item.amount
+        }));
+        
+        await comprehensiveDbService.createInvoiceItems(invoiceItems);
+      }
       
       // Reload invoices
       await loadInvoices();
@@ -158,8 +233,10 @@ export default function EInvoicing() {
         items: [{ description: '', quantity: 1, rate: 0, amount: 0 }]
       });
       setShowCreateForm(false);
+      setEditingInvoiceId(null);
+      setEditingInvoiceStatus('draft');
     } catch (error) {
-      console.error('Error creating invoice:', error);
+      console.error('Error saving invoice:', error);
     }
   };
 
@@ -197,17 +274,70 @@ export default function EInvoicing() {
     pdf.save(`${invoice.invoice_number}.pdf`);
   };
 
-  const viewInvoice = (invoice: Invoice) => {
-    setViewingInvoice(invoice);
+  const loadInvoiceItems = async (invoiceId: string) => {
+    const items = await comprehensiveDbService.getInvoiceItems(invoiceId);
+    return items.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      rate: item.unit_price,
+      amount: item.total_price
+    }));
+  };
+
+  const viewInvoice = async (invoice: Invoice) => {
+    try {
+      const items = await loadInvoiceItems(invoice.id);
+      setViewingInvoice({ ...invoice, items });
+    } catch (error) {
+      console.error('Error loading invoice items:', error);
+      setViewingInvoice(invoice);
+    }
   };
 
   const downloadInvoice = async (invoice: Invoice) => {
-    setViewingInvoice(invoice);
+    try {
+      const items = await loadInvoiceItems(invoice.id);
+      setViewingInvoice({ ...invoice, items });
+    } catch (error) {
+      console.error('Error loading invoice items:', error);
+      setViewingInvoice(invoice);
+    }
     // Wait for the invoice to render
     setTimeout(() => {
       generatePDF(invoice);
       setViewingInvoice(null);
     }, 100);
+  };
+
+  const editInvoice = async (invoice: Invoice) => {
+    try {
+      const items = await loadInvoiceItems(invoice.id);
+      setFormData({
+        clientName: invoice.client_name,
+        clientAddress: invoice.client_address,
+        items: items.length
+          ? items
+          : [{ description: '', quantity: 1, rate: 0, amount: 0 }]
+      });
+      setCompanyLogo(invoice.company_logo_url || null);
+      setEditingInvoiceId(invoice.id);
+      setEditingInvoiceStatus(invoice.status);
+      setShowCreateForm(true);
+    } catch (error) {
+      console.error('Error loading invoice for edit:', error);
+    }
+  };
+
+  const deleteInvoice = async (invoice: Invoice) => {
+    if (!confirm(`Delete invoice ${invoice.invoice_number}?`)) return;
+
+    try {
+      await comprehensiveDbService.deleteInvoiceItems(invoice.id);
+      await comprehensiveDbService.deleteInvoice(invoice.id);
+      await loadInvoices();
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+    }
   };
 
   const { subtotal, vatAmount, total } = calculateTotals();
@@ -222,7 +352,19 @@ export default function EInvoicing() {
               <h1 className="text-xl sm:text-2xl font-bold">E-Invoicing System</h1>
               <p className="text-muted-foreground text-sm">Create professional invoices with your company branding</p>
             </div>
-            <Button onClick={() => setShowCreateForm(true)}>
+            <Button
+              onClick={() => {
+                setEditingInvoiceId(null);
+                setEditingInvoiceStatus('draft');
+                setFormData({
+                  clientName: '',
+                  clientAddress: '',
+                  items: [{ description: '', quantity: 1, rate: 0, amount: 0 }]
+                });
+                setCompanyLogo(null);
+                setShowCreateForm(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Invoice
             </Button>
@@ -232,7 +374,9 @@ export default function EInvoicing() {
           {showCreateForm && (
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Create New Invoice</h3>
+                <h3 className="text-lg font-semibold">
+                  {editingInvoiceId ? 'Edit Invoice' : 'Create New Invoice'}
+                </h3>
                 <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="text-sm">
                   <Upload className="h-4 w-4 mr-2" />
                   <span className="truncate">Upload Logo</span>
@@ -377,8 +521,18 @@ export default function EInvoicing() {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={generateInvoice}>Create Invoice</Button>
-                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+                <Button onClick={saveInvoice}>
+                  {editingInvoiceId ? 'Save Changes' : 'Create Invoice'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingInvoiceId(null);
+                    setEditingInvoiceStatus('draft');
+                  }}
+                >
                   Cancel
                 </Button>
               </div>
@@ -408,13 +562,19 @@ export default function EInvoicing() {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-8">
                       <div>
-                        {companyLogo && (
-                          <img src={companyLogo} alt="Company Logo" className="h-16 w-auto mb-4" />
+                        {viewingInvoice.company_logo_url && (
+                          <img src={viewingInvoice.company_logo_url} alt="Company Logo" className="h-16 w-auto mb-4" />
                         )}
                         <div>
-                          <h1 className="text-2xl font-bold text-gray-900">{profile?.business_name || 'Your Business'}</h1>
-                          <p className="text-gray-600">{profile?.business_address || 'Business Address'}</p>
-                          <p className="text-gray-600">{profile?.phone || 'Phone Number'}</p>
+                          <h1 className="text-2xl font-bold text-gray-900">
+                            {companyDetails?.company_name || currentCompany?.name || profile?.business_name || 'Your Business'}
+                          </h1>
+                          <p className="text-gray-600">
+                            {companyDetails?.address || 'Business Address'}
+                          </p>
+                          <p className="text-gray-600">
+                            {companyDetails?.phone || profile?.phone || 'Phone Number'}
+                          </p>
                           <p className="text-gray-600">{profile?.email || 'Email Address'}</p>
                         </div>
                       </div>
@@ -447,14 +607,16 @@ export default function EInvoicing() {
                           </tr>
                         </thead>
                         <tbody>
-                          {viewingInvoice.items?.map((item, index) => (
-                            <tr key={index} className="border-b border-gray-200">
-                              <td className="py-3 px-2 text-gray-700">{item.description}</td>
-                              <td className="py-3 px-2 text-center text-gray-700">{item.quantity}</td>
-                              <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(item.rate)}</td>
-                              <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(item.amount)}</td>
-                            </tr>
-                          )) || (
+                          {viewingInvoice.items && viewingInvoice.items.length > 0 ? (
+                            viewingInvoice.items.map((item, index) => (
+                              <tr key={index} className="border-b border-gray-200">
+                                <td className="py-3 px-2 text-gray-700">{item.description}</td>
+                                <td className="py-3 px-2 text-center text-gray-700">{item.quantity}</td>
+                                <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(item.rate)}</td>
+                                <td className="py-3 px-2 text-right text-gray-700">{formatCurrency(item.amount)}</td>
+                              </tr>
+                            ))
+                          ) : (
                             <tr className="border-b border-gray-200">
                               <td className="py-3 px-2 text-gray-700">Service/Product</td>
                               <td className="py-3 px-2 text-center text-gray-700">1</td>
@@ -499,7 +661,18 @@ export default function EInvoicing() {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Your Invoices</h3>
             
-            {invoices.length === 0 ? (
+            {loadError ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>{loadError}</p>
+                <button
+                  type="button"
+                  onClick={loadInvoices}
+                  className="mt-3 text-sm text-primary hover:underline"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : invoices.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 {loading ? 'Loading invoices...' : 'No invoices created yet. Create your first professional invoice.'}
               </div>
@@ -532,6 +705,19 @@ export default function EInvoicing() {
                         <Button variant="outline" size="sm" onClick={() => viewInvoice(invoice)}>
                           <Eye className="h-4 w-4" />
                         </Button>
+                        {invoice.status === 'draft' && (
+                          <Button variant="outline" size="sm" onClick={() => editInvoice(invoice)}>
+                            Edit
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteInvoice(invoice)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => downloadInvoice(invoice)}>
                           <Download className="h-4 w-4" />
                         </Button>
@@ -547,3 +733,4 @@ export default function EInvoicing() {
     </SubscriptionGate>
   );
 }
+

@@ -23,6 +23,7 @@ export function RecentReminders() {
   const { currentCompany } = useCompany();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id && currentCompany?.id) {
@@ -35,14 +36,29 @@ export function RecentReminders() {
 
   const loadReminders = async () => {
     if (!user?.id || !currentCompany?.id) return;
-    
+
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setLoadError("Request timed out. Please try again.");
+      setLoading(false);
+    }, 8000);
+
+    setLoadError(null);
     try {
       const data = await supabaseService.getReminders(user.id, currentCompany.id);
+      if (settled) return;
       setReminders(data || []);
     } catch (error) {
+      if (settled) return;
       console.error('Failed to load reminders:', error);
       setReminders([]);
+      setLoadError("Couldn't load reminders. Please try again.");
     } finally {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -59,6 +75,17 @@ export function RecentReminders() {
           <div className="px-3 py-6 text-center text-sm text-muted-foreground">
             <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
             Loading reminders...
+          </div>
+        ) : loadError ? (
+          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <p>{loadError}</p>
+            <button
+              type="button"
+              onClick={loadReminders}
+              className="mt-3 text-sm text-primary hover:underline"
+            >
+              Retry
+            </button>
           </div>
         ) : reminders.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground">
@@ -117,3 +144,4 @@ export function RecentReminders() {
     </div>
   );
 }
+

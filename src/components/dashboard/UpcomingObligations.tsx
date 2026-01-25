@@ -19,6 +19,7 @@ export function UpcomingObligations() {
   const { currentCompany } = useCompany();
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('📊 UpcomingObligations effect:', { userId: user?.id, companyId: currentCompany?.id, companyName: currentCompany?.name });
@@ -32,17 +33,29 @@ export function UpcomingObligations() {
 
   const loadObligations = async () => {
     if (!user?.id || !currentCompany?.id) return;
-    
-    console.log('📊 Loading obligations for company:', currentCompany.name, currentCompany.id);
-    
+
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setLoadError("Request timed out. Please try again.");
+      setLoading(false);
+    }, 8000);
+
+    setLoadError(null);
     try {
       const data = await supabaseService.getObligations(user.id, currentCompany.id);
+      if (settled) return;
       setObligations(data || []);
-      console.log('✅ Loaded', data?.length || 0, 'obligations for', currentCompany.name);
     } catch (error) {
-      console.error('❌ Failed to load obligations:', error);
+      if (settled) return;
+      console.error('Failed to load obligations:', error);
       setObligations([]);
+      setLoadError("Couldn't load obligations. Please try again.");
     } finally {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -69,6 +82,17 @@ export function UpcomingObligations() {
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
             Loading obligations...
+          </div>
+        ) : loadError ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            <p>{loadError}</p>
+            <button
+              type="button"
+              onClick={loadObligations}
+              className="mt-3 text-sm text-primary hover:underline"
+            >
+              Retry
+            </button>
           </div>
         ) : obligations.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
@@ -123,3 +147,4 @@ export function UpcomingObligations() {
     </div>
   );
 }
+

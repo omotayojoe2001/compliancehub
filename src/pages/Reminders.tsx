@@ -34,6 +34,7 @@ export default function Reminders() {
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [upcomingReminders, setUpcomingReminders] = useState<UpcomingReminder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id && currentCompany?.id) {
@@ -47,16 +48,25 @@ export default function Reminders() {
 
   const loadReminderData = async () => {
     if (!user?.id || !currentCompany?.id) return;
-    
+
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setLoadError("Request timed out. Please try again.");
+      setLoading(false);
+    }, 8000);
+
+    setLoadError(null);
     try {
       setLoading(true);
-      
-      // Load sent reminders for current company
+
       const logs = await supabaseService.getReminders(user.id, currentCompany.id);
+      if (settled) return;
       setReminderLogs(Array.isArray(logs) ? logs : []);
-      
-      // Load upcoming reminders from tax obligations for current company
+
       const obligations = await supabaseService.getObligations(user.id, currentCompany.id);
+      if (settled) return;
       const upcoming = Array.isArray(obligations)
         ? obligations
             .filter(o => o.payment_status !== 'paid')
@@ -68,13 +78,18 @@ export default function Reminders() {
               status: 'scheduled'
             }))
         : [];
-      
+
       setUpcomingReminders(upcoming);
     } catch (error) {
+      if (settled) return;
       console.error('Error loading reminder data:', error);
       setReminderLogs([]);
       setUpcomingReminders([]);
+      setLoadError("Couldn't load reminders. Please try again.");
     } finally {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -104,6 +119,17 @@ export default function Reminders() {
           </div>
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
+          ) : loadError ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>{loadError}</p>
+              <button
+                type="button"
+                onClick={loadReminderData}
+                className="mt-3 text-sm text-primary hover:underline"
+              >
+                Retry
+              </button>
+            </div>
           ) : reminderLogs.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               No reminders sent yet.
@@ -237,6 +263,17 @@ export default function Reminders() {
           </div>
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
+          ) : loadError ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>{loadError}</p>
+              <button
+                type="button"
+                onClick={loadReminderData}
+                className="mt-3 text-sm text-primary hover:underline"
+              >
+                Retry
+              </button>
+            </div>
           ) : upcomingReminders.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               No upcoming reminders scheduled.
@@ -320,3 +357,4 @@ export default function Reminders() {
     </SubscriptionGate>
   );
 }
+
