@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { supabaseService } from './supabaseService';
 import { subscriptionVerificationService } from './subscriptionVerificationService';
+import { subscriptionManager } from './subscriptionManager';
 
 declare global {
   interface Window {
@@ -47,58 +48,31 @@ export const paymentService = {
               console.log('💳 Current user:', user.user?.id);
               
               if (user.user) {
-                // Check if user already has a subscription
-                const existingSubscription = await supabaseService.getSubscription(user.user.id);
-                console.log('💳 Existing subscription:', existingSubscription);
-
-                if (existingSubscription) {
-                  // Update existing subscription
-                  await supabaseService.updateSubscription(user.user.id, {
-                    plan_type: plan,
-                    status: 'active',
-                    paystack_subscription_code: response.reference,
-                    amount: amount,
-                    next_payment_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
-                  });
-                  console.log('💳 Subscription updated successfully');
-                } else {
-                  // Create new subscription
-                  await supabaseService.createSubscription({
-                    user_id: user.user.id,
-                    plan_type: plan,
-                    status: 'active',
-                    paystack_subscription_code: response.reference,
-                    amount: amount,
-                    next_payment_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
-                  });
-                  console.log('💳 Subscription saved successfully');
-                }
-                
-                // Update profile with correct plan
-                console.log('💳 Updating profile with plan:', plan);
-                await supabaseService.updateProfile(user.user.id, {
-                  plan: plan,
-                  subscription_status: 'active'
-                });
-                console.log('💳 Profile updated successfully with plan:', plan);
-                
-                // VERIFY SUBSCRIPTION UPDATE
-                console.log('🔍 Starting subscription verification...');
-                const verification = await subscriptionVerificationService.verifySubscriptionUpdate(
-                  user.user.id, 
-                  plan, 
+                // Use subscription manager to handle payment success
+                const newState = await subscriptionManager.handlePaymentSuccess(
+                  user.user.id,
+                  plan,
                   response.reference
                 );
                 
-                if (verification.success) {
-                  console.log('✅ SUBSCRIPTION VERIFIED SUCCESSFULLY!');
-                  console.log('✅ Plan in database:', verification.profile?.plan);
-                  console.log('✅ Status in database:', verification.profile?.subscription_status);
-                  alert(`✅ SUCCESS! You are now subscribed to ${plan.toUpperCase()} plan. Your reminders are active!`);
-                } else {
-                  console.error('❌ SUBSCRIPTION VERIFICATION FAILED:', verification.error);
-                  alert(`⚠️ Payment successful but verification failed: ${verification.error}. Please contact support.`);
-                }
+                console.log('✅ SUBSCRIPTION UPDATED SUCCESSFULLY!');
+                console.log('✅ New plan:', newState.planType);
+                console.log('✅ Status:', newState.status);
+                console.log('✅ Features unlocked:', newState.features);
+                
+                // Show success message with feature details
+                const featureList = [];
+                if (newState.features.hasReminders) featureList.push('Email Reminders');
+                if (newState.features.hasWhatsAppReminders) featureList.push('WhatsApp Reminders');
+                if (newState.features.hasAdvancedCalculator) featureList.push('Advanced Calculator');
+                if (newState.features.businessProfiles > 0) featureList.push(`${newState.features.businessProfiles} Business Profile${newState.features.businessProfiles > 1 ? 's' : ''}`);
+                
+                alert(`🎉 SUCCESS! You are now on the ${plan.toUpperCase()} plan!\n\nFeatures unlocked:\n• ${featureList.join('\n• ')}\n\nYour dashboard will refresh automatically.`);
+                
+                // Force page refresh to update UI
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
               }
             } catch (error) {
               console.error('💳 Payment processing error:', error);

@@ -150,7 +150,7 @@ export default function TaxCalculator() {
             Nigeria Self-Assessment Tax Calculator
           </h1>
           <p className="text-sm text-muted-foreground">
-            Calculate your personal income tax using official FIRS rates and
+            Calculate your personal income tax using official NRS rates and
             Consolidated Relief Allowance (CRA).
           </p>
         </div>

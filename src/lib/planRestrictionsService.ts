@@ -1,5 +1,6 @@
 interface PlanLimits {
   maxObligations: number;
+  maxCompanyProfiles: number;
   hasWhatsAppReminders: boolean;
   hasEmailReminders: boolean;
   hasAdvancedCalculator: boolean;
@@ -12,6 +13,7 @@ interface PlanLimits {
 const PLAN_LIMITS: Record<string, PlanLimits> = {
   free: {
     maxObligations: 0,
+    maxCompanyProfiles: 1,
     hasWhatsAppReminders: false,
     hasEmailReminders: false,
     hasAdvancedCalculator: false,
@@ -22,6 +24,7 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
   },
   basic: {
     maxObligations: 3,
+    maxCompanyProfiles: 1,
     hasWhatsAppReminders: false,
     hasEmailReminders: true,
     hasAdvancedCalculator: true,
@@ -32,6 +35,7 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
   },
   pro: {
     maxObligations: -1, // unlimited
+    maxCompanyProfiles: 5,
     hasWhatsAppReminders: true,
     hasEmailReminders: true,
     hasAdvancedCalculator: true,
@@ -42,6 +46,7 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
   },
   enterprise: {
     maxObligations: -1, // unlimited
+    maxCompanyProfiles: -1, // unlimited
     hasWhatsAppReminders: true,
     hasEmailReminders: true,
     hasAdvancedCalculator: true,
@@ -55,6 +60,12 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
 export const planRestrictionsService = {
   getPlanLimits(plan: string): PlanLimits {
     return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+  },
+
+  canCreateCompanyProfile(plan: string, currentProfileCount: number): boolean {
+    const limits = this.getPlanLimits(plan);
+    if (limits.maxCompanyProfiles === -1) return true; // unlimited
+    return currentProfileCount < limits.maxCompanyProfiles;
   },
 
   canCreateObligation(plan: string, currentObligationCount: number): boolean {
@@ -89,6 +100,20 @@ export const planRestrictionsService = {
     }
     
     return `This feature requires a paid plan`;
+  },
+
+  getCompanyProfileLimitMessage(plan: string): string {
+    const limits = this.getPlanLimits(plan);
+    
+    if (limits.maxCompanyProfiles === 1) {
+      return plan === 'free' 
+        ? 'Free plan includes 1 company profile. Upgrade to manage more businesses'
+        : 'You can manage 1 company profile. Upgrade to Pro for up to 5 profiles';
+    } else if (limits.maxCompanyProfiles > 1) {
+      return `You can manage up to ${limits.maxCompanyProfiles} company profiles. Upgrade to Enterprise for unlimited`;
+    }
+    
+    return 'Unlimited company profiles';
   },
 
   getObligationLimitMessage(plan: string): string {

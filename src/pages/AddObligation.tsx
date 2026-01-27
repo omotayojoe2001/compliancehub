@@ -133,7 +133,7 @@ export default function AddObligation() {
           amountLabel: 'Monthly Sales Amount (₦)',
           amountHelp: 'Your total monthly sales. VAT = 7.5% of this amount',
           registrationLabel: 'VAT Registration Date',
-          registrationHelp: 'When did FIRS approve your VAT registration?'
+          registrationHelp: 'When did NRS approve your VAT registration?'
         };
       case 'PAYE':
         return {

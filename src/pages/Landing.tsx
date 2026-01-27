@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { SimpleVATCalculator } from "@/components/SimpleVATCalculator";
 import {
   Bell,
   Calculator,
@@ -30,7 +31,7 @@ const features = [
     icon: Calculator,
     title: "Tax Calculator",
     description:
-      "Estimate your self-assessment tax instantly using official Nigeria FIRS rates and formulas.",
+      "Estimate your self-assessment tax instantly using official Nigeria NRS rates and formulas.",
   },
   {
     icon: Shield,
@@ -353,14 +354,14 @@ export default function Landing() {
       {/* Calculator Preview */}
       <section id="calculator" className="border-b border-border bg-secondary py-16">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="grid items-center gap-8 md:grid-cols-2">
+            <div className="grid items-center gap-8 md:grid-cols-2">
             <div>
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
                 Free Tax Calculator
               </h2>
               <p className="mb-4 text-sm text-muted-foreground">
                 Estimate your Nigeria self-assessment tax instantly. Our
-                calculator uses official FIRS rates including Consolidated
+                calculator uses official NRS rates including Consolidated
                 Relief Allowance (CRA) and progressive tax bands.
               </p>
               <ul className="mb-6 space-y-2">
@@ -379,57 +380,12 @@ export default function Landing() {
               </ul>
               <Link to="/tax-calculator">
                 <Button>
-                  Open Calculator
+                  Open Full Calculator
                   <Calculator className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
-            <div className="border border-border bg-card p-6">
-              <div className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <Calculator className="h-4 w-4" />
-                Preview
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between border-b border-border pb-2">
-                  <span className="text-sm text-muted-foreground">
-                    Gross Income
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    ₦5,000,000
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-border pb-2">
-                  <span className="text-sm text-muted-foreground">
-                    Deductions
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    ₦500,000
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-border pb-2">
-                  <span className="text-sm text-muted-foreground">CRA</span>
-                  <span className="text-sm font-medium text-foreground">
-                    ₦1,200,000
-                  </span>
-                </div>
-                <div className="flex justify-between border-b border-border pb-2">
-                  <span className="text-sm text-muted-foreground">
-                    Taxable Income
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    ₦3,300,000
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2">
-                  <span className="text-sm font-semibold text-foreground">
-                    Estimated Tax
-                  </span>
-                  <span className="text-lg font-semibold text-primary">
-                    ₦584,000
-                  </span>
-                </div>
-              </div>
-            </div>
+            <SimpleVATCalculator />
           </div>
         </div>
       </section>

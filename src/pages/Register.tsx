@@ -12,6 +12,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     clientName: "",
     businessName: "",
+    tin: "",
     phone: "",
     email: "",
     cacDate: "",
@@ -55,6 +56,7 @@ export default function Register() {
     const { data, error } = await signUp(formData.email, formData.password, {
       full_name: formData.clientName,
       business_name: formData.businessName,
+      tin: formData.tin,
       phone: formData.phone,
       cac_date: formData.cacDate,
       vat_status: formData.vatStatus,
@@ -91,6 +93,7 @@ export default function Register() {
         await freshDbService.saveProfile(data.user.id, {
           client_name: formData.clientName,
           business_name: formData.businessName,
+          tin: formData.tin,
           phone: formData.phone,
           email: formData.email,
           cac_date: formData.cacDate,
@@ -201,6 +204,23 @@ export default function Register() {
                 required
                 className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Tax Identification Number (TIN)
+              </label>
+              <input
+                type="text"
+                name="tin"
+                value={formData.tin}
+                onChange={handleChange}
+                placeholder="Enter your company TIN"
+                className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                📄 Your company's Tax Identification Number from NRS
+              </p>
             </div>
 
             <div>

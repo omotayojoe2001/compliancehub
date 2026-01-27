@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calculator, Lock, Crown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
-import { usePlanRestrictions } from '@/hooks/usePlanRestrictions';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Link } from 'react-router-dom';
 
 interface TaxCalculation {
@@ -15,7 +15,7 @@ interface TaxCalculation {
 }
 
 export default function SmartTaxCalculator() {
-  const { plan, limits } = usePlanRestrictions();
+  const { planType: plan } = useSubscription();
   const [activeTab, setActiveTab] = useState('vat');
   const [calculations, setCalculations] = useState<TaxCalculation[]>([]);
   
@@ -190,7 +190,7 @@ export default function SmartTaxCalculator() {
   ];
 
   return (
-    <SubscriptionGate feature="Smart Tax Calculator">
+    <SubscriptionGate feature="hasAdvancedCalculator">
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}

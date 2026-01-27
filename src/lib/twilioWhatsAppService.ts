@@ -77,7 +77,7 @@ ${daysLeft <= 1 ? '🔥 *URGENT: File today to avoid penalties!*' :
   '📋 Friendly reminder - deadline approaching'}
 
 💰 Calculate tax: your-calculator-link
-📄 File online: firs.gov.ng
+📄 File online: nrs.gov.ng
 
 Reply *HELP* for assistance
 

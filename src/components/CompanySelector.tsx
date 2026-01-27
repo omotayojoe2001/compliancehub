@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, Building2, Plus, Check } from 'lucide-react';
+import { ChevronDown, Building2, Plus, Check, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextClean';
 import { supabaseService } from '@/lib/supabaseService';
+import { usePlanRestrictions } from '@/hooks/usePlanRestrictions';
 import AddCompanyModal from './AddCompanyModal';
 
 interface Company {
@@ -20,10 +21,12 @@ interface CompanySelectorProps {
 
 export default function CompanySelector({ currentCompany, onCompanyChange }: CompanySelectorProps) {
   const { user } = useAuth();
+  const { canCreateCompanyProfile, getCompanyProfileLimitMessage, plan } = usePlanRestrictions();
   const [isOpen, setIsOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false); // Never show loading
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -194,6 +197,18 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
     onCompanyChange(newCompany); // Switch to the new company immediately
   };
 
+  const handleAddCompanyClick = () => {
+    setIsOpen(false);
+    
+    // Check if user can create more company profiles
+    if (!canCreateCompanyProfile(companies.length)) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    
+    setShowAddModal(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 min-w-[200px] p-2 border rounded">
@@ -262,16 +277,35 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
             
             {/* Add New Company Button */}
             <button 
-              onClick={() => {
-                setIsOpen(false);
-                setShowAddModal(true);
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left border-t border-border mt-2 pt-3"
+              onClick={handleAddCompanyClick}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left border-t border-border mt-2 pt-3 ${
+                canCreateCompanyProfile(companies.length) 
+                  ? 'hover:bg-muted' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
             >
-              <Plus className="h-4 w-4 text-blue-600" />
+              {canCreateCompanyProfile(companies.length) ? (
+                <Plus className="h-4 w-4 text-blue-600" />
+              ) : (
+                <Crown className="h-4 w-4 text-amber-500" />
+              )}
               <div>
-                <div className="font-medium text-blue-600">Add New Company</div>
-                <div className="text-sm text-muted-foreground">Manage another business</div>
+                <div className={`font-medium ${
+                  canCreateCompanyProfile(companies.length) 
+                    ? 'text-blue-600' 
+                    : 'text-muted-foreground'
+                }`}>
+                  {canCreateCompanyProfile(companies.length) 
+                    ? 'Add New Company' 
+                    : 'Upgrade to Add More'
+                  }
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {canCreateCompanyProfile(companies.length) 
+                    ? 'Manage another business' 
+                    : getCompanyProfileLimitMessage()
+                  }
+                </div>
               </div>
             </button>
           </div>
@@ -292,6 +326,30 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
         onClose={() => setShowAddModal(false)}
         onCompanyAdded={handleCompanyAdded}
       />
+      
+      {/* Upgrade Prompt Modal */}
+      {showUpgradePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowUpgradePrompt(false)} />
+          <Card className="relative w-full max-w-md mx-4 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Crown className="h-5 w-5 text-amber-500" />
+              <h3 className="text-lg font-semibold">Upgrade Required</h3>
+            </div>
+            <p className="text-muted-foreground mb-4">
+              {getCompanyProfileLimitMessage()}
+            </p>
+            <div className="flex gap-3">
+              <Button onClick={() => setShowUpgradePrompt(false)} className="flex-1">
+                Upgrade Now
+              </Button>
+              <Button variant="outline" onClick={() => setShowUpgradePrompt(false)}>
+                Cancel
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,14 +22,14 @@ export interface GuideStep {
 
 export const complianceGuides: Guide[] = [
   {
-    id: 'vat-filing-firs',
-    title: 'FIRS VAT Filing Steps',
-    description: 'Complete step-by-step guide to file your VAT returns with FIRS online',
+    id: 'vat-filing-nrs',
+    title: 'NRS VAT Filing Steps',
+    description: 'Complete step-by-step guide to file your VAT returns with NRS online',
     category: 'VAT',
     difficulty: 'Beginner',
     estimatedTime: '30-45 minutes',
     requirements: [
-      'FIRS TIN (Tax Identification Number)',
+      'NRS TIN (Tax Identification Number)',
       'VAT Certificate',
       'Monthly sales and purchase records',
       'Bank statements',
@@ -44,9 +44,9 @@ export const complianceGuides: Guide[] = [
     steps: [
       {
         id: 'step-1',
-        title: 'Visit FIRS Online Portal',
-        description: 'Go to the official FIRS website and log into your taxpayer portal',
-        action: 'Navigate to https://www.firs.gov.ng and click "Taxpayer Portal"',
+        title: 'Visit NRS Online Portal',
+        description: 'Go to the official NRS website and log into your taxpayer portal',
+        action: 'Navigate to https://www.nrs.gov.ng and click "Taxpayer Portal"',
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
       },
       {
@@ -183,9 +183,9 @@ export const complianceGuides: Guide[] = [
       },
       {
         id: 'step-2',
-        title: 'Access FIRS Portal',
-        description: 'Log into FIRS taxpayer portal using company TIN',
-        action: 'Visit https://www.firs.gov.ng and access taxpayer portal'
+        title: 'Access NRS Portal',
+        description: 'Log into NRS taxpayer portal using company TIN',
+        action: 'Visit https://www.nrs.gov.ng and access taxpayer portal'
       },
       {
         id: 'step-3',

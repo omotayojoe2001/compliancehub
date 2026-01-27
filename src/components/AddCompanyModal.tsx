@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { X, Building2, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextClean';
 import { supabaseService } from '@/lib/supabaseService';
+import { usePlanRestrictions } from '@/hooks/usePlanRestrictions';
 
 interface AddCompanyModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AddCompanyModalProps {
 
 export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: AddCompanyModalProps) {
   const { user } = useAuth();
+  const { canCreateCompanyProfile } = usePlanRestrictions();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     company_name: '',
@@ -26,6 +28,16 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id || !formData.company_name.trim()) return;
+
+    // Get current company count for plan check
+    const userCompanies = await supabaseService.getUserCompanies(user.id);
+    const currentCount = userCompanies?.length || 0;
+    
+    // Check plan restrictions
+    if (!canCreateCompanyProfile(currentCount)) {
+      alert('You have reached your plan limit for company profiles. Please upgrade to add more.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -116,27 +128,28 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-2">TIN</label>
+              <label className="block text-sm font-medium mb-2">TIN *</label>
               <input
                 type="text"
                 value={formData.tin}
                 onChange={(e) => setFormData({...formData, tin: e.target.value})}
                 className="w-full border border-border rounded-md px-3 py-2"
                 placeholder="Tax ID Number"
+                required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">CAC Number</label>
-              <input
-                type="text"
-                value={formData.cac_number}
-                onChange={(e) => setFormData({...formData, cac_number: e.target.value})}
-                className="w-full border border-border rounded-md px-3 py-2"
-                placeholder="RC Number"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">CAC Number</label>
+            <input
+              type="text"
+              value={formData.cac_number}
+              onChange={(e) => setFormData({...formData, cac_number: e.target.value})}
+              className="w-full border border-border rounded-md px-3 py-2"
+              placeholder="RC Number"
+            />
+          </div>
           </div>
 
           <div>
@@ -162,7 +175,7 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={loading || !formData.company_name.trim()}>
+            <Button type="submit" disabled={loading || !formData.company_name.trim() || !formData.tin.trim()}>
               {loading ? (
                 <>Loading...</>
               ) : (

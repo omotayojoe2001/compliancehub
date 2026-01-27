@@ -48,12 +48,16 @@ export function usePlanRestrictions() {
     plan: effectivePlan,
     limits: planLimits,
     loading,
+    canCreateCompanyProfile: (currentCount: number) => 
+      planRestrictionsService.canCreateCompanyProfile(effectivePlan, currentCount),
     canCreateObligation: (currentCount: number) => 
       planRestrictionsService.canCreateObligation(effectivePlan, currentCount),
     canAccessFeature: (feature: keyof typeof planLimits) => 
       planRestrictionsService.canAccessFeature(effectivePlan, feature),
     getUpgradeMessage: (feature: keyof typeof planLimits) => 
       planRestrictionsService.getUpgradeMessage(effectivePlan, feature),
+    getCompanyProfileLimitMessage: () => 
+      planRestrictionsService.getCompanyProfileLimitMessage(effectivePlan),
     getObligationLimitMessage: () => 
       planRestrictionsService.getObligationLimitMessage(effectivePlan),
   };

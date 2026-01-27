@@ -30,7 +30,7 @@ export default function WelcomeIntro({ onGetStarted, onSignIn }: WelcomeIntroPro
     {
       icon: Shield,
       title: 'Compliance Made Easy',
-      description: 'Stay compliant with FIRS, CAC, and State Revenue Service requirements'
+      description: 'Stay compliant with NRS, CAC, and State Revenue Service requirements'
     }
   ];
 

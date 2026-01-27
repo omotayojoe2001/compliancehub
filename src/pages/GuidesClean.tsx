@@ -168,7 +168,7 @@ export default function GuidesClean() {
             <div className="space-y-2">
               <h4 className="font-medium">Government Resources</h4>
               <div className="space-y-1">
-                <a href="#" className="block text-sm text-blue-600 hover:underline">FIRS Official Website</a>
+                <a href="#" className="block text-sm text-blue-600 hover:underline">NRS Official Website</a>
                 <a href="#" className="block text-sm text-blue-600 hover:underline">CAC Online Portal</a>
                 <a href="#" className="block text-sm text-blue-600 hover:underline">PENCOM Guidelines</a>
               </div>
