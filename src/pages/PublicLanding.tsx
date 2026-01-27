@@ -30,13 +30,13 @@ export default function PublicLanding() {
           Never Miss a Tax Deadline Again
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          WhatsApp + Email reminders for Nigerian business owners. 
-          Get alerts before VAT, PAYE, and CAC deadlines with step-by-step filing guides.
+          Get WhatsApp + Email reminders for Nigerian business owners. 
+          Receive smart alerts before VAT, PAYE, and CAC deadlines with step-by-step filing guides.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/register">
             <Button size="lg" className="text-lg px-8 py-3">
-              Start Free Trial
+              Start Getting Reminders Free
             </Button>
           </Link>
           <Link to="/tax-calculator">
@@ -49,27 +49,32 @@ export default function PublicLanding() {
 
       {/* Features */}
       <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">What We Watch For You</h2>
+        <h2 className="text-3xl font-bold text-center mb-4">What We Watch For You</h2>
+        <p className="text-center text-gray-600 mb-12">We monitor all these deadlines so you don't have to worry</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="p-6 text-center">
             <FileText className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="font-semibold mb-2">VAT Returns</h3>
             <p className="text-sm text-gray-600">Monthly filing by 21st of each month</p>
+            <p className="text-xs text-blue-600 mt-2 font-medium">✓ We'll remind you</p>
           </Card>
           <Card className="p-6 text-center">
             <Building2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h3 className="font-semibold mb-2">PAYE Remittance</h3>
             <p className="text-sm text-gray-600">Employee tax by 10th of each month</p>
+            <p className="text-xs text-green-600 mt-2 font-medium">✓ We'll remind you</p>
           </Card>
           <Card className="p-6 text-center">
             <Bell className="h-12 w-12 text-orange-600 mx-auto mb-4" />
             <h3 className="font-semibold mb-2">CAC Annual Returns</h3>
             <p className="text-sm text-gray-600">42 days after company anniversary</p>
+            <p className="text-xs text-orange-600 mt-2 font-medium">✓ We'll remind you</p>
           </Card>
           <Card className="p-6 text-center">
             <Calculator className="h-12 w-12 text-purple-600 mx-auto mb-4" />
             <h3 className="font-semibold mb-2">Tax Calculator</h3>
             <p className="text-sm text-gray-600">Instant Nigerian tax calculations</p>
+            <p className="text-xs text-purple-600 mt-2 font-medium">✓ Always available</p>
           </Card>
         </div>
       </section>

@@ -7,7 +7,7 @@ import { RecentReminders } from "@/components/dashboard/RecentReminders";
 import { AddTaxObligation } from "@/components/dashboard/AddTaxObligation";
 import { WelcomePopup } from "@/components/onboarding/WelcomePopup";
 import { useProfileSimple } from "@/hooks/useProfileSimple";
-import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,7 @@ export default function Dashboard() {
   
   // Use proper profile hook to fetch real data from database
   const { profile, loading } = useProfileSimple();
-  const { plan, limits, getObligationLimitMessage } = usePlanRestrictions();
+  const { planType, isActive, loading: subscriptionLoading } = useSubscription();
   const { currentCompany } = useCompany();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -136,7 +136,7 @@ export default function Dashboard() {
 
   console.log('✅ Dashboard rendering MAIN CONTENT');
   console.groupEnd();
-  const showUpgradePrompt = plan === 'free' || limits.maxObligations === 0;
+  const showUpgradePrompt = !isActive || planType === 'free';
 
   return (
     <DashboardLayout>
@@ -152,16 +152,16 @@ export default function Dashboard() {
 
         {/* Plan Restrictions Alert */}
         {showUpgradePrompt && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-yellow-800">⚠️ No Active Subscription</h3>
-                <p className="text-sm text-yellow-700 mt-1">
-                  {getObligationLimitMessage()}
+                <h3 className="font-semibold text-blue-800">🚀 Unlock WhatsApp Reminders</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  Get instant WhatsApp alerts for tax deadlines + unlimited tracking. Never miss another deadline!
                 </p>
               </div>
-              <Button onClick={() => navigate('/subscription')} className="bg-yellow-600 hover:bg-yellow-700">
-                Subscribe Now
+              <Button onClick={() => navigate('/subscription')} className="bg-blue-600 hover:bg-blue-700">
+                Upgrade Now
               </Button>
             </div>
           </div>
@@ -171,9 +171,8 @@ export default function Dashboard() {
         {!showUpgradePrompt && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-700">
-              📊 {getObligationLimitMessage()} | 
-              {limits.hasWhatsAppReminders ? '📱 WhatsApp + ' : ''}📧 Email reminders
-              {limits.hasAdvancedCalculator ? ' | 🧮 Advanced calculator' : ''}
+              📊 {planType.charAt(0).toUpperCase() + planType.slice(1)} Plan Active | 
+              📧 Email reminders | 🧮 Advanced calculator
             </p>
           </div>
         )}
@@ -191,9 +190,9 @@ export default function Dashboard() {
             />
             <SummaryCard
               title="Subscription"
-              value={profile?.plan ? (profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)) : "No Plan"}
-              description={profile?.subscription_status === 'active' ? 'Active' : 'Inactive'}
-              variant={profile?.subscription_status === 'active' ? 'success' : 'error'}
+              value={planType ? (planType.charAt(0).toUpperCase() + planType.slice(1)) : "No Plan"}
+              description={isActive ? 'Active' : 'Inactive'}
+              variant={isActive ? 'success' : 'error'}
               icon={<CreditCard className="h-5 w-5" />}
             />
             <SummaryCard

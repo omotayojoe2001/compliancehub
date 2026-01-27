@@ -344,7 +344,7 @@ export default function EInvoicing() {
   const { subtotal, vatAmount, total } = calculateTotals();
 
   return (
-    <SubscriptionGate feature="E-Invoicing">
+    <SubscriptionGate feature="hasAdvancedCalculator">
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}

@@ -117,9 +117,9 @@ export function RecentReminders() {
           </div>
         ) : reminders.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-            No reminders sent yet.
+            🚀 Ready to get reminders?
             <br />
-            Add tax periods and reminders will appear here when sent.
+            Add your tax obligations and we'll start sending you WhatsApp + Email alerts before every deadline!
           </div>
         ) : (
           reminders.map((reminder) => (

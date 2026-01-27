@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, TrendingUp, TrendingDown, FileText, Download, Search, BarChart3, ArrowUpDown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
+import { FilingRequestCard } from '@/components/FilingRequestCard';
+import { FilingRequestButton } from '@/components/FilingRequestButton';
 import { useAuth } from '@/contexts/AuthContextClean';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabaseService } from '@/lib/supabaseService';
@@ -189,7 +191,7 @@ export default function DigitalCashbook() {
   });
 
   return (
-    <SubscriptionGate feature="Digital Cashbook">
+    <SubscriptionGate feature="hasAdvancedCalculator">
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}
@@ -346,6 +348,14 @@ export default function DigitalCashbook() {
               </form>
             </Card>
           )}
+
+          {/* Filing Service Banner */}
+          <FilingRequestButton 
+            totalIncome={getTotalInflow()}
+            totalExpenses={getTotalOutflow()}
+            totalVAT={getVATOwed()}
+            transactionCount={entries.length}
+          />
 
           {/* View Content */}
           <div className="space-y-6">
