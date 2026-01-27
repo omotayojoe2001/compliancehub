@@ -20,26 +20,6 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
     hasMultiUserAccess: false,
     hasPrioritySupport: false,
   },
-  test100: {
-    maxObligations: 1,
-    hasWhatsAppReminders: false,
-    hasEmailReminders: true,
-    hasAdvancedCalculator: false,
-    hasReminderHistory: false,
-    hasApiAccess: false,
-    hasMultiUserAccess: false,
-    hasPrioritySupport: false,
-  },
-  test200: {
-    maxObligations: 2,
-    hasWhatsAppReminders: false,
-    hasEmailReminders: true,
-    hasAdvancedCalculator: false,
-    hasReminderHistory: false,
-    hasApiAccess: false,
-    hasMultiUserAccess: false,
-    hasPrioritySupport: false,
-  },
   basic: {
     maxObligations: 3,
     hasWhatsAppReminders: false,
@@ -61,16 +41,6 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
     hasPrioritySupport: true,
   },
   enterprise: {
-    maxObligations: -1, // unlimited
-    hasWhatsAppReminders: true,
-    hasEmailReminders: true,
-    hasAdvancedCalculator: true,
-    hasReminderHistory: true,
-    hasApiAccess: true,
-    hasMultiUserAccess: true,
-    hasPrioritySupport: true,
-  },
-  annual: {
     maxObligations: -1, // unlimited
     hasWhatsAppReminders: true,
     hasEmailReminders: true,
@@ -110,7 +80,7 @@ export const planRestrictionsService = {
 
     const featureName = featureNames[feature] || feature;
     
-    if (plan === 'free' || plan === 'test100' || plan === 'test200') {
+    if (plan === 'free') {
       return `Upgrade to Basic plan to access ${featureName}`;
     } else if (plan === 'basic') {
       return `Upgrade to Pro plan to access ${featureName}`;

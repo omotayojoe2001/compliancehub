@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { nigerianTaxCalculator, TaxCalculationResult } from "@/lib/nigerianTaxCalculator";
 import { Calculator as CalculatorIcon, Info } from "lucide-react";
 
@@ -32,20 +31,15 @@ export default function Calculator() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <HelpWrapper
-          helpTitle="How does this calculator work?"
-          helpContent="Think of this like calculating how much money the government takes from your salary. You tell us how much you earn in a year, we subtract what you're allowed to keep (like relief allowance), then calculate the tax on what's left. It's like: Total Money - What You Keep = What Gets Taxed."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <CalculatorIcon className="h-5 w-5" />
-              How Much Tax Will I Pay?
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Find out exactly how much money the government will take from your salary
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <CalculatorIcon className="h-5 w-5" />
+            How Much Tax Will I Pay?
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Find out exactly how much money the government will take from your salary
+          </p>
+        </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Input Section */}

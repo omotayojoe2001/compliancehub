@@ -3,18 +3,43 @@ import { supabase } from './supabase';
 export const supabaseService = {
   // Tax Obligations
   async getObligations(userId: string, companyId?: string) {
-    let query = supabase
+    console.group('📊 DATABASE DEBUG - Get Obligations');
+    console.log('📊 Query parameters:', { userId, companyId, timestamp: new Date().toISOString() });
+    
+    const query = supabase
       .from('tax_obligations')
       .select('*')
       .eq('user_id', userId);
     
+    // Only filter by company_id if it's provided and not null
     if (companyId) {
-      query = query.eq('company_id', companyId);
+      query.eq('company_id', companyId);
+      console.log('🔍 Filtering by company_id:', companyId);
     }
     
-    const { data, error } = await query.order('next_due_date', { ascending: true });
+    const startTime = Date.now();
+    const { data, error } = await query.order('next_due_date', { ascending: true }).limit(100);
+    const endTime = Date.now();
     
-    if (error) throw error;
+    console.log('📊 Query results:', {
+      duration: `${endTime - startTime}ms`,
+      success: !error,
+      error: error?.message,
+      recordsFound: data?.length || 0,
+      records: data?.map(d => ({
+        id: d.id,
+        type: d.obligation_type,
+        dueDate: d.next_due_date,
+        status: d.payment_status
+      })) || []
+    });
+    
+    if (error) {
+      console.error('❌ Database error:', error);
+      console.groupEnd();
+      throw error;
+    }
+    console.groupEnd();
     return data;
   },
 
@@ -52,20 +77,50 @@ export const supabaseService = {
 
   // Reminders
   async getReminders(userId: string, companyId?: string) {
-    let query = supabase
+    console.group('📊 DATABASE DEBUG - Get Reminders');
+    console.log('📊 Query parameters:', { userId, companyId, timestamp: new Date().toISOString() });
+    
+    const query = supabase
       .from('reminder_logs')
-      .select('*')
+      .select(`
+        *,
+        tax_obligations(
+          obligation_type
+        )
+      `)
       .eq('user_id', userId);
     
+    // Only filter by company_id if it's provided and not null
     if (companyId) {
-      query = query.eq('company_id', companyId);
+      query.eq('company_id', companyId);
+      console.log('🔍 Filtering by company_id:', companyId);
     }
     
+    const startTime = Date.now();
     const { data, error } = await query
-      .order('sent_date', { ascending: false })
-      .limit(20);
+      .order('created_at', { ascending: false })
+      .limit(50);
+    const endTime = Date.now();
     
-    if (error) throw error;
+    console.log('📊 Query results:', {
+      duration: `${endTime - startTime}ms`,
+      success: !error,
+      error: error?.message,
+      recordsFound: data?.length || 0,
+      records: data?.map(d => ({
+        id: d.id,
+        type: d.reminder_type,
+        sentAt: d.created_at,
+        status: d.status
+      })) || []
+    });
+    
+    if (error) {
+      console.error('❌ Database error:', error);
+      console.groupEnd();
+      throw error;
+    }
+    console.groupEnd();
     return data;
   },
 
@@ -224,7 +279,8 @@ export const supabaseService = {
       .from('invoices')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
     
     if (error) throw error;
     return data;
@@ -264,7 +320,7 @@ export const supabaseService = {
       query = query.eq('company_id', companyId);
     }
     
-    const { data, error } = await query.order('date', { ascending: false });
+    const { data, error } = await query.order('date', { ascending: false }).limit(200);
     
     if (error) throw error;
     return data;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +19,28 @@ interface AddTaxPeriodModalProps {
 export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodModalProps) {
   const { user } = useAuth();
   const { currentCompany } = useCompany();
-  const { profile } = useProfile();
+  const [plan, setPlan] = useState<string>('enterprise'); // Default to enterprise
+  // Always fetch the latest plan from subscriptions
+  useEffect(() => {
+    async function fetchPlan() {
+      if (!user?.id) return setPlan('enterprise');
+      try {
+        const { data: subscription } = await window.supabase
+          .from('subscriptions')
+          .select('plan_type, plan')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        setPlan(subscription?.plan_type || subscription?.plan || 'enterprise');
+      } catch (error) {
+        console.error('Failed to fetch subscription plan:', error);
+        setPlan('enterprise'); // Default to enterprise for full access
+      }
+    }
+    fetchPlan();
+  }, [user?.id]);
   const [loading, setLoading] = useState(false);
   const [obligationType, setObligationType] = useState('');
   const [taxPeriod, setTaxPeriod] = useState('');
@@ -30,20 +51,16 @@ export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodMo
       alert('Please ensure you have selected a company and filled all fields');
       return;
     }
-
-    console.log('💾 Adding tax obligation for company:', currentCompany.name, currentCompany.id);
-
     setLoading(true);
     try {
       await reminderService.addTaxObligation(
-        user.id, 
-        obligationType, 
-        taxPeriod, 
-        profile?.plan || 'free',
-        currentCompany.id  // Pass company ID
+        user.id,
+        obligationType,
+        taxPeriod,
+        plan,
+        currentCompany.id
       );
-      
-      console.log('✅ Tax obligation added successfully for', currentCompany.name);
+      // ...existing code...
       setObligationType('');
       setTaxPeriod('');
       onSuccess();

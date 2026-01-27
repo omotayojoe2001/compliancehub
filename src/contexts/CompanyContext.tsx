@@ -19,7 +19,7 @@ const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [currentCompany, setCurrentCompanyState] = useState<Company | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Never loading
 
   // Load saved company from localStorage on mount
   useEffect(() => {
@@ -33,26 +33,40 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-    setIsLoading(false);
+    setIsLoading(false); // Keep false
   }, [user?.id]);
 
   // Save company selection to localStorage
   const setCurrentCompany = (company: Company) => {
-    console.log('🔄 COMPANY SWITCH DEBUG:', {
-      from: currentCompany?.name || 'none',
-      to: company.name,
-      fromId: currentCompany?.id || 'none',
-      toId: company.id,
-      fromTin: currentCompany?.tin || 'none',
-      toTin: company.tin || 'none'
+    console.group('🏢 COMPANY DEBUG - Switch Company');
+    console.log('📊 Company Switch Details:', {
+      timestamp: new Date().toISOString(),
+      userId: user?.id,
+      previousCompany: {
+        name: currentCompany?.name || 'none',
+        id: currentCompany?.id || 'none',
+        tin: currentCompany?.tin || 'none',
+        isPrimary: currentCompany?.isPrimary || false
+      },
+      newCompany: {
+        name: company.name,
+        id: company.id,
+        tin: company.tin || 'none',
+        isPrimary: company.isPrimary
+      }
     });
     
     setCurrentCompanyState(company);
     if (user?.id) {
-      localStorage.setItem(`selectedCompany_${user.id}`, JSON.stringify(company));
-      console.log('💾 Saved to localStorage:', JSON.stringify(company));
+      const storageKey = `selectedCompany_${user.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(company));
+      console.log('💾 Saved to localStorage:', {
+        key: storageKey,
+        data: company
+      });
     }
-    console.log('🏢 Switched to company:', company.name);
+    console.log('✅ Company switch completed successfully');
+    console.groupEnd();
   };
 
   return (

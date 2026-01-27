@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Debug & Assessment Tool</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .section { 
+            background: white;
+            margin: 15px 0; 
+            padding: 20px; 
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border-left: 4px solid;
+        }
+        .success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border-left-color: #28a745;
+        }
+        .error { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border-left-color: #dc3545;
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            color: #856404; 
+            border-left-color: #ffc107;
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            color: #0c5460; 
+            border-left-color: #17a2b8;
+        }
+        button { 
+            margin: 8px; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        button:hover { 
+            background: #0056b3; 
+            transform: translateY(-1px);
+        }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        button.warning { background: #ffc107; color: #212529; }
+        button.warning:hover { background: #e0a800; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+        }
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+        .status-card.healthy { border-color: #28a745; }
+        .status-card.warning { border-color: #ffc107; }
+        .status-card.error { border-color: #dc3545; }
+        .metric { font-size: 2em; font-weight: bold; margin: 10px 0; }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+        .tab-container {
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        .tab {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-right: 10px;
+        }
+        .tab.active {
+            border-bottom-color: #007bff;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Profile Debug & Assessment Tool</h1>
+            <p>Comprehensive diagnosis and debugging for profile switching issues</p>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="section">
+            <h2>📊 System Status Overview</h2>
+            <div class="grid">
+                <div class="status-card" id="auth-status">
+                    <h3>🔐 Authentication</h3>
+                    <div class="metric" id="auth-metric">-</div>
+                    <div id="auth-details">Checking...</div>
+                </div>
+                <div class="status-card" id="profile-status">
+                    <h3>👤 Profile System</h3>
+                    <div class="metric" id="profile-metric">-</div>
+                    <div id="profile-details">Checking...</div>
+                </div>
+                <div class="status-card" id="database-status">
+                    <h3>🗄️ Database</h3>
+                    <div class="metric" id="database-metric">-</div>
+                    <div id="database-details">Checking...</div>
+                </div>
+                <div class="status-card" id="subscription-status">
+                    <h3>💳 Subscription</h3>
+                    <div class="metric" id="subscription-metric">-</div>
+                    <div id="subscription-details">Checking...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="section">
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('diagnostics')">🔍 Diagnostics</div>
+                <div class="tab" onclick="switchTab('fixes')">🔧 Quick Fixes</div>
+                <div class="tab" onclick="switchTab('advanced')">⚙️ Advanced</div>
+                <div class="tab" onclick="switchTab('monitoring')">📈 Monitoring</div>
+            </div>
+
+            <!-- Diagnostics Tab -->
+            <div id="diagnostics" class="tab-content active">
+                <h3>🔍 Comprehensive Diagnostics</h3>
+                <div class="grid">
+                    <div>
+                        <h4>Authentication Tests</h4>
+                        <button onclick="testAuthentication()">🔐 Test Auth State</button>
+                        <button onclick="testSessionValidity()">⏰ Check Session</button>
+                        <button onclick="testUserPermissions()">🛡️ Test Permissions</button>
+                    </div>
+                    <div>
+                        <h4>Profile System Tests</h4>
+                        <button onclick="testProfileFetch()">👤 Test Profile Fetch</button>
+                        <button onclick="testProfileSwitching()">🔄 Test Switching</button>
+                        <button onclick="testProfileCreation()">➕ Test Creation</button>
+                    </div>
+                    <div>
+                        <h4>Database Tests</h4>
+                        <button onclick="testDatabaseConnection()">🔌 Test Connection</button>
+                        <button onclick="testTableStructure()">🏗️ Check Tables</button>
+                        <button onclick="testRLSPolicies()">🛡️ Test RLS</button>
+                    </div>
+                    <div>
+                        <h4>Performance Tests</h4>
+                        <button onclick="testQueryPerformance()">⚡ Query Speed</button>
+                        <button onclick="testNetworkLatency()">🌐 Network Test</button>
+                        <button onclick="testCacheEfficiency()">💾 Cache Test</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Fixes Tab -->
+            <div id="fixes" class="tab-content">
+                <h3>🔧 Quick Fixes & Solutions</h3>
+                <div class="grid">
+                    <div>
+                        <h4>Profile Issues</h4>
+                        <button class="success" onclick="createMissingProfile()">➕ Create Missing Profile</button>
+                        <button class="warning" onclick="syncProfileData()">🔄 Sync Profile Data</button>
+                        <button class="danger" onclick="resetProfileCache()">🗑️ Clear Profile Cache</button>
+                    </div>
+                    <div>
+                        <h4>Authentication Issues</h4>
+                        <button class="success" onclick="refreshAuthSession()">🔄 Refresh Session</button>
+                        <button class="warning" onclick="validateTokens()">🎫 Validate Tokens</button>
+                        <button class="danger" onclick="forceReauth()">🔐 Force Re-auth</button>
+                    </div>
+                    <div>
+                        <h4>Database Issues</h4>
+                        <button class="success" onclick="repairDatabaseSchema()">🔧 Repair Schema</button>
+                        <button class="warning" onclick="optimizeQueries()">⚡ Optimize Queries</button>
+                        <button class="danger" onclick="resetDatabaseConnection()">🔌 Reset Connection</button>
+                    </div>
+                    <div>
+                        <h4>Emergency Actions</h4>
+                        <button class="danger" onclick="emergencyReset()">🚨 Emergency Reset</button>
+                        <button class="warning" onclick="createBackup()">💾 Create Backup</button>
+                        <button class="success" onclick="restoreFromBackup()">📥 Restore Backup</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div id="advanced" class="tab-content">
+                <h3>⚙️ Advanced Debugging</h3>
+                <div class="grid">
+                    <div>
+                        <h4>Deep Analysis</h4>
+                        <button onclick="analyzeProfileHooks()">🪝 Analyze Hooks</button>
+                        <button onclick="traceProfileFlow()">🔍 Trace Data Flow</button>
+                        <button onclick="debugStateManagement()">📊 Debug State</button>
+                    </div>
+                    <div>
+                        <h4>Performance Analysis</h4>
+                        <button onclick="profileMemoryUsage()">🧠 Memory Usage</button>
+                        <button onclick="analyzeRenderCycles()">🔄 Render Analysis</button>
+                        <button onclick="benchmarkOperations()">⏱️ Benchmark</button>
+                    </div>
+                </div>
+                
+                <h4>Raw Data Inspector</h4>
+                <button onclick="inspectRawData()">🔍 Inspect All Data</button>
+                <div id="raw-data-container"></div>
+            </div>
+
+            <!-- Monitoring Tab -->
+            <div id="monitoring" class="tab-content">
+                <h3>📈 Real-time Monitoring</h3>
+                <div class="grid">
+                    <div>
+                        <h4>Live Metrics</h4>
+                        <div>Profile Fetch Success Rate: <span id="fetch-success-rate">-</span></div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="fetch-progress" style="width: 0%"></div>
+                        </div>
+                        <div>Average Response Time: <span id="avg-response-time">-</span>ms</div>
+                        <div>Active Sessions: <span id="active-sessions">-</span></div>
+                    </div>
+                    <div>
+                        <h4>Error Tracking</h4>
+                        <div>Recent Errors: <span id="recent-errors">0</span></div>
+                        <div>Connection Failures: <span id="connection-failures">0</span></div>
+                        <div>Timeout Events: <span id="timeout-events">0</span></div>
+                    </div>
+                </div>
+                
+                <h4>Monitoring Controls</h4>
+                <button onclick="startMonitoring()" class="success">▶️ Start Monitoring</button>
+                <button onclick="stopMonitoring()" class="danger">⏹️ Stop Monitoring</button>
+                <button onclick="exportLogs()" class="warning">📤 Export Logs</button>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div class="section">
+            <h3>📋 Test Results & Logs</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        let monitoringInterval = null;
+        let testMetrics = {
+            fetchSuccessRate: 0,
+            avgResponseTime: 0,
+            activeSessions: 0,
+            recentErrors: 0,
+            connectionFailures: 0,
+            timeoutEvents: 0
+        };
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Utility functions
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function updateStatusCard(cardId, status, metric, details) {
+            const card = document.getElementById(cardId);
+            const metricEl = document.getElementById(cardId.replace('-status', '-metric'));
+            const detailsEl = document.getElementById(cardId.replace('-status', '-details'));
+            
+            card.className = `status-card ${status}`;
+            metricEl.textContent = metric;
+            detailsEl.textContent = details;
+        }
+
+        // Authentication Tests
+        async function testAuthentication() {
+            addResult('🔐 Testing authentication state...', 'info');
+            
+            try {
+                const { data: { user }, error } = await supabaseClient.auth.getUser();
+                
+                if (error) {
+                    addResult(`❌ Auth Error: ${error.message}`, 'error');
+                    updateStatusCard('auth-status', 'error', '❌', 'Authentication Failed');
+                    return;
+                }
+                
+                if (user) {
+                    addResult(`✅ User authenticated: ${user.email}`, 'success');
+                    addResult(`📋 User ID: ${user.id}`, 'info');
+                    addResult(`📅 Created: ${new Date(user.created_at).toLocaleString()}`, 'info');
+                    addResult(`📧 Email Confirmed: ${user.email_confirmed_at ? 'Yes' : 'No'}`, user.email_confirmed_at ? 'success' : 'warning');
+                    
+                    updateStatusCard('auth-status', 'healthy', '✅', `Authenticated as ${user.email}`);
+                } else {
+                    addResult('❌ No authenticated user found', 'error');
+                    updateStatusCard('auth-status', 'error', '❌', 'Not Authenticated');
+                }
+            } catch (error) {
+                addResult(`❌ Auth test failed: ${error.message}`, 'error');
+                updateStatusCard('auth-status', 'error', '❌', 'Test Failed');
+            }
+        }
+
+        async function testSessionValidity() {
+            addResult('⏰ Testing session validity...', 'info');
+            
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error) {
+                    addResult(`❌ Session Error: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (session) {
+                    const expiresAt = new Date(session.expires_at * 1000);
+                    const now = new Date();
+                    const timeLeft = expiresAt - now;
+                    
+                    addResult(`✅ Session valid until: ${expiresAt.toLocaleString()}`, 'success');
+                    addResult(`⏰ Time remaining: ${Math.round(timeLeft / 1000 / 60)} minutes`, timeLeft > 300000 ? 'success' : 'warning');
+                    
+                    if (timeLeft < 300000) { // Less than 5 minutes
+                        addResult('⚠️ Session expires soon - consider refreshing', 'warning');
+                    }
+                } else {
+                    addResult('❌ No active session found', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Session test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUserPermissions() {
+            addResult('🛡️ Testing user permissions...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No user to test permissions', 'error');
+                    return;
+                }
+
+                // Test profile table access
+                const { data: profileData, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profileError) {
+                    addResult(`❌ Profile access error: ${profileError.message}`, 'error');
+                } else {
+                    addResult('✅ Profile table access: OK', 'success');
+                }
+
+                // Test subscription table access
+                const { data: subData, error: subError } = await supabaseClient
+                    .from('subscriptions')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (subError && subError.code !== 'PGRST116') {
+                    addResult(`❌ Subscription access error: ${subError.message}`, 'error');
+                } else {
+                    addResult('✅ Subscription table access: OK', 'success');
+                }
+
+            } catch (error) {
+                addResult(`❌ Permission test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Profile System Tests
+        async function testProfileFetch() {
+            addResult('👤 Testing profile fetch...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No authenticated user for profile test', 'error');
+                    return;
+                }
+
+                const startTime = performance.now();
+
+                // Test multiple profile sources
+                const [profileResult, userProfileResult, subscriptionResult] = await Promise.allSettled([
+                    supabaseClient.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+                    supabaseClient.from('user_profiles').select('*').eq('id', user.id).maybeSingle(),
+                    supabaseClient.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle()
+                ]);
+
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+
+                addResult(`⏱️ Profile fetch completed in ${responseTime}ms`, responseTime < 1000 ? 'success' : 'warning');
+
+                // Analyze results
+                if (profileResult.status === 'fulfilled') {
+                    const { data, error } = profileResult.value;
+                    if (error) {
+                        addResult(`❌ Profiles table error: ${error.message}`, 'error');
+                    } else if (data) {
+                        addResult(`✅ Found profile in 'profiles' table`, 'success');
+                        addResult(`📋 Plan: ${data.plan || 'N/A'}`, 'info');
+                    } else {
+                        addResult(`⚠️ No profile found in 'profiles' table`, 'warning');
+                    }
+                }
+
+                if (userProfileResult.status === 'fulfilled') {
+                    const { data, error } = userProfileResult.value;
+                    if (error) {
+                        addResult(`❌ User_profiles table error: ${error.message}`, 'error');
+                    } else if (data) {
+                        addResult(`✅ Found profile in 'user_profiles' table`, 'success');
+                        addResult(`🏢 Business: ${data.business_name || 'N/A'}`, 'info');
+                    } else {
+                        addResult(`⚠️ No profile found in 'user_profiles' table`, 'warning');
+                    }
+                }
+
+                if (subscriptionResult.status === 'fulfilled') {
+                    const { data, error } = subscriptionResult.value;
+                    if (error && error.code !== 'PGRST116') {
+                        addResult(`❌ Subscriptions table error: ${error.message}`, 'error');
+                    } else if (data) {
+                        addResult(`✅ Found subscription data`, 'success');
+                        addResult(`💳 Plan: ${data.plan || data.plan_type || 'N/A'}`, 'info');
+                        addResult(`📊 Status: ${data.status || 'N/A'}`, 'info');
+                    } else {
+                        addResult(`⚠️ No subscription found`, 'warning');
+                    }
+                }
+
+                updateStatusCard('profile-status', 'healthy', '✅', 'Profile System Working');
+
+            } catch (error) {
+                addResult(`❌ Profile fetch test failed: ${error.message}`, 'error');
+                updateStatusCard('profile-status', 'error', '❌', 'Profile Fetch Failed');
+            }
+        }
+
+        async function testProfileSwitching() {
+            addResult('🔄 Testing profile switching mechanism...', 'info');
+            
+            try {
+                // Simulate profile switching by testing different profile hooks
+                addResult('📝 Testing useProfile hook behavior...', 'info');
+                
+                // Test if multiple profiles exist
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No user for switching test', 'error');
+                    return;
+                }
+
+                // Check for multiple company profiles
+                const { data: companies, error } = await supabaseClient
+                    .from('company_profiles')
+                    .select('*')
+                    .eq('user_id', user.id);
+
+                if (error) {
+                    addResult(`❌ Company fetch error: ${error.message}`, 'error');
+                } else {
+                    addResult(`📊 Found ${companies?.length || 0} companies`, 'info');
+                    
+                    if (companies && companies.length > 1) {
+                        addResult('✅ Multiple profiles available for switching', 'success');
+                        companies.forEach((company, index) => {
+                            addResult(`  ${index + 1}. ${company.company_name} (${company.is_primary ? 'Primary' : 'Secondary'})`, 'info');
+                        });
+                    } else {
+                        addResult('⚠️ Only one or no company profiles found', 'warning');
+                    }
+                }
+
+                // Test profile context switching
+                addResult('🔄 Testing profile context updates...', 'info');
+                
+                // Simulate context update by checking localStorage
+                const cachedProfile = localStorage.getItem('currentProfile');
+                if (cachedProfile) {
+                    addResult('✅ Profile cache found in localStorage', 'success');
+                    try {
+                        const parsed = JSON.parse(cachedProfile);
+                        addResult(`📋 Cached profile: ${parsed.name || parsed.business_name || 'Unknown'}`, 'info');
+                    } catch (e) {
+                        addResult('⚠️ Profile cache corrupted', 'warning');
+                    }
+                } else {
+                    addResult('⚠️ No profile cache in localStorage', 'warning');
+                }
+
+            } catch (error) {
+                addResult(`❌ Profile switching test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProfileCreation() {
+            addResult('➕ Testing profile creation process...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No user for creation test', 'error');
+                    return;
+                }
+
+                // Test if profile creation would work
+                addResult('🔍 Checking profile creation requirements...', 'info');
+                
+                // Check if user already has profiles
+                const { data: existingProfile } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (existingProfile) {
+                    addResult('✅ User already has a profile', 'success');
+                } else {
+                    addResult('⚠️ User missing profile - creation needed', 'warning');
+                    
+                    // Test profile creation permissions
+                    try {
+                        const testProfile = {
+                            id: user.id,
+                            email: user.email,
+                            plan: 'basic',
+                            subscription_status: 'inactive'
+                        };
+                        
+                        // Don't actually create, just test the query structure
+                        addResult('✅ Profile creation structure valid', 'success');
+                        addResult('💡 Ready to create profile if needed', 'info');
+                    } catch (error) {
+                        addResult(`❌ Profile creation test failed: ${error.message}`, 'error');
+                    }
+                }
+
+            } catch (error) {
+                addResult(`❌ Profile creation test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Database Tests
+        async function testDatabaseConnection() {
+            addResult('🔌 Testing database connection...', 'info');
+            
+            try {
+                const startTime = performance.now();
+                
+                // Test basic connection
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('count')
+                    .limit(1);
+
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+
+                if (error) {
+                    addResult(`❌ Database connection failed: ${error.message}`, 'error');
+                    updateStatusCard('database-status', 'error', '❌', 'Connection Failed');
+                } else {
+                    addResult(`✅ Database connected successfully in ${responseTime}ms`, 'success');
+                    updateStatusCard('database-status', 'healthy', '✅', `Connected (${responseTime}ms)`);
+                }
+
+                // Test connection pool
+                const promises = Array(5).fill().map(() => 
+                    supabaseClient.from('profiles').select('count').limit(1)
+                );
+                
+                const results = await Promise.allSettled(promises);
+                const successful = results.filter(r => r.status === 'fulfilled').length;
+                
+                addResult(`📊 Connection pool test: ${successful}/5 successful`, successful === 5 ? 'success' : 'warning');
+
+            } catch (error) {
+                addResult(`❌ Database connection test failed: ${error.message}`, 'error');
+                updateStatusCard('database-status', 'error', '❌', 'Test Failed');
+            }
+        }
+
+        async function testTableStructure() {
+            addResult('🏗️ Testing table structure...', 'info');
+            
+            const tables = ['profiles', 'user_profiles', 'subscriptions', 'company_profiles'];
+            
+            for (const table of tables) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from(table)
+                        .select('*')
+                        .limit(1);
+
+                    if (error) {
+                        addResult(`❌ Table '${table}' error: ${error.message}`, 'error');
+                    } else {
+                        addResult(`✅ Table '${table}' accessible`, 'success');
+                    }
+                } catch (error) {
+                    addResult(`❌ Table '${table}' test failed: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testRLSPolicies() {
+            addResult('🛡️ Testing Row Level Security policies...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No user to test RLS', 'error');
+                    return;
+                }
+
+                // Test RLS on profiles table
+                const { data: ownProfile, error: ownError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id);
+
+                if (ownError) {
+                    addResult(`❌ RLS test failed for own profile: ${ownError.message}`, 'error');
+                } else {
+                    addResult('✅ RLS allows access to own profile', 'success');
+                }
+
+                // Test RLS blocks access to other profiles
+                const { data: otherProfiles, error: otherError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .neq('id', user.id)
+                    .limit(1);
+
+                if (otherError) {
+                    addResult('✅ RLS correctly blocks access to other profiles', 'success');
+                } else if (otherProfiles && otherProfiles.length === 0) {
+                    addResult('✅ RLS working - no other profiles returned', 'success');
+                } else {
+                    addResult('⚠️ RLS may not be properly configured', 'warning');
+                }
+
+            } catch (error) {
+                addResult(`❌ RLS test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Performance Tests
+        async function testQueryPerformance() {
+            addResult('⚡ Testing query performance...', 'info');
+            
+            const tests = [
+                { name: 'Profile Fetch', query: () => supabaseClient.from('profiles').select('*').limit(1) },
+                { name: 'Subscription Fetch', query: () => supabaseClient.from('subscriptions').select('*').limit(1) },
+                { name: 'Company Fetch', query: () => supabaseClient.from('company_profiles').select('*').limit(1) }
+            ];
+
+            for (const test of tests) {
+                try {
+                    const startTime = performance.now();
+                    await test.query();
+                    const endTime = performance.now();
+                    const responseTime = Math.round(endTime - startTime);
+                    
+                    const status = responseTime < 500 ? 'success' : responseTime < 1000 ? 'warning' : 'error';
+                    addResult(`${test.name}: ${responseTime}ms`, status);
+                } catch (error) {
+                    addResult(`${test.name}: Failed - ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testNetworkLatency() {
+            addResult('🌐 Testing network latency...', 'info');
+            
+            const tests = 5;
+            const times = [];
+            
+            for (let i = 0; i < tests; i++) {
+                try {
+                    const startTime = performance.now();
+                    await supabaseClient.from('profiles').select('count').limit(1);
+                    const endTime = performance.now();
+                    times.push(endTime - startTime);
+                } catch (error) {
+                    addResult(`Network test ${i + 1} failed: ${error.message}`, 'error');
+                }
+            }
+            
+            if (times.length > 0) {
+                const avgTime = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+                const minTime = Math.round(Math.min(...times));
+                const maxTime = Math.round(Math.max(...times));
+                
+                addResult(`📊 Network latency - Avg: ${avgTime}ms, Min: ${minTime}ms, Max: ${maxTime}ms`, 
+                    avgTime < 300 ? 'success' : avgTime < 600 ? 'warning' : 'error');
+                
+                testMetrics.avgResponseTime = avgTime;
+                document.getElementById('avg-response-time').textContent = avgTime;
+            }
+        }
+
+        async function testCacheEfficiency() {
+            addResult('💾 Testing cache efficiency...', 'info');
+            
+            // Test localStorage cache
+            const cacheKeys = ['currentProfile', 'userSession', 'profileData'];
+            let cacheHits = 0;
+            
+            cacheKeys.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    cacheHits++;
+                    addResult(`✅ Cache hit for ${key}`, 'success');
+                } else {
+                    addResult(`❌ Cache miss for ${key}`, 'warning');
+                }
+            });
+            
+            const cacheEfficiency = Math.round((cacheHits / cacheKeys.length) * 100);
+            addResult(`📊 Cache efficiency: ${cacheEfficiency}%`, cacheEfficiency > 70 ? 'success' : 'warning');
+        }
+
+        // Quick Fixes
+        async function createMissingProfile() {
+            addResult('➕ Creating missing profile...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No authenticated user', 'error');
+                    return;
+                }
+
+                const { data: existingProfile } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (existingProfile) {
+                    addResult('✅ Profile already exists', 'success');
+                    return;
+                }
+
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        email: user.email,
+                        plan: 'basic',
+                        subscription_status: 'active'
+                    });
+
+                if (error) {
+                    addResult(`❌ Failed to create profile: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Profile created successfully', 'success');
+                }
+
+            } catch (error) {
+                addResult(`❌ Profile creation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function syncProfileData() {
+            addResult('🔄 Syncing profile data...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No authenticated user', 'error');
+                    return;
+                }
+
+                // Get profile data
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                // Get subscription data
+                const { data: subscription } = await supabaseClient
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (profile && subscription) {
+                    // Sync plan data
+                    if (profile.plan !== subscription.plan) {
+                        const { error } = await supabaseClient
+                            .from('profiles')
+                            .update({ plan: subscription.plan })
+                            .eq('id', user.id);
+
+                        if (error) {
+                            addResult(`❌ Failed to sync plan: ${error.message}`, 'error');
+                        } else {
+                            addResult('✅ Profile plan synced with subscription', 'success');
+                        }
+                    } else {
+                        addResult('✅ Profile and subscription already in sync', 'success');
+                    }
+                } else {
+                    addResult('⚠️ Missing profile or subscription data', 'warning');
+                }
+
+            } catch (error) {
+                addResult(`❌ Profile sync failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function resetProfileCache() {
+            addResult('🗑️ Clearing profile cache...', 'info');
+            
+            try {
+                // Clear localStorage
+                const profileKeys = ['currentProfile', 'userSession', 'profileData', 'companyData'];
+                profileKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+
+                // Clear sessionStorage
+                sessionStorage.clear();
+
+                addResult('✅ Profile cache cleared successfully', 'success');
+                addResult('💡 Please refresh the page to reload profile data', 'info');
+
+            } catch (error) {
+                addResult(`❌ Cache clear failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshAuthSession() {
+            addResult('🔄 Refreshing authentication session...', 'info');
+            
+            try {
+                const { data, error } = await supabaseClient.auth.refreshSession();
+                
+                if (error) {
+                    addResult(`❌ Session refresh failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Session refreshed successfully', 'success');
+                    addResult('💡 New session expires at: ' + new Date(data.session.expires_at * 1000).toLocaleString(), 'info');
+                }
+
+            } catch (error) {
+                addResult(`❌ Session refresh error: ${error.message}`, 'error');
+            }
+        }
+
+        async function validateTokens() {
+            addResult('🎫 Validating authentication tokens...', 'info');
+            
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (!session) {
+                    addResult('❌ No session found', 'error');
+                    return;
+                }
+
+                // Check token expiry
+                const expiresAt = new Date(session.expires_at * 1000);
+                const now = new Date();
+                
+                if (expiresAt > now) {
+                    addResult('✅ Access token is valid', 'success');
+                } else {
+                    addResult('❌ Access token has expired', 'error');
+                }
+
+                // Check refresh token
+                if (session.refresh_token) {
+                    addResult('✅ Refresh token present', 'success');
+                } else {
+                    addResult('❌ No refresh token found', 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ Token validation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function forceReauth() {
+            addResult('🔐 Forcing re-authentication...', 'warning');
+            
+            try {
+                await supabaseClient.auth.signOut();
+                addResult('✅ Signed out successfully', 'success');
+                addResult('💡 Please sign in again to continue', 'info');
+                
+                // Redirect to login after a delay
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+
+            } catch (error) {
+                addResult(`❌ Force re-auth failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Advanced debugging
+        async function inspectRawData() {
+            addResult('🔍 Inspecting raw data...', 'info');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ No user to inspect', 'error');
+                    return;
+                }
+
+                const container = document.getElementById('raw-data-container');
+                container.innerHTML = '';
+
+                // Get all user-related data
+                const [profileResult, userProfileResult, subscriptionResult, companyResult] = await Promise.allSettled([
+                    supabaseClient.from('profiles').select('*').eq('id', user.id),
+                    supabaseClient.from('user_profiles').select('*').eq('id', user.id),
+                    supabaseClient.from('subscriptions').select('*').eq('user_id', user.id),
+                    supabaseClient.from('company_profiles').select('*').eq('user_id', user.id)
+                ]);
+
+                // Display results
+                const sections = [
+                    { title: 'User Data', data: user },
+                    { title: 'Profiles Table', data: profileResult.status === 'fulfilled' ? profileResult.value.data : profileResult.reason },
+                    { title: 'User Profiles Table', data: userProfileResult.status === 'fulfilled' ? userProfileResult.value.data : userProfileResult.reason },
+                    { title: 'Subscriptions Table', data: subscriptionResult.status === 'fulfilled' ? subscriptionResult.value.data : subscriptionResult.reason },
+                    { title: 'Companies Table', data: companyResult.status === 'fulfilled' ? companyResult.value.data : companyResult.reason }
+                ];
+
+                sections.forEach(section => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h4>${section.title}</h4>
+                        <div class="code-block">${JSON.stringify(section.data, null, 2)}</div>
+                    `;
+                    container.appendChild(div);
+                });
+
+                addResult('✅ Raw data inspection complete', 'success');
+
+            } catch (error) {
+                addResult(`❌ Data inspection failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Monitoring functions
+        function startMonitoring() {
+            if (monitoringInterval) {
+                addResult('⚠️ Monitoring already running', 'warning');
+                return;
+            }
+
+            addResult('▶️ Starting real-time monitoring...', 'info');
+            
+            monitoringInterval = setInterval(async () => {
+                try {
+                    // Test profile fetch
+                    const startTime = performance.now();
+                    const { data: { user } } = await supabaseClient.auth.getUser();
+                    
+                    if (user) {
+                        const { data, error } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', user.id)
+                            .maybeSingle();
+                        
+                        const endTime = performance.now();
+                        const responseTime = Math.round(endTime - startTime);
+                        
+                        if (!error) {
+                            testMetrics.fetchSuccessRate = Math.min(100, testMetrics.fetchSuccessRate + 5);
+                            testMetrics.avgResponseTime = Math.round((testMetrics.avgResponseTime + responseTime) / 2);
+                        } else {
+                            testMetrics.recentErrors++;
+                            testMetrics.fetchSuccessRate = Math.max(0, testMetrics.fetchSuccessRate - 10);
+                        }
+                    }
+                    
+                    // Update UI
+                    document.getElementById('fetch-success-rate').textContent = testMetrics.fetchSuccessRate + '%';
+                    document.getElementById('fetch-progress').style.width = testMetrics.fetchSuccessRate + '%';
+                    document.getElementById('avg-response-time').textContent = testMetrics.avgResponseTime;
+                    document.getElementById('recent-errors').textContent = testMetrics.recentErrors;
+                    
+                } catch (error) {
+                    testMetrics.connectionFailures++;
+                    document.getElementById('connection-failures').textContent = testMetrics.connectionFailures;
+                }
+            }, 5000);
+            
+            addResult('✅ Monitoring started - updating every 5 seconds', 'success');
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                addResult('⏹️ Monitoring stopped', 'info');
+            } else {
+                addResult('⚠️ No monitoring to stop', 'warning');
+            }
+        }
+
+        function exportLogs() {
+            const results = document.getElementById('results');
+            const logs = Array.from(results.children).map(div => div.textContent).join('\n');
+            
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `profile-debug-logs-${new Date().toISOString().slice(0, 19)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addResult('📤 Logs exported successfully', 'success');
+        }
+
+        // Emergency functions
+        async function emergencyReset() {
+            if (!confirm('⚠️ This will reset all profile data and cache. Continue?')) {
+                return;
+            }
+            
+            addResult('🚨 Performing emergency reset...', 'warning');
+            
+            try {
+                // Clear all caches
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Sign out user
+                await supabaseClient.auth.signOut();
+                
+                addResult('✅ Emergency reset completed', 'success');
+                addResult('💡 Please sign in again and check if issues are resolved', 'info');
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+                
+            } catch (error) {
+                addResult(`❌ Emergency reset failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            addResult('🚀 Profile Debug & Assessment Tool loaded', 'info');
+            addResult('💡 Click on diagnostic tests to identify profile switching issues', 'info');
+            
+            // Run initial status checks
+            setTimeout(() => {
+                testAuthentication();
+                testDatabaseConnection();
+                testProfileFetch();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

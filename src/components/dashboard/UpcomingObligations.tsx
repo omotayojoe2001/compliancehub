@@ -23,7 +23,8 @@ export function UpcomingObligations() {
 
   useEffect(() => {
     console.log('📊 UpcomingObligations effect:', { userId: user?.id, companyId: currentCompany?.id, companyName: currentCompany?.name });
-    if (user?.id && currentCompany?.id) {
+    if (user?.id) {
+      // Load obligations even if no company is selected (will show all user obligations)
       loadObligations();
     } else {
       setObligations([]);
@@ -32,24 +33,50 @@ export function UpcomingObligations() {
   }, [user?.id, currentCompany?.id]);
 
   const loadObligations = async () => {
-    if (!user?.id || !currentCompany?.id) return;
+    if (!user?.id) {
+      console.log('🚫 loadObligations: Missing user ID');
+      return;
+    }
+
+    console.log('🔄 loadObligations: Starting...', {
+      userId: user.id,
+      companyId: currentCompany?.id || 'none',
+      companyName: currentCompany?.name || 'none',
+      timestamp: new Date().toISOString()
+    });
 
     let settled = false;
     const timeoutId = window.setTimeout(() => {
       if (settled) return;
       settled = true;
+      console.error('⏰ loadObligations: TIMEOUT after 8 seconds');
       setLoadError("Request timed out. Please try again.");
       setLoading(false);
     }, 8000);
 
     setLoadError(null);
     try {
-      const data = await supabaseService.getObligations(user.id, currentCompany.id);
+      console.log('📡 loadObligations: Calling supabaseService.getObligations...');
+      const startTime = Date.now();
+      const data = await supabaseService.getObligations(user.id, currentCompany?.id);
+      const endTime = Date.now();
+      
+      console.log('✅ loadObligations: Success!', {
+        duration: `${endTime - startTime}ms`,
+        dataLength: data?.length || 0,
+        data: data?.slice(0, 3) // Log first 3 items for debugging
+      });
+      
       if (settled) return;
       setObligations(data || []);
     } catch (error) {
       if (settled) return;
-      console.error('Failed to load obligations:', error);
+      console.error('❌ loadObligations: Error:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorCode: (error as any)?.code,
+        errorDetails: (error as any)?.details
+      });
       setObligations([]);
       setLoadError("Couldn't load obligations. Please try again.");
     } finally {
@@ -57,6 +84,7 @@ export function UpcomingObligations() {
       settled = true;
       window.clearTimeout(timeoutId);
       setLoading(false);
+      console.log('🏁 loadObligations: Finished');
     }
   };
 

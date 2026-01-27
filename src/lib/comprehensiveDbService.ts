@@ -267,12 +267,19 @@ class ComprehensiveDbService {
   }
 
   // Invoice Management
-  async getInvoices(userId: string): Promise<Invoice[]> {
-    const { data, error } = await supabase
+  async getInvoices(userId: string, companyId?: string): Promise<Invoice[]> {
+    let query = supabase
       .from('invoices')
       .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .eq('user_id', userId);
+    
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .limit(100);
     
     if (error) throw error;
     return data || [];

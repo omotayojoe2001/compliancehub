@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Profile Plan</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fix Subscription Access</h1>
+    
+    <div>
+        <button onclick="checkCurrentPlan()">Check Current Subscription</button>
+        <button onclick="updateToEnterprise()">Create Enterprise Subscription</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function checkCurrentPlan() {
+            addResult('🔍 Checking current subscription plan...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Not authenticated. Please sign in first.', 'error');
+                    return;
+                }
+                
+                // Check profile (without plan)
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('email, business_name, phone, vat_status, paye_status')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError) {
+                    addResult(`❌ Profile check failed: ${profileError.message}`, 'error');
+                } else {
+                    addResult(`✅ Profile found:`, 'success');
+                    addResult(`📧 Email: ${profile.email}`, 'info');
+                    addResult(`👤 Name: ${profile.business_name}`, 'info');
+                }
+                
+                // Check subscriptions (this is the source of truth for plans)
+                const { data: subscriptions, error: subError } = await supabaseClient
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false });
+                
+                if (subError) {
+                    addResult(`❌ Subscription check failed: ${subError.message}`, 'error');
+                } else {
+                    addResult(`📊 Found ${subscriptions.length} active subscription(s):`, 'info');
+                    subscriptions.forEach((sub, i) => {
+                        const plan = sub.plan_type || sub.plan || 'Unknown';
+                        addResult(`  ${i+1}. Plan: ${plan}, Status: ${sub.status}`, plan === 'enterprise' ? 'success' : 'warning');
+                    });
+                    
+                    if (subscriptions.length === 0) {
+                        addResult('⚠️ No active subscriptions found. Creating enterprise subscription...', 'warning');
+                        await createEnterpriseSubscription(user.id);
+                    }
+                }
+                
+            } catch (error) {
+                addResult(`❌ Check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createEnterpriseSubscription(userId) {
+            addResult('🔧 Creating enterprise subscription...', 'warning');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('subscriptions')
+                    .insert({ 
+                        user_id: userId,
+                        plan: 'enterprise',
+                        plan_type: 'enterprise',
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select();
+                
+                if (error) {
+                    addResult(`❌ Subscription creation failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Enterprise subscription created successfully!', 'success');
+                    addResult('🎉 You now have full access to all features!', 'success');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Subscription creation failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateToEnterprise() {
+            addResult('🔧 Ensuring enterprise subscription...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Not authenticated. Please sign in first.', 'error');
+                    return;
+                }
+                
+                // First deactivate any existing subscriptions
+                await supabaseClient
+                    .from('subscriptions')
+                    .update({ status: 'inactive', updated_at: new Date().toISOString() })
+                    .eq('user_id', user.id);
+                
+                // Create new enterprise subscription
+                const { data, error } = await supabaseClient
+                    .from('subscriptions')
+                    .insert({ 
+                        user_id: user.id,
+                        plan: 'enterprise',
+                        plan_type: 'enterprise',
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select();
+                
+                if (error) {
+                    addResult(`❌ Enterprise subscription creation failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Enterprise subscription created successfully!', 'success');
+                    addResult('🎉 You now have unlimited access to all features!', 'success');
+                    addResult('💪 Try adding your tax obligations again in the main app.', 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Update failed: ${error.message}`, 'error');
+            }
+        }
+        
+        window.onload = async function() {
+            addResult('🚀 Profile plan fixer loaded', 'warning');
+            
+            // Auto sign in
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: 'joshuaomotayo10@gmail.com',
+                    password: '••••••'
+                });
+                
+                if (!error) {
+                    addResult('✅ Auto-signed in', 'success');
+                    checkCurrentPlan();
+                }
+            } catch (e) {
+                addResult('⚠️ Auto sign-in failed. Please check manually.', 'warning');
+            }
+        };
+    </script>
+</body>
+</html>

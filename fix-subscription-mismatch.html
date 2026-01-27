@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Subscription Mismatch</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .fix-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fix Subscription Mismatch</h1>
+    
+    <div class="fix-section">
+        <h3>Current Issue:</h3>
+        <div class="result warning">
+            ⚠️ Profile Plan: "basic" but Subscription Plan: "undefined"<br>
+            This mismatch is causing app loading issues across all features.
+        </div>
+    </div>
+    
+    <div class="fix-section">
+        <h3>Quick Fixes:</h3>
+        <button onclick="syncSubscriptionPlan()">🔄 Sync Subscription Plan to "basic"</button>
+        <button onclick="refreshUserSession()">🔄 Refresh User Session</button>
+        <button onclick="checkStatus()">✅ Check Current Status</button>
+        <button onclick="clearCache()">🗑️ Clear App Cache</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        async function syncSubscriptionPlan() {
+            addResult('🔄 Attempting to sync subscription plan...', 'warning');
+            
+            try {
+                // Sign in first
+                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email: 'joshuaomotayo10@gmail.com',
+                    password: 'your-password-here' // You'll need to enter your actual password
+                });
+                
+                if (authError) {
+                    addResult(`❌ Authentication failed: ${authError.message}`, 'error');
+                    return;
+                }
+                
+                const userId = authData.user.id;
+                
+                // Update subscription plan to match profile plan
+                const { data, error } = await supabaseClient
+                    .from('subscriptions')
+                    .update({ 
+                        plan: 'basic',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('user_id', userId)
+                    .eq('id', '1f3209c0-182c-492e-8eec-421329235dd4');
+                
+                if (error) {
+                    addResult(`❌ Failed to update subscription: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Subscription plan updated to "basic"', 'success');
+                    addResult('🎉 Mismatch should now be resolved!', 'success');
+                    
+                    // Refresh the session
+                    await refreshUserSession();
+                }
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function refreshUserSession() {
+            addResult('🔄 Refreshing user session...', 'warning');
+            
+            try {
+                const { data, error } = await supabaseClient.auth.refreshSession();
+                
+                if (error) {
+                    addResult(`❌ Session refresh failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ User session refreshed successfully', 'success');
+                    addResult('💡 Try refreshing your main app now', 'info');
+                }
+            } catch (error) {
+                addResult(`❌ Session refresh error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkStatus() {
+            addResult('🔍 Checking current subscription status...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Not authenticated', 'error');
+                    return;
+                }
+                
+                // Check profile
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('plan')
+                    .eq('id', user.id)
+                    .single();
+                
+                // Check subscription
+                const { data: subscription } = await supabaseClient
+                    .from('subscriptions')
+                    .select('plan, status')
+                    .eq('user_id', user.id)
+                    .single();
+                
+                addResult(`📋 Profile Plan: ${profile?.plan || 'N/A'}`, 'info');
+                addResult(`💳 Subscription Plan: ${subscription?.plan || 'N/A'}`, 'info');
+                addResult(`📊 Subscription Status: ${subscription?.status || 'N/A'}`, 'info');
+                
+                if (profile?.plan === subscription?.plan) {
+                    addResult('✅ Plans are now synchronized!', 'success');
+                } else {
+                    addResult('⚠️ Plans still don\'t match', 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Status check error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function clearCache() {
+            addResult('🗑️ Clearing browser cache and storage...', 'warning');
+            
+            try {
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                
+                // Clear IndexedDB if available
+                if ('indexedDB' in window) {
+                    const databases = await indexedDB.databases();
+                    databases.forEach(db => {
+                        indexedDB.deleteDatabase(db.name);
+                    });
+                }
+                
+                addResult('✅ Browser cache cleared', 'success');
+                addResult('💡 Please refresh your main app and try again', 'info');
+                
+            } catch (error) {
+                addResult(`❌ Cache clear error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-check status on load
+        window.onload = function() {
+            addResult('🚀 Subscription Mismatch Fixer loaded', 'info');
+            addResult('💡 Click "Sync Subscription Plan" to fix the mismatch', 'warning');
+        };
+    </script>
+</body>
+</html>

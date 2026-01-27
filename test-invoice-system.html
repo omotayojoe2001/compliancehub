@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice System Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .auth-section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🧾 Invoice System Test</h1>
+    
+    <div class="auth-section">
+        <h3>🔐 Authentication</h3>
+        <div id="auth-status"></div>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <br>
+        <button onclick="signUp()">Sign Up</button>
+        <button onclick="signIn()">Sign In</button>
+        <button onclick="signOut()">Sign Out</button>
+        <button onclick="checkAuth()">Check Auth</button>
+    </div>
+    
+    <div class="auth-section">
+        <h3>🧪 Invoice Tests</h3>
+        <button onclick="testInvoiceTable()">Test Invoice Table</button>
+        <button onclick="createTestInvoice()">Create Test Invoice</button>
+        <button onclick="fetchInvoices()">Fetch My Invoices</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function updateAuthStatus(message, type = 'info') {
+            const authStatus = document.getElementById('auth-status');
+            authStatus.innerHTML = `<div class="test-result ${type}">${message}</div>`;
+        }
+        
+        async function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    updateAuthStatus(`❌ Sign up failed: ${error.message}`, 'error');
+                } else {
+                    updateAuthStatus(`✅ Sign up successful! Check email for confirmation.`, 'success');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Sign up error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    updateAuthStatus(`❌ Sign in failed: ${error.message}`, 'error');
+                } else {
+                    updateAuthStatus(`✅ Signed in as: ${data.user.email}`, 'success');
+                    addResult(`🎉 Authentication successful! User ID: ${data.user.id}`, 'success');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Sign in error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function signOut() {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    updateAuthStatus(`❌ Sign out failed: ${error.message}`, 'error');
+                } else {
+                    updateAuthStatus(`✅ Signed out successfully`, 'success');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Sign out error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    updateAuthStatus(`✅ Authenticated as: ${user.email} (ID: ${user.id})`, 'success');
+                } else {
+                    updateAuthStatus(`❌ Not authenticated`, 'warning');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Auth check error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testInvoiceTable() {
+            addResult('🔍 Testing invoice table access...', 'warning');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('invoices')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    addResult(`❌ Invoice table error: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Invoice table accessible', 'success');
+                }
+            } catch (error) {
+                addResult(`❌ Invoice table test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createTestInvoice() {
+            addResult('📝 Creating test invoice...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Must be authenticated to create invoice', 'error');
+                    return;
+                }
+                
+                addResult(`🔍 User ID: ${user.id}`, 'info');
+                addResult(`📧 User Email: ${user.email}`, 'info');
+                
+                const testInvoice = {
+                    user_id: user.id,
+                    invoice_number: `INV-${Date.now()}`,
+                    client_name: 'Test Client Ltd',
+                    client_address: '123 Test Street, Lagos',
+                    client_email: 'client@test.com',
+                    issue_date: new Date().toISOString().split('T')[0],
+                    due_date: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                    subtotal: 100000.00,
+                    vat_amount: 7500.00,
+                    total_amount: 107500.00,
+                    status: 'draft',
+                    notes: 'Test invoice created by system test'
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('invoices')
+                    .insert([testInvoice])
+                    .select();
+                
+                if (error) {
+                    addResult(`❌ Invoice creation failed: ${error.message}`, 'error');
+                    addResult(`🔍 Error details: ${JSON.stringify(error)}`, 'info');
+                } else {
+                    addResult(`✅ Invoice created successfully! ID: ${data[0].id}`, 'success');
+                    addResult(`📄 Invoice Number: ${data[0].invoice_number}`, 'info');
+                }
+            } catch (error) {
+                addResult(`❌ Invoice creation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function fetchInvoices() {
+            addResult('📋 Fetching your invoices...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Must be authenticated to fetch invoices', 'error');
+                    return;
+                }
+                
+                addResult(`🔍 Searching for user_id: ${user.id}`, 'info');
+                
+                const { data: allData, error: allError } = await supabaseClient
+                    .from('invoices')
+                    .select('*')
+                    .limit(5);
+                
+                if (allError) {
+                    addResult(`❌ Failed to fetch all invoices: ${allError.message}`, 'error');
+                } else {
+                    addResult(`🔍 Total invoices in table: ${allData.length}`, 'info');
+                    allData.forEach((inv, i) => {
+                        addResult(`📄 ${i+1}. ID: ${inv.id}, user_id: ${inv.user_id}, number: ${inv.invoice_number}`, 'info');
+                    });
+                }
+                
+                const { data, error } = await supabaseClient
+                    .from('invoices')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    addResult(`❌ Failed to fetch user invoices: ${error.message}`, 'error');
+                } else {
+                    addResult(`✅ Found ${data.length} invoices for current user`, 'success');
+                    data.forEach((invoice, index) => {
+                        addResult(`📄 ${index + 1}. ${invoice.invoice_number} - ${invoice.client_name} - ₦${invoice.total_amount} (${invoice.status})`, 'info');
+                    });
+                }
+            } catch (error) {
+                addResult(`❌ Fetch invoices error: ${error.message}`, 'error');
+            }
+        }
+        
+        window.onload = function() {
+            addResult('🚀 Invoice system test loaded', 'warning');
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

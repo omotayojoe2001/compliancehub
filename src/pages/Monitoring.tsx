@@ -14,7 +14,6 @@ import {
   Eye
 } from 'lucide-react';
 import { monitoringService } from '@/lib/monitoringService';
-import { HelpWrapper } from '@/components/onboarding/HelpWrapper';
 
 interface MonitoringResult {
   timestamp: string;
@@ -68,27 +67,22 @@ export default function Monitoring() {
 
   return (
     <DashboardLayout>
-      <div className=\"space-y-6\">
-        <HelpWrapper
-          helpTitle=\"What does this page show?\"
-          helpContent=\"This page proves our system is actually working. It shows how many users we're watching, how many deadlines are coming up, and how many reminders we've sent. This is the proof that we're really monitoring your taxes.\"
-        >
-          <div className=\"flex items-center justify-between\">
-            <div>
-              <h1 className=\"text-lg font-semibold text-foreground flex items-center gap-2\">
-                <Eye className=\"h-5 w-5\" />
-                System Monitoring
-              </h1>
-              <p className=\"text-sm text-muted-foreground\">
-                Real-time proof that we're watching your deadlines
-              </p>
-            </div>
-            <Button onClick={runHealthCheck} disabled={loading} className=\"flex items-center gap-2\">
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Check Now
-            </Button>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              System Monitoring
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Real-time proof that we're watching your deadlines
+            </p>
           </div>
-        </HelpWrapper>
+          <Button onClick={runHealthCheck} disabled={loading} className="flex items-center gap-2">
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Check Now
+          </Button>
+        </div>
 
         {/* System Health Status */}
         {monitoring && (

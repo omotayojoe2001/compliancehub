@@ -3,7 +3,6 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Check, AlertTriangle, X, TrendingDown, TrendingUp, Shield, Calculator, Mail, Users, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { paymentService } from "@/lib/paymentService";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useProfile } from "@/hooks/useProfileClean";
@@ -205,6 +204,7 @@ export default function Subscription() {
       pro: 'Professional',
       enterprise: 'Enterprise'
     };
+    if (!planKey) return 'No Plan';
     return planNames[planKey as keyof typeof planNames] || planKey;
   };
 
@@ -262,7 +262,7 @@ export default function Subscription() {
       return;
     }
     
-    const currentLevel = planHierarchy[profile.plan as keyof typeof planHierarchy] || 0;
+    const currentLevel = profile?.plan ? planHierarchy[profile.plan as keyof typeof planHierarchy] || 0 : 0;
     const newLevel = planHierarchy[plan.planKey as keyof typeof planHierarchy] || 0;
     const isDowngrade = newLevel < currentLevel;
     
@@ -270,7 +270,7 @@ export default function Subscription() {
     setSelectedPlan({
       ...plan,
       isDowngrade,
-      lostFeatures: isDowngrade ? getLostFeatures(profile.plan, plan.planKey) : []
+      lostFeatures: isDowngrade && profile?.plan ? getLostFeatures(profile.plan, plan.planKey) : []
     });
     setShowConfirmation(true);
   };
@@ -347,125 +347,110 @@ export default function Subscription() {
         />
 
         {/* Page Header */}
-        <HelpWrapper
-          helpTitle="Why do I need to pay?"
-          helpContent="This app costs money to run - we need to send WhatsApp messages, emails, and keep the system running 24/7. If you don't pay, the reminders stop working. It's like paying for electricity - no payment, no power."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Your Subscription</h1>
-            <p className="text-sm text-muted-foreground">
-              Keep your reminders working by staying subscribed
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Your Subscription</h1>
+          <p className="text-sm text-muted-foreground">
+            Keep your reminders working by staying subscribed
+          </p>
+        </div>
 
         {/* Current Status */}
-        <HelpWrapper
-          helpTitle="Your Current Status"
-          helpContent="This shows: 1) What plan you're on, 2) If it's working (Active) or stopped (Inactive), 3) When you need to pay again. If it says 'Inactive', your reminders have stopped!"
-        >
-          <div className="border border-border bg-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Your Plan
-                </p>
-                <p className="text-lg font-semibold text-foreground">
-                  {profile?.plan ? getPlanDisplayName(profile.plan) : 'No Plan'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Are Reminders Working?
-                </p>
-                <p className={`text-sm font-medium ${
-                  profile?.subscription_status === 'active' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {profile?.subscription_status === 'active' ? '✓ Yes, Active' : '❌ No, Inactive'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Next Payment Due
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {profile?.subscription_status === 'active' ? 'Next month' : 'No payment scheduled'}
-                </p>
-              </div>
+        <div className="border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Your Plan
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                {getPlanDisplayName(profile?.plan || null)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Are Reminders Working?
+              </p>
+              <p className={`text-sm font-medium ${
+                profile?.subscription_status === 'active' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {profile?.subscription_status === 'active' ? '✓ Yes, Active' : '❌ No, Inactive'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Next Payment Due
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {profile?.subscription_status === 'active' ? 'Next month' : 'No payment scheduled'}
+              </p>
             </div>
           </div>
-        </HelpWrapper>
+        </div>
 
         {/* Plans Grid */}
-        <HelpWrapper
-          helpTitle="Choose Your Plan"
-          helpContent="Different plans give you different features. The more you pay, the more reminders and features you get. If you stop paying, ALL reminders stop - the system won't work for free."
-        >
-          <div className="grid gap-4 lg:grid-cols-3">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={cn(
-                  "border bg-card p-6",
-                  plan.current ? "border-green-500 bg-green-50" : "border-border"
-                )}
-              >
-                {plan.current && (
-                  <div className="mb-4 inline-block border border-green-200 bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                    ✓ This is your plan
-                  </div>
-                )}
-                
-                <h3 className="text-lg font-semibold text-foreground">
-                  {plan.name}
-                </h3>
-                
-                <div className="mt-2 flex flex-col">
-                  <div className="flex items-baseline">
-                    <span className="text-2xl font-semibold text-foreground">
-                      {plan.price}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {plan.period}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    + VAT = <span className="font-semibold">{plan.vatPrice}</span>
-                  </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={cn(
+                "border bg-card p-6",
+                plan.current ? "border-green-500 bg-green-50" : "border-border"
+              )}
+            >
+              {plan.current && (
+                <div className="mb-4 inline-block border border-green-200 bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                  ✓ This is your plan
                 </div>
-
-                <ul className="mt-6 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-6">
-                  {plan.current ? (
-                    <Button variant="outline" className="w-full" disabled>
-                      This is your current plan
-                    </Button>
-                  ) : (
-                    <Button
-                      variant={plan.name === "Annual" ? "default" : "outline"}
-                      className="w-full"
-                      onClick={() => handlePlanSelection(plan)}
-                      disabled={loading === plan.planKey}
-                    >
-                      {loading === plan.planKey ? 'Processing...' : 
-                       `${profile?.plan && planHierarchy[plan.planKey] < planHierarchy[profile.plan as keyof typeof planHierarchy] ? 'Downgrade to' : 'Upgrade to'} ${plan.name}`}
-                    </Button>
-                  )}
+              )}
+              
+              <h3 className="text-lg font-semibold text-foreground">
+                {plan.name}
+              </h3>
+              
+              <div className="mt-2 flex flex-col">
+                <div className="flex items-baseline">
+                  <span className="text-2xl font-semibold text-foreground">
+                    {plan.price}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {plan.period}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  + VAT = <span className="font-semibold">{plan.vatPrice}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </HelpWrapper>
+
+              <ul className="mt-6 space-y-3">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 text-green-600" />
+                    <span className="text-sm text-muted-foreground">
+                      {feature}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6">
+                {plan.current ? (
+                  <Button variant="outline" className="w-full" disabled>
+                    This is your current plan
+                  </Button>
+                ) : (
+                  <Button
+                    variant={plan.name === "Annual" ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => handlePlanSelection(plan)}
+                    disabled={loading === plan.planKey}
+                  >
+                    {loading === plan.planKey ? 'Processing...' : 
+                     {`${profile?.plan && planHierarchy[plan.planKey] < planHierarchy[profile.plan as keyof typeof planHierarchy] ? 'Downgrade to' : 'Upgrade to'} ${plan.name}`}
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
         
         {/* Important Warning */}
         <div className="p-4 bg-red-50 border border-red-200 rounded">

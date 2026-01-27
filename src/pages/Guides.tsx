@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, FileText, AlertTriangle, CheckCircle, Play } from 'lucide-react';
 import { complianceGuides, Guide } from '@/lib/complianceGuides';
-import { HelpWrapper } from '@/components/onboarding/HelpWrapper';
 
 export default function Guides() {
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
@@ -181,17 +180,12 @@ export default function Guides() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <HelpWrapper
-          helpTitle="What are these guides?"
-          helpContent="These are step-by-step instructions to help you file your taxes correctly. Each guide shows you exactly what to do, what documents you need, and how to avoid mistakes."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Compliance Guides</h1>
-            <p className="text-sm text-muted-foreground">
-              Step-by-step guides for Nigerian tax compliance
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Compliance Guides</h1>
+          <p className="text-sm text-muted-foreground">
+            Step-by-step guides for Nigerian tax compliance
+          </p>
+        </div>
 
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {complianceGuides.map((guide) => (

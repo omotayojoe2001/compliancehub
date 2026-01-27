@@ -61,7 +61,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             />
           </div>
           <div className="text-sm text-muted-foreground">
-            {currentCompany ? `Managing: ${currentCompany.name}` : 'Loading...'}
+            {currentCompany ? `Managing: ${currentCompany.name}` : 'Select Company'}
           </div>
         </div>
         

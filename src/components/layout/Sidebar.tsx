@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContextClean";
-import { useProfile } from "@/hooks/useProfileClean";
+import { useProfileSimple } from "@/hooks/useProfileSimple";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -26,7 +26,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const location = useLocation();
   const { signOut } = useAuth();
-  const { profile } = useProfile();
+  const { profile } = useProfileSimple();
 
   const hasExpenseAccess = true;
   const hasInvoicingAccess = true;
@@ -90,8 +90,16 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         
         {/* Logout button */}
         <button 
-          onClick={() => {
-            signOut();
+          onClick={async () => {
+            console.log('🚪 Logout button clicked');
+            try {
+              await signOut();
+              console.log('🚪 SignOut completed');
+            } catch (error) {
+              console.error('🚪 SignOut error:', error);
+              // Force redirect even on error
+              window.location.href = '/';
+            }
             onClose?.();
           }}
           className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground rounded-md"

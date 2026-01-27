@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useProfile } from "@/hooks/useProfile";
+import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import { dataExportService } from "@/lib/dataExportService";
 import { supabase } from "@/lib/supabase";
 import { Download, Calendar, CheckCircle, X, CreditCard } from "lucide-react";
@@ -15,6 +16,7 @@ export default function Settings() {
   const { user } = useAuth();
   const { currentCompany } = useCompany();
   const { profile, loading } = useProfile();
+  const { plan } = usePlanRestrictions();
   
   // Form states - use current company data
   const [profileData, setProfileData] = useState({
@@ -416,7 +418,7 @@ export default function Settings() {
             <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 p-4 rounded mb-4">
                 <p className="text-sm text-blue-700">
-                  <Calendar className="inline h-4 w-4 mr-1" /> Your current plan: {profile?.plan?.toUpperCase() || 'FREE'}
+                  <Calendar className="inline h-4 w-4 mr-1" /> Your current plan: {plan?.toUpperCase() || 'FREE'}
                 </p>
               </div>
               
@@ -431,7 +433,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {profile?.plan !== 'free' ? (
+                    {plan !== 'free' ? (
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -459,7 +461,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {profile?.plan === 'pro' || profile?.plan === 'enterprise' ? (
+                    {plan === 'pro' || plan === 'enterprise' ? (
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -487,7 +489,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {profile?.plan !== 'free' ? (
+                    {plan !== 'free' ? (
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -513,7 +515,7 @@ export default function Settings() {
               </div>
             </div>
             
-            {profile?.plan === 'free' && (
+            {plan === 'free' && (
               <div className="mt-6">
                 <Button 
                   onClick={() => window.location.href = '/subscription'}

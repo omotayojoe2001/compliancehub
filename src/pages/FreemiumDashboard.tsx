@@ -86,11 +86,11 @@ export default function FreemiumDashboard() {
     window.location.href = '/subscription';
   };
 
-  if (hasSubscription) {
-    // User has subscription - redirect to normal dashboard
-    window.location.href = '/dashboard';
-    return null;
-  }
+  // Don't auto-redirect - let user see freemium dashboard for testing
+  // if (hasSubscription) {
+  //   window.location.href = '/dashboard';
+  //   return null;
+  // }
 
   return (
     <DashboardLayout>

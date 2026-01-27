@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Fetch Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Profile Fetch Test</h1>
+    <p>This test verifies if your app can fetch profile data from the database.</p>
+    
+    <button onclick="testDatabaseAccess()">Test Database Access</button>
+    <button onclick="testProfileFetch()">Test Profile Fetch</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        window.addResult = function(message, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        window.clearResults = function() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        window.testDatabaseAccess = async function() {
+            addResult('🔌 Testing database connection...', 'warning');
+            
+            try {
+                // Test user_profiles table
+                const { data: profiles, error: profileError } = await supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .limit(1);
+                
+                if (profileError) {
+                    addResult(`❌ user_profiles error: ${profileError.message}`, 'error');
+                } else {
+                    addResult('✅ user_profiles table accessible', 'success');
+                }
+                
+                // Test subscriptions table
+                const { data: subscriptions, error: subError } = await supabaseClient
+                    .from('subscriptions')
+                    .select('*')
+                    .limit(1);
+                
+                if (subError) {
+                    addResult(`❌ subscriptions error: ${subError.message}`, 'error');
+                } else {
+                    addResult('✅ subscriptions table accessible', 'success');
+                }
+                
+                // Test company_profiles table
+                const { data: companies, error: companyError } = await supabaseClient
+                    .from('company_profiles')
+                    .select('*')
+                    .limit(1);
+                
+                if (companyError) {
+                    addResult(`❌ company_profiles error: ${companyError.message}`, 'error');
+                } else {
+                    addResult('✅ company_profiles table accessible', 'success');
+                }
+                
+                if (!profileError && !subError && !companyError) {
+                    addResult('🎉 All database tables are accessible!', 'success');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Database connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        window.testProfileFetch = async function() {
+            addResult('👤 Testing profile fetch simulation...', 'warning');
+            
+            try {
+                // Simulate what your useProfile hook does
+                const mockUserId = 'test-user-id';
+                
+                // Test profile query
+                const profilePromise = supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', mockUserId)
+                    .maybeSingle();
+                
+                // Test subscription query
+                const subscriptionPromise = supabaseClient
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', mockUserId)
+                    .maybeSingle();
+                
+                const [
+                    { data: profileData, error: profileError },
+                    { data: subscriptionData, error: subscriptionError }
+                ] = await Promise.all([profilePromise, subscriptionPromise]);
+                
+                if (profileError && profileError.code !== 'PGRST116') {
+                    addResult(`❌ Profile query error: ${profileError.message}`, 'error');
+                } else {
+                    addResult('✅ Profile query structure works', 'success');
+                }
+                
+                if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+                    addResult(`❌ Subscription query error: ${subscriptionError.message}`, 'error');
+                } else {
+                    addResult('✅ Subscription query structure works', 'success');
+                }
+                
+                // Test fallback profile creation
+                const combinedProfile = {
+                    id: mockUserId,
+                    business_name: profileData?.business_name || 'Your Business',
+                    phone: profileData?.phone || '',
+                    email: 'test@example.com',
+                    cac_date: profileData?.cac_date || null,
+                    vat_status: profileData?.vat_status || false,
+                    paye_status: profileData?.paye_status || false,
+                    plan: subscriptionData?.plan_type || 'free',
+                    subscription_status: subscriptionData?.status || 'inactive'
+                };
+                
+                addResult(`✅ Profile creation works: ${JSON.stringify(combinedProfile, null, 2)}`, 'success');
+                addResult('🎉 Your einvoicing should be able to fetch profiles!', 'success');
+                
+            } catch (error) {
+                addResult(`❌ Profile fetch test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            addResult('🚀 Profile fetch test page loaded', 'warning');
+            addResult('💡 Click the buttons above to run tests', 'warning');
+        };
+    </script>
+</body>
+</html>

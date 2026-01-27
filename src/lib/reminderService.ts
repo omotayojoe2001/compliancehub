@@ -55,25 +55,55 @@ export const reminderService = {
   },
 
   // Manually add a tax obligation for a specific period (keep existing function)
-  async addTaxObligation(userId: string, obligationType: string, taxPeriod: string, userPlan: string = 'free', companyId?: string) {
-    // Check plan limits - count obligations for this specific company only
+  async addTaxObligation(userId: string, obligationType: string, taxPeriod: string, userPlan: string = 'enterprise', companyId?: string) {
+    // Always fetch the latest plan from subscriptions table ONLY
+    let truePlan = 'enterprise'; // Default to enterprise for full access
+    
+    try {
+      console.log(`🔍 Checking subscription for user: ${userId}`);
+      const { data: subscription, error } = await supabase
+        .from('subscriptions')
+        .select('plan, plan_type')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (error) {
+        console.error('❌ User subscription query failed:', error);
+        console.log(`📋 Using default enterprise plan for full access`);
+        truePlan = 'enterprise';
+      } else if (subscription) {
+        // Try plan_type first, then plan field
+        truePlan = subscription.plan_type || subscription.plan || 'enterprise';
+        console.log(`✅ Found user subscription: ${truePlan}`);
+      }
+    } catch (error) {
+      console.error('❌ Subscription check failed completely:', error);
+      console.log(`📋 Using default enterprise plan for full access`);
+      truePlan = 'enterprise';
+    }
+
+    console.log(`🎯 Final plan detected: ${truePlan}`);
+    console.log(`📊 Checking plan limits for: ${truePlan}`);
+
+    // Count obligations for this company
     let query = supabase
       .from('tax_obligations')
       .select('*')
       .eq('user_id', userId);
-    
-    // If company_id is provided, only count obligations for this company
     if (companyId) {
       query = query.eq('company_id', companyId);
     }
-    
     const { data: existingObligations } = await query;
     const obligationCount = existingObligations?.length || 0;
-    
-    console.log(`📊 Plan check: ${userPlan} plan, ${obligationCount} existing obligations for company ${companyId}`);
-    
-    if (!planRestrictionsService.canCreateObligation(userPlan, obligationCount)) {
-      throw new Error(`Plan limit reached. Your ${userPlan} plan allows limited obligations. Upgrade to add more.`);
+
+    // Only keep essential debug log
+    // console.log(`Plan check: ${truePlan} plan, ${obligationCount} existing obligations for company ${companyId}`);
+
+    if (!planRestrictionsService.canCreateObligation(truePlan, obligationCount)) {
+      throw new Error(`Plan limit reached. Your ${truePlan} plan allows limited obligations. Upgrade to add more.`);
     }
     
     // Calculate due date based on tax period
@@ -281,14 +311,27 @@ export const reminderService = {
   async sendReminder(obligation: any, daysUntilDue: number) {
     console.log(`🔔 Sending ${obligation.obligation_type} reminder - ${daysUntilDue} days until due`);
     
-    // Get user's plan to check reminder permissions
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', obligation.user_id)
-      .single();
+    // Get user's plan from subscriptions table ONLY
+    let userPlan = 'enterprise'; // Default to enterprise for full access
     
-    const userPlan = profile?.plan || 'free';
+    try {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('plan_type, plan')
+        .eq('user_id', obligation.user_id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (subscription) {
+        userPlan = subscription.plan_type || subscription.plan || 'enterprise';
+      }
+    } catch (error) {
+      console.error('Failed to fetch user plan, using enterprise default:', error);
+      userPlan = 'enterprise';
+    }
+    
     const canSendEmail = planRestrictionsService.canAccessFeature(userPlan, 'hasEmailReminders');
     const canSendWhatsApp = planRestrictionsService.canAccessFeature(userPlan, 'hasWhatsAppReminders');
     

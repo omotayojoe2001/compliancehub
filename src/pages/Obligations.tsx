@@ -1,10 +1,9 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { cn } from "@/lib/utils";
-import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useCompany } from "@/contexts/CompanyContext";
-import { supabase } from "@/lib/supabase";
+import { supabaseService } from "@/lib/supabaseService";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle, Calculator } from "lucide-react";
 import { SubscriptionGate } from "@/components/SubscriptionGate";
@@ -46,22 +45,11 @@ export default function Obligations() {
     console.log('📊 Fetching obligations for company:', currentCompany.name, currentCompany.id);
     
     try {
-      const { data, error } = await supabase
-        .from('tax_obligations')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('company_id', currentCompany.id)
-        .order('next_due_date', { ascending: true });
+      const data = await supabaseService.getObligations(user?.id, currentCompany.id);
+      console.log('📊 Obligations query result:', data);
 
-      console.log('📊 Obligations query result:', { data, error, companyId: currentCompany.id });
-
-      if (!error && data) {
-        setObligations(data);
-        console.log('✅ Loaded', data.length, 'obligations for', currentCompany.name);
-      } else {
-        console.error('❌ Obligations error:', error);
-        setObligations([]);
-      }
+      setObligations(data || []);
+      console.log('✅ Loaded', data?.length || 0, 'obligations for', currentCompany.name);
     } catch (error) {
       console.error('❌ Obligations fetch failed:', error);
       setObligations([]);
@@ -74,13 +62,11 @@ export default function Obligations() {
   const deleteObligation = async (id: string) => {
     if (!confirm('Delete this tax obligation?')) return;
     
-    const { error } = await supabase
-      .from('tax_obligations')
-      .delete()
-      .eq('id', id);
-    
-    if (!error) {
+    try {
+      await supabaseService.deleteObligation(id);
       fetchObligations();
+    } catch (error) {
+      console.error('Error deleting obligation:', error);
     }
   };
 
@@ -98,17 +84,12 @@ export default function Obligations() {
     <SubscriptionGate feature="Tax Obligations">
       <DashboardLayout>
       <div className="space-y-6">
-        <HelpWrapper
-          helpTitle="What is this page?"
-          helpContent="This shows all the tax periods you've added that we're watching for you. You can delete any that you don't actually need to file."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">What We're Watching For You</h1>
-            <p className="text-sm text-muted-foreground">
-              Tax periods you've added that we're monitoring
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">What We're Watching For You</h1>
+          <p className="text-sm text-muted-foreground">
+            Tax periods you've added that we're monitoring
+          </p>
+        </div>
 
         <div className="border border-border bg-card">
           {loading ? (

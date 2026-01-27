@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Selector Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🏢 Company Selector Fix Verification</h1>
+    
+    <div class="status success">
+        ✅ <strong>Debug System Added:</strong>
+        <ul>
+            <li>Comprehensive console logging for company operations</li>
+            <li>Visual debug panel in bottom-right corner of dashboard</li>
+            <li>Organized debug groups for better readability</li>
+            <li>Real-time company and profile information display</li>
+            <li>Copy debug data to clipboard functionality</li>
+        </ul>
+    </div>
+    
+    <div class="status success">
+        ✅ <strong>Fixed Issues:</strong>
+        <ul>
+            <li>Removed hardcoded "Joshua Omotayo" company name</li>
+            <li>Enabled proper company loading from database</li>
+            <li>Fixed useProfileSimple to load real profile data</li>
+            <li>Updated dashboard route to use proper Dashboard component</li>
+            <li>Fixed DashboardMinimal to use company context</li>
+            <li>Cleaned up old debug statements and replaced with organized logging</li>
+        </ul>
+    </div>
+    
+    <div class="status info">
+        🔍 <strong>Debug Features Added:</strong>
+        <ul>
+            <li><strong>Console Logging:</strong> Open browser DevTools (F12) to see organized debug groups</li>
+            <li><strong>Debug Panel:</strong> Click the yellow "Debug" button in bottom-right corner</li>
+            <li><strong>Company Info:</strong> See current company name, ID, TIN, and primary status</li>
+            <li><strong>Profile Info:</strong> View business name, plan, subscription status, and VAT registration</li>
+            <li><strong>Copy Data:</strong> Export all debug information to clipboard</li>
+            <li><strong>Real-time Updates:</strong> Debug info updates as you switch companies</li>
+        </ul>
+    </div>
+    
+    <div class="status info">
+        📊 <strong>Debug Console Groups:</strong>
+        <ul>
+            <li>🏢 <strong>COMPANY DEBUG:</strong> Company loading, switching, and creation</li>
+            <li>👤 <strong>PROFILE DEBUG:</strong> User profile loading and data</li>
+            <li>🏠 <strong>DASHBOARD DEBUG:</strong> Dashboard component rendering and state</li>
+            <li>📊 <strong>DATABASE DEBUG:</strong> All database queries and responses</li>
+        </ul>
+    </div>
+    
+    <div class="status info">
+        📋 <strong>Changes Made:</strong>
+        <ul>
+            <li><code>CompanySelector.tsx</code>: Added comprehensive debug logging and cleaned up old statements</li>
+            <li><code>useProfileSimple.ts</code>: Added detailed profile loading debug information</li>
+            <li><code>Dashboard.tsx</code>: Added grouped debug logging and DebugPanel component</li>
+            <li><code>supabaseService.ts</code>: Improved database query logging with better organization</li>
+            <li><code>DebugPanel.tsx</code>: New visual debug panel for real-time system monitoring</li>
+        </ul>
+    </div>
+    
+    <div class="status info">
+        🧪 <strong>How to Use Debug System:</strong>
+        <ol>
+            <li>Open your browser's Developer Tools (F12)</li>
+            <li>Go to the Console tab</li>
+            <li>Navigate to <code>/dashboard</code> in your app</li>
+            <li>Look for organized debug groups with emojis (🏢, 👤, 🏠, 📊)</li>
+            <li>Click the yellow "Debug" button in bottom-right corner for visual panel</li>
+            <li>Use "Log to Console" button to export current state</li>
+            <li>Use "Copy" button to copy debug data to clipboard</li>
+        </ol>
+    </div>
+    
+    <div class="status info">
+        🎯 <strong>What You'll See in Console:</strong>
+        <ul>
+            <li>Your actual company name, ID, and TIN number</li>
+            <li>Profile information including business name and subscription status</li>
+            <li>Database query performance and results</li>
+            <li>Company switching operations with before/after data</li>
+            <li>Any errors with detailed context</li>
+        </ul>
+    </div>
+    
+    <div class="status info">
+        🔍 <strong>What Should Happen Now:</strong>
+        <ul>
+            <li>Company selector loads companies from your database</li>
+            <li>If no companies exist, it creates a default one from your profile</li>
+            <li>You can add new companies using the "Add New Company" button</li>
+            <li>Company switching should work properly</li>
+            <li>Business name should reflect your actual profile data</li>
+        </ul>
+    </div>
+    
+    <div class="status error">
+        ⚠️ <strong>If Issues Persist:</strong>
+        <ul>
+            <li>Check browser console for any database connection errors</li>
+            <li>Verify your Supabase connection is working</li>
+            <li>Clear browser cache and localStorage</li>
+            <li>Check if you have proper profile data in the database</li>
+        </ul>
+    </div>
+</body>
+</html>

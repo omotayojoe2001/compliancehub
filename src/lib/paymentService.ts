@@ -11,12 +11,12 @@ declare global {
 interface PaymentData {
   email: string;
   amount: number; // in kobo
-  plan: 'test200' | 'basic' | 'pro' | 'enterprise';
+  plan: 'free' | 'basic' | 'pro' | 'enterprise';
   businessName?: string;
 }
 
 const PLAN_PRICES = {
-  test200: 20000,    // ₦200 in kobo
+  free: 0,           // ₦0 - free plan
   basic: 1500000,    // ₦15,000 in kobo
   pro: 5000000,      // ₦50,000 in kobo
   enterprise: 15000000 // ₦150,000 in kobo
@@ -118,7 +118,7 @@ export const paymentService = {
     });
   },
 
-  getPlanPrice(plan: 'test200' | 'basic' | 'pro' | 'enterprise'): number {
+  getPlanPrice(plan: 'free' | 'basic' | 'pro' | 'enterprise'): number {
     return PLAN_PRICES[plan];
   },
 

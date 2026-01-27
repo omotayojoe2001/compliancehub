@@ -22,7 +22,7 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Never show loading
   const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
     }
   }, [user?.id]);
 
-  // Refresh data when dropdown opens
+  // Load companies when dropdown opens
   useEffect(() => {
     if (isOpen && user?.id) {
       loadUserCompanies();
@@ -41,9 +41,25 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
   const loadUserCompanies = async () => {
     if (!user?.id) return;
     
+    console.group('🏢 COMPANY DEBUG - Load Companies');
+    console.log('📊 Loading companies for user:', {
+      userId: user.id,
+      userEmail: user.email,
+      timestamp: new Date().toISOString()
+    });
+    
     try {
       // Try to load real companies from database
       const userCompanies = await supabaseService.getUserCompanies(user.id);
+      console.log('📊 Database response:', {
+        companiesFound: userCompanies?.length || 0,
+        companies: userCompanies?.map(c => ({
+          id: c.id,
+          name: c.company_name,
+          tin: c.tin,
+          isPrimary: c.is_primary
+        })) || []
+      });
       
       if (userCompanies && userCompanies.length > 0) {
         // Remove duplicates by company name
@@ -58,6 +74,7 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
           isPrimary: company.is_primary
         }));
         
+        console.log('✅ Companies processed successfully:', mappedCompanies);
         setCompanies(mappedCompanies);
         
         // Update current company data if it exists
@@ -66,43 +83,66 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
           if (updatedCurrentCompany && 
               (updatedCurrentCompany.tin !== currentCompany.tin || 
                updatedCurrentCompany.name !== currentCompany.name)) {
+            console.log('🔄 Updating current company with fresh data');
             onCompanyChange(updatedCurrentCompany);
           }
         } else {
           // Set primary company as current if none selected
           const primaryCompany = mappedCompanies.find(c => c.isPrimary) || mappedCompanies[0];
           if (primaryCompany) {
+            console.log('🎯 Setting primary company as current:', primaryCompany);
             onCompanyChange(primaryCompany);
           }
         }
       } else {
         // No companies exist - create default one from user profile
+        console.log('⚠️ No companies found, creating default company');
         await createDefaultCompany();
       }
     } catch (error) {
-      console.error('Error loading companies:', error);
-      // If database fails, create a simple fallback
-      const fallbackCompany = {
-        id: 'fallback-1',
-        name: 'My Business',
-        tin: '',
-        isPrimary: true
-      };
-      setCompanies([fallbackCompany]);
-      onCompanyChange(fallbackCompany);
+      console.error('❌ Error loading companies:', error);
+      // If database fails, try to create a default company
+      try {
+        await createDefaultCompany();
+      } catch (createError) {
+        console.error('❌ Error creating default company:', createError);
+        // Final fallback
+        const fallbackCompany = {
+          id: 'fallback-1',
+          name: 'My Business',
+          tin: '',
+          isPrimary: true
+        };
+        console.log('🆘 Using fallback company:', fallbackCompany);
+        setCompanies([fallbackCompany]);
+        onCompanyChange(fallbackCompany);
+      }
     } finally {
       setLoading(false);
+      console.groupEnd();
     }
   };
 
   const createDefaultCompany = async () => {
     if (!user?.id) return;
     
+    console.group('🏢 COMPANY DEBUG - Create Default Company');
+    console.log('📊 Creating default company for user:', user.id);
+    
     try {
       const profile = await supabaseService.getProfile(user.id);
+      console.log('📊 Profile data retrieved:', {
+        hasProfile: !!profile,
+        businessName: profile?.business_name,
+        firstName: profile?.first_name,
+        businessType: profile?.business_type,
+        tin: profile?.tin,
+        cacNumber: profile?.cac_number
+      });
+      
       const companyName = profile?.business_name || `${profile?.first_name || 'My'} Business`;
       
-      const newCompany = await supabaseService.createCompany({
+      const newCompanyData = {
         user_id: user.id,
         company_name: companyName,
         business_type: profile?.business_type || 'General Business',
@@ -111,7 +151,10 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
         address: profile?.address || '',
         phone: profile?.phone || '',
         is_primary: true
-      });
+      };
+      
+      console.log('📊 Creating company with data:', newCompanyData);
+      const newCompany = await supabaseService.createCompany(newCompanyData);
       
       if (newCompany) {
         const company = {
@@ -120,11 +163,12 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
           tin: newCompany.tin,
           isPrimary: true
         };
+        console.log('✅ Default company created successfully:', company);
         setCompanies([company]);
         onCompanyChange(company);
       }
     } catch (error) {
-      console.error('Error creating default company:', error);
+      console.error('❌ Error creating default company:', error);
       // Fallback to basic company if database fails
       const fallbackCompany = {
         id: 'temp-1',
@@ -132,8 +176,11 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
         tin: '',
         isPrimary: true
       };
+      console.log('🆘 Using temporary fallback company:', fallbackCompany);
       setCompanies([fallbackCompany]);
       onCompanyChange(fallbackCompany);
+    } finally {
+      console.groupEnd();
     }
   };
 

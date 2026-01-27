@@ -7,23 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Create client with simplified configuration for login fix
+// Single, clean Supabase client with minimal configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  global: {
-    fetch: (input, init) => {
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 8000);
-      const nextInit = { ...init, signal: controller.signal };
-
-      return fetch(input, nextInit).finally(() => {
-        window.clearTimeout(timeoutId);
-      });
-    }
-  },
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    redirectTo: 'https://compliance.forecourtlimited.com/dashboard'
+    detectSessionInUrl: true
   }
 })

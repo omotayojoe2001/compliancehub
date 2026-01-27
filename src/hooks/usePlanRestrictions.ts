@@ -1,18 +1,53 @@
-import { useProfile } from './useProfile';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContextClean';
+import { supabase } from '@/lib/supabase';
 import { planRestrictionsService } from '@/lib/planRestrictionsService';
 
 export function usePlanRestrictions() {
-  const { profile, loading } = useProfile();
-  const userPlan = profile?.plan || 'basic'; // Default to basic instead of free
+  const { user } = useAuth();
+  const [userPlan, setUserPlan] = useState<string>('free'); // Default to free
+  const [loading, setLoading] = useState(true);
   
-  // If profile is still loading, use basic plan defaults
-  const effectivePlan = loading ? 'basic' : userPlan;
+  useEffect(() => {
+    async function fetchPlan() {
+      if (!user?.id) {
+        setUserPlan('free');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('plan_type, plan')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        // Use plan_type first, then plan, default to free
+        const plan = subscription?.plan_type || subscription?.plan || 'free';
+        setUserPlan(plan);
+      } catch (error) {
+        console.error('Failed to fetch subscription plan:', error);
+        // Default to free for proper restrictions
+        setUserPlan('free');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPlan();
+  }, [user?.id]);
   
+  const effectivePlan = loading ? 'free' : userPlan;
   const planLimits = planRestrictionsService.getPlanLimits(effectivePlan);
   
   return {
     plan: effectivePlan,
     limits: planLimits,
+    loading,
     canCreateObligation: (currentCount: number) => 
       planRestrictionsService.canCreateObligation(effectivePlan, currentCount),
     canAccessFeature: (feature: keyof typeof planLimits) => 

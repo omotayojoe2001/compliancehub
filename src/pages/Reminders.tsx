@@ -1,7 +1,6 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CheckCircle, XCircle, Mail, MessageSquare, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useCompany } from "@/contexts/CompanyContext";
@@ -17,7 +16,7 @@ interface ReminderLog {
   message_content?: string;
   tax_obligations?: {
     obligation_type: string;
-  };
+  } | null;
 }
 
 interface UpcomingReminder {
@@ -37,17 +36,17 @@ export default function Reminders() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.id && currentCompany?.id) {
+    if (user?.id) {
       loadReminderData();
     } else {
       setReminderLogs([]);
       setUpcomingReminders([]);
       setLoading(false);
     }
-  }, [user?.id, currentCompany?.id]);
+  }, [user?.id]);
 
   const loadReminderData = async () => {
-    if (!user?.id || !currentCompany?.id) return;
+    if (!user?.id) return;
 
     let settled = false;
     const timeoutId = window.setTimeout(() => {
@@ -60,13 +59,19 @@ export default function Reminders() {
     setLoadError(null);
     try {
       setLoading(true);
+      console.log('Loading reminder data for user:', user.id);
 
-      const logs = await supabaseService.getReminders(user.id, currentCompany.id);
+      // Load reminders
+      const logs = await supabaseService.getReminders(user.id, currentCompany?.id);
+      console.log('Loaded reminders:', logs);
       if (settled) return;
       setReminderLogs(Array.isArray(logs) ? logs : []);
 
-      const obligations = await supabaseService.getObligations(user.id, currentCompany.id);
+      // Load obligations
+      const obligations = await supabaseService.getObligations(user.id, currentCompany?.id);
+      console.log('Loaded obligations:', obligations);
       if (settled) return;
+      
       const upcoming = Array.isArray(obligations)
         ? obligations
             .filter(o => o.payment_status !== 'paid')
@@ -85,7 +90,7 @@ export default function Reminders() {
       console.error('Error loading reminder data:', error);
       setReminderLogs([]);
       setUpcomingReminders([]);
-      setLoadError("Couldn't load reminders. Please try again.");
+      setLoadError(`Couldn't load reminders: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (settled) return;
       settled = true;
@@ -100,17 +105,12 @@ export default function Reminders() {
     <SubscriptionGate feature="Reminders">
       <DashboardLayout>
       <div className="space-y-6">
-        <HelpWrapper
-          helpTitle="Why is this important?"
-          helpContent="This page proves the system is actually working! You can see every reminder we tried to send you, when we sent it, and if it worked. This builds trust - you know the robot is doing its job."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Proof We're Working</h1>
-            <p className="text-sm text-muted-foreground">
-              Every reminder we've sent you (or tried to send) and what's coming up
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Proof We're Working</h1>
+          <p className="text-sm text-muted-foreground">
+            Every reminder we've sent you (or tried to send) and what's coming up
+          </p>
+        </div>
 
         {/* Sent Reminders */}
         <div className="border border-border bg-card">
@@ -164,7 +164,7 @@ export default function Reminders() {
                     {reminderLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-secondary/50">
                         <td className="px-4 py-3 text-sm font-medium text-foreground">
-                          {log.obligation_type || 'Tax Reminder'}
+                          {log.tax_obligations?.obligation_type || 'Tax Reminder'}
                           {log.message_content && (
                             <div className="text-xs text-gray-500 mt-1 italic">
                               "{log.message_content.substring(0, 80)}..."
@@ -218,7 +218,7 @@ export default function Reminders() {
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
                         <h4 className="text-sm font-medium text-foreground">
-                          {log.obligation_type || 'Tax Reminder'}
+                          {log.tax_obligations?.obligation_type || 'Tax Reminder'}
                         </h4>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           {log.reminder_type === "email" ? (

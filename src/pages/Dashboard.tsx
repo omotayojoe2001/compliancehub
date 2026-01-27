@@ -5,9 +5,8 @@ import { AlertBanner } from "@/components/dashboard/AlertBanner";
 import { UpcomingObligations } from "@/components/dashboard/UpcomingObligations";
 import { RecentReminders } from "@/components/dashboard/RecentReminders";
 import { AddTaxObligation } from "@/components/dashboard/AddTaxObligation";
-import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { WelcomePopup } from "@/components/onboarding/WelcomePopup";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfileSimple } from "@/hooks/useProfileSimple";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
@@ -15,11 +14,14 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { supabaseService } from "@/lib/supabaseService";
+import DebugPanel from "@/components/DebugPanel";
 
 export default function Dashboard() {
-  console.log('🏠 Dashboard component RENDERING...');
+  console.group('🏠 DASHBOARD DEBUG - Component Render');
+  console.log('📊 Dashboard rendering at:', new Date().toISOString());
   
-  const { profile, loading } = useProfile();
+  // Use proper profile hook to fetch real data from database
+  const { profile, loading } = useProfileSimple();
   const { plan, limits, getObligationLimitMessage } = usePlanRestrictions();
   const { currentCompany } = useCompany();
   const { user } = useAuth();
@@ -34,16 +36,17 @@ export default function Dashboard() {
 
   // Load obligations when company changes
   useEffect(() => {
-    if (user?.id && currentCompany?.id) {
+    if (user?.id) {
+      // Load obligations even if no company is selected yet
       loadObligations();
     }
   }, [user?.id, currentCompany?.id]);
 
   const loadObligations = async () => {
-    if (!user?.id || !currentCompany?.id) return;
+    if (!user?.id) return;
     
     try {
-      const data = await supabaseService.getObligations(user.id, currentCompany.id);
+      const data = await supabaseService.getObligations(user.id, currentCompany?.id);
       setObligations(data || []);
       calculateStats(data || []);
     } catch (error) {
@@ -91,29 +94,48 @@ export default function Dashboard() {
   };
 
   console.log('🏠 Dashboard state check:', {
-    hasProfile: !!profile,
-    profileBusinessName: profile?.business_name,
-    currentCompany: currentCompany?.name,
-    companyId: currentCompany?.id,
-    loading,
-    plan,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    user: {
+      id: user?.id,
+      email: user?.email
+    },
+    profile: {
+      hasProfile: !!profile,
+      businessName: profile?.business_name,
+      plan: profile?.plan,
+      subscriptionStatus: profile?.subscription_status
+    },
+    company: {
+      hasCurrentCompany: !!currentCompany,
+      companyName: currentCompany?.name,
+      companyId: currentCompany?.id,
+      companyTin: currentCompany?.tin,
+      isPrimary: currentCompany?.isPrimary
+    },
+    dashboard: {
+      obligationsCount: obligations.length,
+      nextDue: dashboardStats.nextDue,
+      overdueCount: dashboardStats.overdueCount,
+      loading: false
+    }
   });
 
-  if (loading) {
-    console.log('🏠 Dashboard showing LOADING state');
+  // Force no loading state - but allow brief loading for profile
+  if (loading && !profile) {
+    console.log('🔄 Dashboard showing LOADING state');
+    console.groupEnd();
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
-          <p className="mt-1 text-xs text-gray-400">Debug: Profile loading in progress</p>
+          <p className="ml-4 text-sm text-muted-foreground">Loading...</p>
         </div>
       </DashboardLayout>
     );
   }
 
-  console.log('🏠 Dashboard rendering MAIN CONTENT');
+  console.log('✅ Dashboard rendering MAIN CONTENT');
+  console.groupEnd();
   const showUpgradePrompt = plan === 'free' || limits.maxObligations === 0;
 
   return (
@@ -121,17 +143,12 @@ export default function Dashboard() {
       <WelcomePopup />
       <div className="space-y-6">
         {/* Page Header */}
-        <HelpWrapper
-          helpTitle="What is this page?"
-          helpContent="This is your main screen. It answers one simple question: 'Am I safe right now or not?' You can see if any taxes are due soon and if the system is working for you."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Overview of your compliance status
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Overview of your compliance status
+          </p>
+        </div>
 
         {/* Plan Restrictions Alert */}
         {showUpgradePrompt && (
@@ -162,19 +179,10 @@ export default function Dashboard() {
         )}
 
         {/* Alert Banner - Only show if there are actual obligations */}
-        <HelpWrapper
-          helpTitle="Important Warnings"
-          helpContent="When you see a red or yellow warning like this, it means a tax deadline is coming soon. This is the most important thing to pay attention to!"
-        >
-          {/* Remove hardcoded alert - will be populated by UpcomingObligations component */}
-        </HelpWrapper>
+        {/* Remove hardcoded alert - will be populated by UpcomingObligations component */}
 
         {/* Summary Cards */}
-        <HelpWrapper
-          helpTitle="Quick Info About You"
-          helpContent="These boxes show: 1) Your business name, 2) If you paid your subscription, 3) What tax is due next, 4) If anything is overdue. Think of it like a quick health check."
-        >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryCard
               title="Business"
               value={currentCompany?.name || profile?.business_name || "Loading..."}
@@ -183,7 +191,7 @@ export default function Dashboard() {
             />
             <SummaryCard
               title="Subscription"
-              value={profile?.plan?.charAt(0).toUpperCase() + profile?.plan?.slice(1) || "Basic"}
+              value={profile?.plan ? (profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)) : "No Plan"}
               description={profile?.subscription_status === 'active' ? 'Active' : 'Inactive'}
               variant={profile?.subscription_status === 'active' ? 'success' : 'error'}
               icon={<CreditCard className="h-5 w-5" />}
@@ -202,34 +210,21 @@ export default function Dashboard() {
               icon={<AlertTriangle className="h-5 w-5" />}
             />
           </div>
-        </HelpWrapper>
 
         {/* Content Grid */}
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
-            <HelpWrapper
-              helpTitle="Add Your Tax Periods"
-              helpContent="Only add tax periods you actually need to file. For example, if you had business activity in December 2024, add 'VAT - December 2024' here."
-            >
-              <AddTaxObligation />
-            </HelpWrapper>
+            <AddTaxObligation />
             
-            <HelpWrapper
-              helpTitle="What's Coming Up"
-              helpContent="This shows all your upcoming tax deadlines. The system watches these dates for you and will send you WhatsApp and email reminders."
-            >
-              <UpcomingObligations />
-            </HelpWrapper>
+            <UpcomingObligations />
           </div>
           
-          <HelpWrapper
-            helpTitle="Proof the System Works"
-            helpContent="This shows you all the reminders we've sent you. This proves the system is actually working and watching your deadlines."
-          >
-            <RecentReminders />
-          </HelpWrapper>
+          <RecentReminders />
         </div>
       </div>
+      
+      {/* Debug Panel - Only visible in development */}
+      <DebugPanel />
     </DashboardLayout>
   );
 }

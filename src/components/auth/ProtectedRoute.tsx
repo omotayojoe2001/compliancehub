@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading: authLoading } = useAuth()
 
-  if (authLoading) {
+  if (false) { // Disable auth loading in ProtectedRoute
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

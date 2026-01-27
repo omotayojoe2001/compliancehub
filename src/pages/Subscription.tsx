@@ -3,7 +3,6 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HelpWrapper } from "@/components/onboarding/HelpWrapper";
 import { paymentService } from "@/lib/paymentService";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useProfile } from "@/hooks/useProfileClean";
@@ -17,7 +16,7 @@ export default function Subscription() {
   // Get plan display name
   const getPlanDisplayName = (planKey: string) => {
     const planNames = {
-      test200: 'Test ₦200',
+      free: 'Free',
       basic: 'Basic',
       pro: 'Professional', 
       enterprise: 'Enterprise'
@@ -47,18 +46,18 @@ export default function Subscription() {
 
 const plans = [
   {
-    name: "Test ₦200",
-    annualPrice: "₦2,400",
-    monthlyPrice: "₦200",
-    period: "/year",
-    monthlyPeriod: "/month",
+    name: "Free",
+    annualPrice: "₦0",
+    monthlyPrice: "₦0",
+    period: "/forever",
+    monthlyPeriod: "/forever",
     features: [
-      "Testing the system",
-      "2 obligations tracked",
-      "Email reminders only",
+      "View compliance guides",
+      "Basic tax information",
+      "No reminders",
     ],
-    current: actualSubscription?.plan_type === 'test200',
-    planKey: 'test200' as const,
+    current: actualSubscription?.plan_type === 'free',
+    planKey: 'free' as const,
   },
   {
     name: "Basic",
@@ -68,10 +67,10 @@ const plans = [
     monthlyPeriod: "/month",
     features: [
       "1 Business Profile",
-      "WhatsApp Reminders",
       "Email Reminders",
       "Tax Calculator Access",
       "Filing Guides",
+      "Up to 3 tax obligations",
     ],
     current: actualSubscription?.plan_type === 'basic',
     planKey: 'basic' as const,
@@ -84,11 +83,12 @@ const plans = [
     monthlyPeriod: "/month",
     features: [
       "Up to 5 Business Profiles",
-      "Priority WhatsApp Reminders",
+      "WhatsApp Reminders",
       "Email Reminders",
-      "Tax Calculator Access",
+      "Advanced Tax Calculator",
       "Filing Guides",
-      "Annual Summary Reports",
+      "Unlimited tax obligations",
+      "Priority Support",
     ],
     current: actualSubscription?.plan_type === 'pro',
     planKey: 'pro' as const,
@@ -101,18 +101,20 @@ const plans = [
     monthlyPeriod: "/month",
     features: [
       "Unlimited Business Profiles",
-      "Priority Support",
-      "Custom Integrations",
-      "Dedicated Account Manager",
-      "Advanced Analytics",
+      "WhatsApp Reminders",
+      "Email Reminders",
+      "Advanced Tax Calculator",
       "API Access",
+      "Multi-user Access",
+      "Dedicated Account Manager",
+      "Custom Integrations",
     ],
     current: actualSubscription?.plan_type === 'enterprise',
     planKey: 'enterprise' as const,
   },
 ];
 
-  const handleUpgrade = async (planType: 'test200' | 'basic' | 'pro' | 'enterprise') => {
+  const handleUpgrade = async (planType: 'free' | 'basic' | 'pro' | 'enterprise') => {
     if (!user || !profile) return;
     
     setLoading(planType);
@@ -141,61 +143,47 @@ const plans = [
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <HelpWrapper
-          helpTitle="Why do I need to pay?"
-          helpContent="This app costs money to run - we need to send WhatsApp messages, emails, and keep the system running 24/7. If you don't pay, the reminders stop working. It's like paying for electricity - no payment, no power."
-        >
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Your Subscription</h1>
-            <p className="text-sm text-muted-foreground">
-              Keep your reminders working by staying subscribed
-            </p>
-          </div>
-        </HelpWrapper>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Your Subscription</h1>
+          <p className="text-sm text-muted-foreground">
+            Keep your reminders working by staying subscribed
+          </p>
+        </div>
 
         {/* Current Status */}
-        <HelpWrapper
-          helpTitle="Your Current Status"
-          helpContent="This shows: 1) What plan you're on, 2) If it's working (Active) or stopped (Inactive), 3) When you need to pay again. If it says 'Inactive', your reminders have stopped!"
-        >
-          <div className="border border-border bg-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Your Plan
-                </p>
-                <p className="text-lg font-semibold text-foreground">
-                  {actualSubscription?.plan_type ? getPlanDisplayName(actualSubscription.plan_type) : 'No Plan'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Are Reminders Working?
-                </p>
-                <p className={`text-sm font-medium ${
-                  actualSubscription?.status === 'active' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {actualSubscription?.status === 'active' ? '✓ Yes, Active' : '❌ No, Inactive'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Next Payment Due
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {actualSubscription?.status === 'active' ? 'Next year' : 'No payment scheduled'}
-                </p>
-              </div>
+        <div className="border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Your Plan
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                {actualSubscription?.plan_type ? getPlanDisplayName(actualSubscription.plan_type) : 'No Plan'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Are Reminders Working?
+              </p>
+              <p className={`text-sm font-medium ${
+                actualSubscription?.status === 'active' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {actualSubscription?.status === 'active' ? '✓ Yes, Active' : '❌ No, Inactive'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Next Payment Due
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {actualSubscription?.status === 'active' ? 'Next year' : 'No payment scheduled'}
+              </p>
             </div>
           </div>
-        </HelpWrapper>
+        </div>
 
         {/* Plans Grid */}
-        <HelpWrapper
-          helpTitle="Choose Your Plan"
-          helpContent="Different plans give you different features. The more you pay, the more reminders and features you get. If you stop paying, ALL reminders stop - the system won't work for free."
-        >
-          <div className="grid gap-4 lg:grid-cols-4">
+        <div className="grid gap-4 lg:grid-cols-4">
             {plans.map((plan) => (
               <div
                 key={plan.name}
@@ -257,7 +245,6 @@ const plans = [
               </div>
             ))}
           </div>
-        </HelpWrapper>
         
         {/* Important Warning */}
         <div className="p-4 bg-red-50 border border-red-200 rounded">

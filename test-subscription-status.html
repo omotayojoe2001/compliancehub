@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Status Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .auth-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
+        input { margin: 5px; padding: 8px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Subscription Status Checker</h1>
+    
+    <div class="auth-section">
+        <h3>Authentication</h3>
+        <input type="email" id="email" placeholder="Email" value="joshuaomotayo10@gmail.com">
+        <input type="password" id="password" placeholder="Password" value="••••••">
+        <br>
+        <button onclick="signIn()">Sign In</button>
+        <button onclick="signOut()">Sign Out</button>
+        <button onclick="checkAuth()">Check Auth</button>
+        <div id="auth-status"></div>
+    </div>
+    
+    <div>
+        <h3>🧪 Subscription Tests</h3>
+        <button onclick="checkProfile()">Check Profile Table</button>
+        <button onclick="checkSubscriptions()">Check Subscriptions Table</button>
+        <button onclick="checkAllTables()">Check All Tables</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function updateAuthStatus(message, type = 'info') {
+            const authStatus = document.getElementById('auth-status');
+            authStatus.innerHTML = `<div class="test-result ${type}">${message}</div>`;
+        }
+        
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    updateAuthStatus(`❌ Sign in failed: ${error.message}`, 'error');
+                } else {
+                    updateAuthStatus(`✅ Signed in as: ${data.user.email}`, 'success');
+                    addResult(`🎉 Authentication successful! User ID: ${data.user.id}`, 'success');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Sign in error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function signOut() {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    updateAuthStatus(`❌ Sign out failed: ${error.message}`, 'error');
+                } else {
+                    updateAuthStatus(`✅ Signed out successfully`, 'success');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Sign out error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    updateAuthStatus(`✅ Authenticated as: ${user.email} (ID: ${user.id})`, 'success');
+                } else {
+                    updateAuthStatus(`❌ Not authenticated`, 'warning');
+                }
+            } catch (error) {
+                updateAuthStatus(`❌ Auth check error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkProfile() {
+            addResult('🔍 Checking profile table...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Must be authenticated to check profile', 'error');
+                    return;
+                }
+                
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (error) {
+                    addResult(`❌ Profile check failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Profile found:', 'success');
+                    addResult(`📧 Email: ${data.email || 'N/A'}`, 'info');
+                    addResult(`👤 Full Name: ${data.full_name || 'N/A'}`, 'info');
+                    addResult(`📋 Plan: ${data.plan || 'N/A'}`, 'info');
+                    addResult(`🏢 Company: ${data.company_name || 'N/A'}`, 'info');
+                    addResult(`📅 Created: ${data.created_at || 'N/A'}`, 'info');
+                    addResult(`🔄 Updated: ${data.updated_at || 'N/A'}`, 'info');
+                    
+                    if (data.subscription) {
+                        addResult(`💳 Subscription in Profile: ${data.subscription}`, 'info');
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ Profile check error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkSubscriptions() {
+            addResult('🔍 Checking subscriptions table...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Must be authenticated to check subscriptions', 'error');
+                    return;
+                }
+                
+                const { data, error } = await supabaseClient
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', user.id);
+                
+                if (error) {
+                    addResult(`❌ Subscriptions check failed: ${error.message}`, 'error');
+                } else if (data.length === 0) {
+                    addResult('⚠️ No subscriptions found for this user', 'warning');
+                } else {
+                    addResult(`✅ Found ${data.length} subscription(s):`, 'success');
+                    data.forEach((sub, index) => {
+                        addResult(`📋 Subscription ${index + 1}:`, 'info');
+                        addResult(`  - ID: ${sub.id}`, 'info');
+                        addResult(`  - Plan: ${sub.plan || 'N/A'}`, 'info');
+                        addResult(`  - Status: ${sub.status || 'N/A'}`, 'info');
+                        addResult(`  - Created: ${sub.created_at || 'N/A'}`, 'info');
+                        addResult(`  - Updated: ${sub.updated_at || 'N/A'}`, 'info');
+                        if (sub.expires_at) {
+                            addResult(`  - Expires: ${sub.expires_at}`, 'info');
+                        }
+                    });
+                }
+            } catch (error) {
+                addResult(`❌ Subscriptions check error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkAllTables() {
+            addResult('🔍 Checking all subscription-related data...', 'warning');
+            
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    addResult('❌ Must be authenticated', 'error');
+                    return;
+                }
+                
+                addResult(`👤 Current User: ${user.email} (${user.id})`, 'info');
+                addResult('', 'info');
+                
+                // Check profiles table
+                addResult('📋 PROFILES TABLE:', 'warning');
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError) {
+                    addResult(`❌ Profile error: ${profileError.message}`, 'error');
+                } else {
+                    addResult(`✅ Plan in Profile: ${profile.plan || 'Not set'}`, profile.plan ? 'success' : 'warning');
+                    if (profile.subscription) {
+                        addResult(`✅ Subscription field in Profile: ${profile.subscription}`, 'success');
+                    }
+                }
+                
+                addResult('', 'info');
+                
+                // Check subscriptions table
+                addResult('💳 SUBSCRIPTIONS TABLE:', 'warning');
+                const { data: subscriptions, error: subError } = await supabaseClient
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', user.id);
+                
+                if (subError) {
+                    addResult(`❌ Subscriptions error: ${subError.message}`, 'error');
+                } else if (subscriptions.length === 0) {
+                    addResult('⚠️ No active subscriptions found', 'warning');
+                } else {
+                    subscriptions.forEach(sub => {
+                        addResult(`✅ Active Subscription: ${sub.plan || 'Unknown'} (Status: ${sub.status || 'Unknown'})`, 'success');
+                    });
+                }
+                
+                addResult('', 'info');
+                addResult('🔍 SUMMARY:', 'warning');
+                const profilePlan = profile?.plan || 'None';
+                const subscriptionPlan = subscriptions.length > 0 ? subscriptions[0].plan : 'None';
+                
+                addResult(`Profile Plan: ${profilePlan}`, profilePlan !== 'None' ? 'info' : 'warning');
+                addResult(`Subscription Plan: ${subscriptionPlan}`, subscriptionPlan !== 'None' ? 'info' : 'warning');
+                
+                if (profilePlan !== subscriptionPlan) {
+                    addResult('⚠️ MISMATCH DETECTED! Profile and Subscription plans don\'t match', 'error');
+                    addResult('💡 This could be causing your app issues', 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Check all tables error: ${error.message}`, 'error');
+            }
+        }
+        
+        window.onload = function() {
+            addResult('🚀 Subscription status checker loaded', 'warning');
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

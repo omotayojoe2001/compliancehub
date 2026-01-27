@@ -5,6 +5,6 @@ import Dashboard from '@/pages/Dashboard';
 import FreemiumDashboard from '@/pages/FreemiumDashboard';
 
 export function DashboardRouter() {
-  // SIMPLIFIED - Always show regular Dashboard
+  // SIMPLIFIED - Always show main Dashboard (the fixed one)
   return <Dashboard />;
 }

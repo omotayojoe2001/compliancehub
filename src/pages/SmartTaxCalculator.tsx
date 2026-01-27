@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calculator, Lock, Crown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
-import { useProfile } from '@/hooks/useProfile';
+import { usePlanRestrictions } from '@/hooks/usePlanRestrictions';
 import { Link } from 'react-router-dom';
 
 interface TaxCalculation {
@@ -15,7 +15,7 @@ interface TaxCalculation {
 }
 
 export default function SmartTaxCalculator() {
-  const { profile } = useProfile();
+  const { plan, limits } = usePlanRestrictions();
   const [activeTab, setActiveTab] = useState('vat');
   const [calculations, setCalculations] = useState<TaxCalculation[]>([]);
   
@@ -54,14 +54,13 @@ export default function SmartTaxCalculator() {
   });
 
   const hasAccess = (feature: string) => {
-    const plan = profile?.plan;
     switch (feature) {
       case 'vat':
-        return ['basic', 'pro', 'enterprise'].includes(plan || '');
+        return ['basic', 'pro', 'enterprise'].includes(plan);
       case 'paye':
       case 'cit':
       case 'withholding':
-        return ['pro', 'enterprise'].includes(plan || '');
+        return ['pro', 'enterprise'].includes(plan);
       case 'capital-gains':
         return plan === 'enterprise';
       default:
@@ -208,13 +207,13 @@ export default function SmartTaxCalculator() {
               <Crown className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="font-medium text-blue-900">
-                  Your Plan: {profile?.plan?.toUpperCase() || 'FREE'}
+                  Your Plan: {plan?.toUpperCase() || 'FREE'}
                 </p>
                 <p className="text-sm text-blue-700">
-                  {profile?.plan === 'basic' && 'Access to VAT calculations only'}
-                  {profile?.plan === 'pro' && 'Access to VAT, PAYE, CIT, and Withholding Tax'}
-                  {profile?.plan === 'enterprise' && 'Access to all tax calculators including Capital Gains'}
-                  {!profile?.plan && 'Upgrade to access tax calculators'}
+                  {plan === 'free' && 'Upgrade to access tax calculators'}
+                  {plan === 'basic' && 'Access to VAT calculations only'}
+                  {plan === 'pro' && 'Access to VAT, PAYE, CIT, and Withholding Tax'}
+                  {plan === 'enterprise' && 'Access to all tax calculators including Capital Gains'}
                 </p>
               </div>
             </div>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Download, Eye, Upload, Building2, Trash2 } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
-import { useProfile } from '@/hooks/useProfileClean';
+import { useProfileSimple } from '@/hooks/useProfileSimple';
 import { useAuth } from '@/contexts/AuthContextClean';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/lib/supabase';
@@ -37,7 +37,7 @@ interface Invoice {
 export default function EInvoicing() {
   const { user } = useAuth();
   const { currentCompany } = useCompany();
-  const { profile } = useProfile();
+  const { profile } = useProfileSimple();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export default function EInvoicing() {
 
     setLoadError(null);
     try {
-      const data = await comprehensiveDbService.getInvoices(user.id);
+      const data = await comprehensiveDbService.getInvoices(user.id, currentCompany?.id);
       if (settled) return;
       setInvoices(data || []);
     } catch (error) {
@@ -176,6 +176,7 @@ export default function EInvoicing() {
     
     const newInvoice = {
       user_id: user.id,
+      company_id: currentCompany?.id,
       invoice_number: invoiceNumber,
       client_name: formData.clientName,
       client_address: formData.clientAddress,
