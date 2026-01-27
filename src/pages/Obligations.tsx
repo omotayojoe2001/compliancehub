@@ -5,9 +5,10 @@ import { useAuth } from "@/contexts/AuthContextClean";
 import { useCompany } from "@/contexts/CompanyContext";
 import { supabaseService } from "@/lib/supabaseService";
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckCircle, Calculator } from "lucide-react";
+import { Trash2, CheckCircle, Calculator, Plus, Check } from "lucide-react";
 import { SubscriptionGate } from "@/components/SubscriptionGate";
 import { Link } from "react-router-dom";
+import { AddTaxObligation } from "@/components/dashboard/AddTaxObligation";
 
 interface Obligation {
   id: string;
@@ -16,6 +17,7 @@ interface Obligation {
   next_due_date: string;
   tax_period?: string;
   is_active: boolean;
+  payment_status: string;
 }
 
 export default function Obligations() {
@@ -23,9 +25,9 @@ export default function Obligations() {
   const { currentCompany } = useCompany();
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    console.log('🔄 Obligations effect triggered:', { userId: user?.id, companyId: currentCompany?.id, companyName: currentCompany?.name });
     if (user?.id && currentCompany?.id) {
       fetchObligations();
     } else {
@@ -36,28 +38,106 @@ export default function Obligations() {
 
   const fetchObligations = async () => {
     if (!currentCompany?.id) {
-      console.log('🚫 No company selected, clearing obligations');
       setObligations([]);
       setLoading(false);
       return;
     }
     
-    console.log('📊 Fetching obligations for company:', currentCompany.name, currentCompany.id);
-    
     try {
       const data = await supabaseService.getObligations(user?.id, currentCompany.id);
-      console.log('📊 Obligations query result:', data);
-
       setObligations(data || []);
-      console.log('✅ Loaded', data?.length || 0, 'obligations for', currentCompany.name);
     } catch (error) {
-      console.error('❌ Obligations fetch failed:', error);
+      console.error('Error loading obligations:', error);
       setObligations([]);
     }
     setLoading(false);
   };
 
 
+
+  const markAsPaid = async (id: string) => {
+    const obligation = obligations.find(o => o.id === id);
+    const confirmed = confirm(`Are you sure you have paid the ${obligation?.obligation_type} tax? This will mark it as completed and create the next period.`);
+    
+    if (!confirmed) return;
+    
+    try {
+      // Mark current obligation as paid
+      await supabaseService.updateObligation(id, { payment_status: 'paid' });
+      
+      // Create next period for recurring taxes
+      if (obligation && user?.id && currentCompany?.id) {
+        const nextPeriod = generateNextPeriod(obligation);
+        if (nextPeriod) {
+          await supabaseService.createObligation({
+            user_id: user.id,
+            company_id: currentCompany.id,
+            obligation_type: obligation.obligation_type,
+            frequency: getFrequencyForTaxType(obligation.obligation_type),
+            next_due_date: nextPeriod.dueDate,
+            tax_period: nextPeriod.period,
+            payment_status: 'pending',
+            is_active: true,
+            amount_due: (obligation as any).amount_due || 0
+          });
+        }
+      }
+      
+      // Refresh the list
+      await fetchObligations();
+      
+    } catch (error) {
+      console.error('Failed to mark as paid:', error);
+      alert('Failed to mark as paid: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };
+
+  const getFrequencyForTaxType = (taxType: string): string => {
+    const type = taxType.toLowerCase();
+    if (type.includes('paye') || type.includes('vat')) return 'monthly';
+    if (type.includes('cit') || type.includes('company income')) return 'annually';
+    if (type.includes('wht') || type.includes('withholding')) return 'monthly';
+    return 'monthly'; // Default to monthly
+  };
+
+  const generateNextPeriod = (obligation: any) => {
+    const taxType = obligation.obligation_type.toLowerCase();
+    const currentDue = new Date(obligation.next_due_date);
+    
+    // For monthly taxes (PAYE, VAT, WHT)
+    if (taxType.includes('paye') || taxType.includes('vat') || taxType.includes('wht')) {
+      const nextMonth = new Date(currentDue);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      
+      // Set proper due dates
+      if (taxType.includes('paye')) {
+        nextMonth.setDate(10); // PAYE due 10th of following month
+      } else if (taxType.includes('vat')) {
+        nextMonth.setDate(21); // VAT due 21st of following month
+      }
+      
+      const year = nextMonth.getFullYear();
+      const month = String(nextMonth.getMonth() + 1).padStart(2, '0');
+      
+      return {
+        dueDate: nextMonth.toISOString(),
+        period: `${year}-${month}`
+      };
+    }
+    
+    // For annual taxes (CIT)
+    if (taxType.includes('cit') || taxType.includes('company income')) {
+      const nextYear = new Date(currentDue);
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      
+      return {
+        dueDate: nextYear.toISOString(),
+        period: null
+      };
+    }
+    
+    return null; // Don't create next period for unknown types
+  };
 
   const deleteObligation = async (id: string) => {
     if (!confirm('Delete this tax obligation?')) return;
@@ -81,15 +161,37 @@ export default function Obligations() {
   };
 
   return (
-    <SubscriptionGate feature="Tax Obligations">
+    <SubscriptionGate feature="hasReminders">
       <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">What We're Watching For You</h1>
-          <p className="text-sm text-muted-foreground">
-            Tax periods you've added that we're monitoring
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">What We're Watching For You</h1>
+            <p className="text-sm text-muted-foreground">
+              Tax periods you've added that we're monitoring
+            </p>
+          </div>
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Tax Obligation
+          </Button>
         </div>
+
+        {/* Add Tax Obligation Form */}
+        {showAddForm && (
+          <div className="border border-border bg-card p-6 rounded-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Add New Tax Obligation</h3>
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                Cancel
+              </Button>
+            </div>
+            <AddTaxObligation onSuccess={() => {
+              setShowAddForm(false);
+              fetchObligations();
+            }} />
+          </div>
+        )}
 
         <div className="border border-border bg-card">
           {loading ? (
@@ -148,16 +250,29 @@ export default function Obligations() {
                           <span
                             className={cn(
                               "inline-flex px-2 py-1 text-xs font-medium border",
-                              obligation.is_active
+                              obligation.payment_status === 'paid'
+                                ? "border-blue-200 bg-blue-100 text-blue-800"
+                                : obligation.is_active
                                 ? "border-green-200 bg-green-100 text-green-800"
                                 : "border-gray-200 bg-gray-100 text-gray-600"
                             )}
                           >
-                            {obligation.is_active ? "✓ Watching" : "⏸ Paused"}
+                            {obligation.payment_status === 'paid' ? "✓ Paid" : obligation.is_active ? "✓ Watching" : "⏸ Paused"}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
+                            {obligation.is_active && obligation.payment_status !== 'paid' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => markAsPaid(obligation.id)}
+                                className="border-green-200 text-green-700 hover:bg-green-50"
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Mark Paid
+                              </Button>
+                            )}
                             <Button
                               asChild
                               variant="outline"
@@ -217,6 +332,17 @@ export default function Obligations() {
                         Due: {new Date(obligation.next_due_date).toLocaleDateString()}
                       </p>
                       <div className="flex items-center gap-2">
+                        {obligation.is_active && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => markAsPaid(obligation.id)}
+                            className="border-green-200 text-green-700 hover:bg-green-50 h-7 px-2"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Paid
+                          </Button>
+                        )}
                         <Button
                           asChild
                           variant="outline"

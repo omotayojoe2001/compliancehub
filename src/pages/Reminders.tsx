@@ -59,17 +59,12 @@ export default function Reminders() {
     setLoadError(null);
     try {
       setLoading(true);
-      console.log('Loading reminder data for user:', user.id);
 
-      // Load reminders
       const logs = await supabaseService.getReminders(user.id, currentCompany?.id);
-      console.log('Loaded reminders:', logs);
       if (settled) return;
       setReminderLogs(Array.isArray(logs) ? logs : []);
 
-      // Load obligations
       const obligations = await supabaseService.getObligations(user.id, currentCompany?.id);
-      console.log('Loaded obligations:', obligations);
       if (settled) return;
       
       const upcoming = Array.isArray(obligations)
@@ -102,7 +97,7 @@ export default function Reminders() {
 
 
   return (
-    <SubscriptionGate feature="Reminders">
+    <SubscriptionGate feature="hasReminders">
       <DashboardLayout>
       <div className="space-y-6">
         <div>

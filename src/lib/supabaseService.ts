@@ -3,43 +3,18 @@ import { supabase } from './supabase';
 export const supabaseService = {
   // Tax Obligations
   async getObligations(userId: string, companyId?: string) {
-    console.group('📊 DATABASE DEBUG - Get Obligations');
-    console.log('📊 Query parameters:', { userId, companyId, timestamp: new Date().toISOString() });
-    
     const query = supabase
       .from('tax_obligations')
       .select('*')
       .eq('user_id', userId);
     
-    // Only filter by company_id if it's provided and not null
     if (companyId) {
       query.eq('company_id', companyId);
-      console.log('🔍 Filtering by company_id:', companyId);
     }
     
-    const startTime = Date.now();
     const { data, error } = await query.order('next_due_date', { ascending: true }).limit(100);
-    const endTime = Date.now();
     
-    console.log('📊 Query results:', {
-      duration: `${endTime - startTime}ms`,
-      success: !error,
-      error: error?.message,
-      recordsFound: data?.length || 0,
-      records: data?.map(d => ({
-        id: d.id,
-        type: d.obligation_type,
-        dueDate: d.next_due_date,
-        status: d.payment_status
-      })) || []
-    });
-    
-    if (error) {
-      console.error('❌ Database error:', error);
-      console.groupEnd();
-      throw error;
-    }
-    console.groupEnd();
+    if (error) throw error;
     return data;
   },
 

@@ -1,15 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AddTaxPeriodModal } from './AddTaxPeriodModal';
 import { Plus } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContextClean';
+import { useCompany } from '@/contexts/CompanyContext';
+import { supabaseService } from '@/lib/supabaseService';
 
-export function AddTaxObligation() {
+interface AddTaxObligationProps {
+  onSuccess?: () => void;
+}
+
+export function AddTaxObligation({ onSuccess }: AddTaxObligationProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasExistingObligations, setHasExistingObligations] = useState(false);
+  const { user } = useAuth();
+  const { currentCompany } = useCompany();
+
+  useEffect(() => {
+    checkExistingObligations();
+  }, [user?.id, currentCompany?.id]);
+
+  const checkExistingObligations = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const obligations = await supabaseService.getObligations(user.id, currentCompany?.id);
+      setHasExistingObligations((obligations?.length || 0) > 0);
+    } catch (error) {
+      console.error('Error checking obligations:', error);
+    }
+  };
 
   const handleSuccess = () => {
-    // Refresh page to show new obligation
-    window.location.reload();
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      window.location.reload();
+    }
   };
+
+  const title = hasExistingObligations ? "Add New Tax Period" : "Add Your First Tax Period";
+  const description = hasExistingObligations 
+    ? "Add another month when you had business activity" 
+    : "Tell us about months when you had business activity";
 
   return (
     <>
@@ -19,8 +52,8 @@ export function AddTaxObligation() {
             <Plus className="h-6 w-6 text-blue-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Add Your First Tax Period</h3>
-            <p className="text-sm text-blue-700 mb-3">Tell us about months when you had business activity</p>
+            <h3 className="font-semibold text-blue-900 mb-1">{title}</h3>
+            <p className="text-sm text-blue-700 mb-3">{description}</p>
           </div>
           <Button 
             onClick={() => setIsModalOpen(true)} 

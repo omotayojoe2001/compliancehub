@@ -22,9 +22,7 @@ export function UpcomingObligations() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('📊 UpcomingObligations effect:', { userId: user?.id, companyId: currentCompany?.id, companyName: currentCompany?.name });
     if (user?.id) {
-      // Load obligations even if no company is selected (will show all user obligations)
       loadObligations();
     } else {
       setObligations([]);
@@ -33,50 +31,25 @@ export function UpcomingObligations() {
   }, [user?.id, currentCompany?.id]);
 
   const loadObligations = async () => {
-    if (!user?.id) {
-      console.log('🚫 loadObligations: Missing user ID');
-      return;
-    }
-
-    console.log('🔄 loadObligations: Starting...', {
-      userId: user.id,
-      companyId: currentCompany?.id || 'none',
-      companyName: currentCompany?.name || 'none',
-      timestamp: new Date().toISOString()
-    });
+    if (!user?.id) return;
 
     let settled = false;
     const timeoutId = window.setTimeout(() => {
       if (settled) return;
       settled = true;
-      console.error('⏰ loadObligations: TIMEOUT after 8 seconds');
       setLoadError("Request timed out. Please try again.");
       setLoading(false);
     }, 8000);
 
     setLoadError(null);
     try {
-      console.log('📡 loadObligations: Calling supabaseService.getObligations...');
-      const startTime = Date.now();
       const data = await supabaseService.getObligations(user.id, currentCompany?.id);
-      const endTime = Date.now();
-      
-      console.log('✅ loadObligations: Success!', {
-        duration: `${endTime - startTime}ms`,
-        dataLength: data?.length || 0,
-        data: data?.slice(0, 3) // Log first 3 items for debugging
-      });
       
       if (settled) return;
       setObligations(data || []);
     } catch (error) {
       if (settled) return;
-      console.error('❌ loadObligations: Error:', {
-        error,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        errorCode: (error as any)?.code,
-        errorDetails: (error as any)?.details
-      });
+      console.error('Error loading obligations:', error);
       setObligations([]);
       setLoadError("Couldn't load obligations. Please try again.");
     } finally {
@@ -84,7 +57,6 @@ export function UpcomingObligations() {
       settled = true;
       window.clearTimeout(timeoutId);
       setLoading(false);
-      console.log('🏁 loadObligations: Finished');
     }
   };
 
@@ -102,7 +74,7 @@ export function UpcomingObligations() {
     <div className="border border-border bg-card">
       <div className="border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">
-          What We Watch ({obligations.length})
+          What We Watch ({obligations.filter(o => o.payment_status !== 'paid').length})
         </h3>
       </div>
       <div className="divide-y divide-border">
@@ -129,7 +101,9 @@ export function UpcomingObligations() {
             Use "Add Tax Period" above to add your actual tax periods.
           </div>
         ) : (
-          obligations.map((obligation) => {
+          obligations
+            .filter(obligation => obligation.payment_status !== 'paid') // Only show unpaid obligations
+            .map((obligation) => {
             const status = getStatus(obligation.next_due_date);
             return (
               <div

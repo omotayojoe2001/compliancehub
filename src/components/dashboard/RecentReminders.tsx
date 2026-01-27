@@ -37,49 +37,28 @@ export function RecentReminders() {
 
   const loadReminders = async () => {
     if (!user?.id) {
-      console.log('🚫 loadReminders: Missing user ID');
       return;
     }
-
-    console.log('🔄 loadReminders: Starting...', {
-      userId: user.id,
-      companyId: currentCompany?.id || 'none',
-      companyName: currentCompany?.name || 'none',
-      timestamp: new Date().toISOString()
-    });
 
     let settled = false;
     const timeoutId = window.setTimeout(() => {
       if (settled) return;
       settled = true;
-      console.error('⏰ loadReminders: TIMEOUT after 8 seconds');
       setLoadError("Request timed out. Please try again.");
       setLoading(false);
     }, 8000);
 
     setLoadError(null);
     try {
-      console.log('📡 loadReminders: Calling supabaseService.getReminders...');
       const startTime = Date.now();
       const data = await supabaseService.getReminders(user.id, currentCompany?.id);
       const endTime = Date.now();
-      
-      console.log('✅ loadReminders: Success!', {
-        duration: `${endTime - startTime}ms`,
-        dataLength: data?.length || 0,
-        data: data?.slice(0, 3) // Log first 3 items for debugging
-      });
       
       if (settled) return;
       setReminders(data || []);
     } catch (error) {
       if (settled) return;
-      console.error('❌ loadReminders: Error:', {
-        error,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        errorCode: (error as any)?.code,
-        errorDetails: (error as any)?.details
-      });
+      console.error('Error loading reminders:', error);
       setReminders([]);
       setLoadError("Couldn't load reminders. Please try again.");
     } finally {
@@ -87,7 +66,6 @@ export function RecentReminders() {
       settled = true;
       window.clearTimeout(timeoutId);
       setLoading(false);
-      console.log('🏁 loadReminders: Finished');
     }
   };
 

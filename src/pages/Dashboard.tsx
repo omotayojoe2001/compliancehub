@@ -17,10 +17,6 @@ import { supabaseService } from "@/lib/supabaseService";
 import DebugPanel from "@/components/DebugPanel";
 
 export default function Dashboard() {
-  console.group('🏠 DASHBOARD DEBUG - Component Render');
-  console.log('📊 Dashboard rendering at:', new Date().toISOString());
-  
-  // Use proper profile hook to fetch real data from database
   const { profile, loading } = useProfileSimple();
   const { planType, isActive, loading: subscriptionLoading } = useSubscription();
   const { currentCompany } = useCompany();
@@ -63,18 +59,21 @@ export default function Dashboard() {
     let overdueCount = 0;
     
     if (obligationData.length > 0) {
-      // Find overdue obligations
-      const overdue = obligationData.filter(o => {
+      // Only count unpaid obligations
+      const unpaidObligations = obligationData.filter(o => o.payment_status !== 'paid');
+      
+      // Find overdue obligations (unpaid only)
+      const overdue = unpaidObligations.filter(o => {
         const dueDate = new Date(o.next_due_date);
-        return dueDate < now && o.payment_status !== 'paid';
+        return dueDate < now;
       });
       overdueCount = overdue.length;
       
-      // Find next due obligation
-      const upcoming = obligationData
+      // Find next due obligation (unpaid only)
+      const upcoming = unpaidObligations
         .filter(o => {
           const dueDate = new Date(o.next_due_date);
-          return dueDate >= now && o.payment_status !== 'paid';
+          return dueDate >= now;
         })
         .sort((a, b) => new Date(a.next_due_date).getTime() - new Date(b.next_due_date).getTime());
       
@@ -122,8 +121,6 @@ export default function Dashboard() {
 
   // Force no loading state - but allow brief loading for profile
   if (loading && !profile) {
-    console.log('🔄 Dashboard showing LOADING state');
-    console.groupEnd();
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -135,7 +132,6 @@ export default function Dashboard() {
   }
 
   console.log('✅ Dashboard rendering MAIN CONTENT');
-  console.groupEnd();
   const showUpgradePrompt = !isActive || planType === 'free';
 
   return (
