@@ -1,8 +1,23 @@
 import { supabase } from './supabase';
 
 export const supabaseService = {
+  // Input validation helper
+  validateUserId(userId: string): void {
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+      throw new Error('Invalid user ID provided');
+    }
+  },
+
+  validateId(id: string, fieldName = 'ID'): void {
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new Error(`Invalid ${fieldName} provided`);
+    }
+  },
   // Tax Obligations
   async getObligations(userId: string, companyId?: string) {
+    this.validateUserId(userId);
+    if (companyId) this.validateId(companyId, 'Company ID');
+    
     const query = supabase
       .from('tax_obligations')
       .select('*')
@@ -30,6 +45,11 @@ export const supabaseService = {
   },
 
   async updateObligation(id: string, updates: any) {
+    this.validateId(id, 'Obligation ID');
+    if (!updates || typeof updates !== 'object') {
+      throw new Error('Invalid updates object provided');
+    }
+    
     const { data, error } = await supabase
       .from('tax_obligations')
       .update(updates)
@@ -42,6 +62,8 @@ export const supabaseService = {
   },
 
   async deleteObligation(id: string) {
+    this.validateId(id, 'Obligation ID');
+    
     const { error } = await supabase
       .from('tax_obligations')
       .delete()
@@ -52,6 +74,9 @@ export const supabaseService = {
 
   // Reminders
   async getReminders(userId: string, companyId?: string) {
+    this.validateUserId(userId);
+    if (companyId) this.validateId(companyId, 'Company ID');
+    
     console.group('📊 DATABASE DEBUG - Get Reminders');
     console.log('📊 Query parameters:', { userId, companyId, timestamp: new Date().toISOString() });
     
@@ -112,6 +137,8 @@ export const supabaseService = {
 
   // Profile
   async getProfile(userId: string) {
+    this.validateUserId(userId);
+    
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -123,6 +150,11 @@ export const supabaseService = {
   },
 
   async updateProfile(userId: string, updates: any) {
+    this.validateUserId(userId);
+    if (!updates || typeof updates !== 'object') {
+      throw new Error('Invalid updates object provided');
+    }
+    
     const { data, error } = await supabase
       .from('user_profiles')
       .update(updates)

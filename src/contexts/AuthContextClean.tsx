@@ -93,10 +93,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
 
-      // Step 2: Clear browser storage
-      console.log('🚪 Step 2: Clearing browser storage');
-      localStorage.clear();
-      sessionStorage.clear();
+      // Step 2: Clear only auth-related storage
+      console.log('🚪 Step 2: Clearing auth-related storage');
+      // Clear specific auth-related keys instead of all localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.includes('auth') || key.includes('session'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      sessionStorage.clear(); // This is safer as it's session-specific
 
       // Step 3: Sign out from Supabase with timeout
       console.log('🚪 Step 3: Calling Supabase signOut');
