@@ -135,7 +135,7 @@ export default function Register() {
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary-foreground" />
             <span className="text-lg font-semibold text-primary-foreground">
-              ComplianceHub
+              TaxandCompliance T&C
             </span>
           </div>
           <div>
@@ -143,11 +143,11 @@ export default function Register() {
               Never miss a<br />deadline again.
             </h2>
             <p className="mt-4 text-sm text-primary-foreground/80">
-              Join thousands of Nigerian businesses using ComplianceHub to stay on top of their tax obligations.
+              Join thousands of Nigerian businesses using TaxandCompliance T&C to stay on top of their tax obligations.
             </p>
           </div>
           <p className="text-xs text-primary-foreground/60">
-            © 2025 ComplianceHub. All rights reserved.
+            © 2025 TaxandCompliance T&C. All rights reserved.
           </p>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function Register() {
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
               <span className="text-lg font-semibold text-foreground">
-                ComplianceHub
+                TaxandCompliance T&C
               </span>
             </div>
           </div>

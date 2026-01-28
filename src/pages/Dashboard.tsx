@@ -14,7 +14,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { supabaseService } from "@/lib/supabaseService";
-import DebugPanel from "@/components/DebugPanel";
 
 export default function Dashboard() {
   const { profile, loading } = useProfileSimple();
@@ -217,9 +216,6 @@ export default function Dashboard() {
           <RecentReminders />
         </div>
       </div>
-      
-      {/* Debug Panel - Only visible in development */}
-      <DebugPanel />
     </DashboardLayout>
   );
 }

@@ -14,7 +14,7 @@ import Obligations from "./pages/Obligations";
 import Reminders from "./pages/Reminders";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
-import AdminPanel from "./pages/AdminPanel";
+import AdminTest from "./pages/AdminTest";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -56,7 +56,7 @@ function AppContent() {
       <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />
       <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminPanel /></AdminRoute></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><AdminTest /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -9,7 +9,7 @@ export default function Terms() {
           <Link to="/" className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-foreground">
-              ComplianceHub
+              TaxandCompliance T&C
             </span>
           </Link>
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
@@ -34,7 +34,7 @@ export default function Terms() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using ComplianceHub, you agree to these Terms and
+              By accessing or using TaxandCompliance T&C, you agree to these Terms and
               Conditions. If you do not agree, do not use the service.
             </p>
           </section>
@@ -44,7 +44,7 @@ export default function Terms() {
               2. Services
             </h2>
             <p>
-              ComplianceHub provides compliance reminders, guides, and tools
+              TaxandCompliance T&C provides compliance reminders, guides, and tools
               designed to help Nigerian businesses track filing obligations.
               The service does not replace professional legal, tax, or
               accounting advice.
@@ -98,7 +98,7 @@ export default function Terms() {
               7. Limitation of Liability
             </h2>
             <p>
-              ComplianceHub is provided on an as-is basis. We are not liable for
+              TaxandCompliance T&C is provided on an as-is basis. We are not liable for
               indirect or consequential damages, including penalties or losses
               arising from missed deadlines.
             </p>
@@ -121,10 +121,10 @@ export default function Terms() {
             <p>
               Questions about these terms? Email{" "}
               <a
-                href="mailto:hello@compliancehub.ng"
+                href="mailto:hello@taxandcompliance.ng"
                 className="text-foreground underline"
               >
-                hello@compliancehub.ng
+                hello@taxandcompliance.ng
               </a>
               .
             </p>

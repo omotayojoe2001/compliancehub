@@ -11,7 +11,7 @@ export default function PublicLanding() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">ComplianceHub</span>
+            <span className="text-xl font-bold text-gray-900">TaxandCompliance T&C</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login">
@@ -143,7 +143,7 @@ export default function PublicLanding() {
       {/* Footer */}
       <footer className="border-t bg-gray-50">
         <div className="container mx-auto px-4 py-8 text-center text-gray-600">
-          <p>&copy; 2024 ComplianceHub. Never miss a tax deadline again.</p>
+          <p>&copy; 2024 TaxandCompliance T&C. Never miss a tax deadline again.</p>
         </div>
       </footer>
     </div>

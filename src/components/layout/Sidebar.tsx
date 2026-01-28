@@ -54,7 +54,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         <div className="flex items-center">
           <Building2 className="h-5 w-5 text-primary" />
           <span className="ml-2 text-sm font-semibold text-foreground">
-            ComplianceHub
+            TaxandCompliance T&C
           </span>
         </div>
         {/* Close button for mobile */}

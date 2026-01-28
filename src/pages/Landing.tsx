@@ -134,7 +134,7 @@ export default function Landing() {
           <Link to="/" className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-foreground">
-              ComplianceHub
+              TaxandCompliance T&C
             </span>
           </Link>
           <nav className="hidden items-center gap-6 md:flex">
@@ -460,7 +460,7 @@ export default function Landing() {
               <div className="mb-4 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
                 <span className="text-sm font-semibold text-foreground">
-                  ComplianceHub
+                  TaxandCompliance T&C
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -543,7 +543,7 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2">
                 <li className="text-sm text-muted-foreground">
-                  hello@compliancehub.ng
+                  hello@taxandcompliance.ng
                 </li>
                 <li className="text-sm text-muted-foreground">
                   Lagos, Nigeria
@@ -552,7 +552,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="mt-8 border-t border-border pt-8 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} ComplianceHub. All rights reserved.
+            © {new Date().getFullYear()} TaxandCompliance T&C. All rights reserved.
           </div>
         </div>
       </footer>

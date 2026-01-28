@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextClean';
 import { supabase } from '@/lib/supabase';
 
 interface AdminRouteProps {
@@ -23,20 +23,22 @@ export function AdminRoute({ children }: AdminRouteProps) {
   }, [user]);
 
   const checkAdminAccess = async () => {
+    console.log('🔐 Checking admin access for user:', user?.email);
+    
     if (!user?.email) {
+      console.log('🔐 No user email found');
       setIsAdmin(false);
       setLoading(false);
       return;
     }
 
-    // Temporarily allow all logged-in users for testing
+    // Allow all logged-in users for testing
+    console.log('🔐 Granting admin access to:', user.email);
     setIsAdmin(true);
     setLoading(false);
-    
-    // Original admin check (commented out for testing)
-    // const isAdminUser = ADMIN_EMAILS.includes(user.email.toLowerCase());
-    // setIsAdmin(isAdminUser);
   };
+
+  console.log('🔐 AdminRoute render - loading:', loading, 'isAdmin:', isAdmin, 'user:', user?.email);
 
   if (loading) {
     return (

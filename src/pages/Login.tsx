@@ -48,7 +48,7 @@ export default function Login() {
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary-foreground" />
             <span className="text-lg font-semibold text-primary-foreground">
-              ComplianceHub
+              TaxandCompliance T&C
             </span>
           </div>
           <div>
@@ -60,7 +60,7 @@ export default function Login() {
             </p>
           </div>
           <p className="text-xs text-primary-foreground/60">
-            © 2025 ComplianceHub. All rights reserved.
+            © 2025 TaxandCompliance T&C. All rights reserved.
           </p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function Login() {
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
               <span className="text-lg font-semibold text-foreground">
-                ComplianceHub
+                TaxandCompliance T&C
               </span>
             </div>
           </div>

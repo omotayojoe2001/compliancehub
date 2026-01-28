@@ -53,7 +53,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Desktop header with company selector */}
         <div className="hidden lg:flex items-center justify-between p-4 border-b border-border bg-card">
           <div className="flex items-center gap-4">
-            <span className="text-lg font-semibold">ComplianceHub</span>
+            <span className="text-lg font-semibold">TaxandCompliance T&C</span>
             <div className="text-sm text-muted-foreground">|</div>
             <CompanySelector 
               currentCompany={currentCompany}
@@ -76,7 +76,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="text-lg font-semibold">ComplianceHub</span>
+            <span className="text-lg font-semibold">T&C</span>
           </div>
           <CompanySelector 
             currentCompany={currentCompany}

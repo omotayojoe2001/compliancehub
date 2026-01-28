@@ -7,7 +7,7 @@ export function Footer() {
       <div className="px-4 py-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground mb-4">
           <div>
-            © 2026 ComplianceHub. All rights reserved.
+            © 2026 TaxandCompliance T&C. All rights reserved.
           </div>
         </div>
         
