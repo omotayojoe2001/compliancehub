@@ -32,6 +32,9 @@ interface Invoice {
   total_amount: number;
   status: 'draft' | 'sent' | 'paid';
   company_logo_url?: string;
+  bank_name?: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
 }
 
 export default function EInvoicing() {
@@ -58,7 +61,10 @@ export default function EInvoicing() {
   const [formData, setFormData] = useState({
     clientName: '',
     clientAddress: '',
-    items: [{ description: '', quantity: 1, rate: 0, amount: 0 }] as InvoiceItem[]
+    items: [{ description: '', quantity: 1, rate: 0, amount: 0 }] as InvoiceItem[],
+    bankAccountNumber: '',
+    bankAccountName: '',
+    bankName: ''
   });
 
   useEffect(() => {
@@ -85,18 +91,34 @@ export default function EInvoicing() {
       settled = true;
       setLoadError("Request timed out. Please try again.");
       setLoading(false);
-    }, 8000);
+    }, 5000); // Reduced timeout to 5 seconds
 
     setLoadError(null);
+    setLoading(true);
+    
     try {
-      const data = await comprehensiveDbService.getInvoices(user.id, currentCompany?.id);
+      // Simple query without company filter first
+      const data = await comprehensiveDbService.getInvoices(user.id);
       if (settled) return;
+      
       setInvoices(data || []);
     } catch (error) {
       if (settled) return;
       console.error('Error loading invoices:', error);
       setInvoices([]);
-      setLoadError("Couldn't load invoices. Please try again.");
+      
+      // More specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          setLoadError("Connection timeout. Please check your internet and try again.");
+        } else if (error.message.includes('network')) {
+          setLoadError("Network error. Please check your connection.");
+        } else {
+          setLoadError(`Error: ${error.message}`);
+        }
+      } else {
+        setLoadError("Couldn't load invoices. Please try again.");
+      }
     } finally {
       if (settled) return;
       settled = true;
@@ -176,7 +198,7 @@ export default function EInvoicing() {
     
     const newInvoice = {
       user_id: user.id,
-      company_id: currentCompany?.id,
+      company_id: currentCompany?.id || null,
       invoice_number: invoiceNumber,
       client_name: formData.clientName,
       client_address: formData.clientAddress,
@@ -186,7 +208,10 @@ export default function EInvoicing() {
       vat_amount: vatAmount,
       total_amount: total,
       status: 'draft' as const,
-      company_logo_url: companyLogo
+      company_logo_url: companyLogo,
+      bank_name: formData.bankName,
+      bank_account_name: formData.bankAccountName,
+      bank_account_number: formData.bankAccountNumber
     };
 
     try {
@@ -198,7 +223,10 @@ export default function EInvoicing() {
           vat_amount: vatAmount,
           total_amount: total,
           status: editingInvoiceStatus,
-          company_logo_url: companyLogo
+          company_logo_url: companyLogo,
+          bank_name: formData.bankName,
+          bank_account_name: formData.bankAccountName,
+          bank_account_number: formData.bankAccountNumber
         });
 
         await comprehensiveDbService.deleteInvoiceItems(editingInvoiceId);
@@ -231,13 +259,17 @@ export default function EInvoicing() {
       setFormData({
         clientName: '',
         clientAddress: '',
-        items: [{ description: '', quantity: 1, rate: 0, amount: 0 }]
+        items: [{ description: '', quantity: 1, rate: 0, amount: 0 }],
+        bankAccountNumber: '',
+        bankAccountName: '',
+        bankName: ''
       });
       setShowCreateForm(false);
       setEditingInvoiceId(null);
       setEditingInvoiceStatus('draft');
     } catch (error) {
       console.error('Error saving invoice:', error);
+      alert('Failed to save invoice. Please try again.');
     }
   };
 
@@ -251,25 +283,77 @@ export default function EInvoicing() {
   const generatePDF = async (invoice: Invoice) => {
     if (!invoiceRef.current) return;
     
-    const canvas = await html2canvas(invoiceRef.current);
-    const imgData = canvas.toDataURL('image/png');
+    // High-quality canvas settings
+    const canvas = await html2canvas(invoiceRef.current, {
+      scale: 3, // Higher scale for better quality
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: invoiceRef.current.scrollWidth,
+      height: invoiceRef.current.scrollHeight,
+      scrollX: 0,
+      scrollY: 0
+    });
     
-    const pdf = new jsPDF();
-    const imgWidth = 210;
-    const pageHeight = 295;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
+    const imgData = canvas.toDataURL('image/png', 1.0); // Maximum quality
     
-    let position = 0;
+    // A4 dimensions in mm
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: false // Disable compression for better quality
+    });
     
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    // Calculate dimensions to fit A4 while maintaining aspect ratio
+    const canvasAspectRatio = canvas.height / canvas.width;
+    const imgWidth = pdfWidth - 20; // 10mm margin on each side
+    const imgHeight = imgWidth * canvasAspectRatio;
+    
+    let yPosition = 10; // 10mm top margin
+    
+    // If content fits on one page
+    if (imgHeight <= pdfHeight - 20) {
+      pdf.addImage(imgData, 'PNG', 10, yPosition, imgWidth, imgHeight, undefined, 'FAST');
+    } else {
+      // Multi-page handling with better quality
+      let remainingHeight = imgHeight;
+      let sourceY = 0;
+      
+      while (remainingHeight > 0) {
+        const pageHeight = Math.min(remainingHeight, pdfHeight - 20);
+        
+        // Create a temporary canvas for this page section
+        const pageCanvas = document.createElement('canvas');
+        const pageCtx = pageCanvas.getContext('2d');
+        
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = (pageHeight / imgHeight) * canvas.height;
+        
+        if (pageCtx) {
+          pageCtx.drawImage(
+            canvas,
+            0, sourceY * (canvas.height / imgHeight),
+            canvas.width, pageCanvas.height,
+            0, 0,
+            canvas.width, pageCanvas.height
+          );
+          
+          const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+          pdf.addImage(pageImgData, 'PNG', 10, 10, imgWidth, pageHeight, undefined, 'FAST');
+        }
+        
+        remainingHeight -= pageHeight;
+        sourceY += pageHeight;
+        
+        if (remainingHeight > 0) {
+          pdf.addPage();
+        }
+      }
     }
     
     pdf.save(`${invoice.invoice_number}.pdf`);
@@ -318,7 +402,10 @@ export default function EInvoicing() {
         clientAddress: invoice.client_address,
         items: items.length
           ? items
-          : [{ description: '', quantity: 1, rate: 0, amount: 0 }]
+          : [{ description: '', quantity: 1, rate: 0, amount: 0 }],
+        bankAccountNumber: invoice.bank_account_number || '',
+        bankAccountName: invoice.bank_account_name || '',
+        bankName: invoice.bank_name || ''
       });
       setCompanyLogo(invoice.company_logo_url || null);
       setEditingInvoiceId(invoice.id);
@@ -360,7 +447,10 @@ export default function EInvoicing() {
                 setFormData({
                   clientName: '',
                   clientAddress: '',
-                  items: [{ description: '', quantity: 1, rate: 0, amount: 0 }]
+                  items: [{ description: '', quantity: 1, rate: 0, amount: 0 }],
+                  bankAccountNumber: '',
+                  bankAccountName: '',
+                  bankName: ''
                 });
                 setCompanyLogo(null);
                 setShowCreateForm(true);
@@ -428,6 +518,43 @@ export default function EInvoicing() {
                     placeholder="Client address"
                     required
                   />
+                </div>
+              </div>
+
+              {/* Bank Account Details */}
+              <div className="mb-6">
+                <h4 className="font-medium mb-4">Bank Account Details (for payment)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Bank Name</label>
+                    <input
+                      type="text"
+                      value={formData.bankName}
+                      onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                      className="w-full border border-border rounded-md px-3 py-2"
+                      placeholder="e.g. First Bank of Nigeria"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Account Name</label>
+                    <input
+                      type="text"
+                      value={formData.bankAccountName}
+                      onChange={(e) => setFormData({...formData, bankAccountName: e.target.value})}
+                      className="w-full border border-border rounded-md px-3 py-2"
+                      placeholder="Account holder name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Account Number</label>
+                    <input
+                      type="text"
+                      value={formData.bankAccountNumber}
+                      onChange={(e) => setFormData({...formData, bankAccountNumber: e.target.value})}
+                      className="w-full border border-border rounded-md px-3 py-2"
+                      placeholder="1234567890"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -559,7 +686,7 @@ export default function EInvoicing() {
                   </div>
                   
                   {/* Invoice Template */}
-                  <div ref={invoiceRef} className="bg-white p-8 border" style={{ minHeight: '800px' }}>
+                  <div ref={invoiceRef} className="bg-white p-8 border" style={{ minHeight: '800px', fontSize: '14px', lineHeight: '1.4' }}>
                     {/* Header */}
                     <div className="flex justify-between items-start mb-8">
                       <div>
@@ -646,6 +773,36 @@ export default function EInvoicing() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Payment Details - Prominent Section */}
+                    {(viewingInvoice.bank_name || viewingInvoice.bank_account_name || viewingInvoice.bank_account_number) && (
+                      <div className="mb-8 p-6 bg-gray-50 border-2 border-gray-300 rounded-lg">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">💳 PAYMENT INSTRUCTIONS</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                          {viewingInvoice.bank_name && (
+                            <div className="bg-white p-4 rounded-lg border">
+                              <p className="text-sm font-medium text-gray-600 mb-1">BANK NAME</p>
+                              <p className="text-lg font-bold text-gray-900">{viewingInvoice.bank_name}</p>
+                            </div>
+                          )}
+                          {viewingInvoice.bank_account_name && (
+                            <div className="bg-white p-4 rounded-lg border">
+                              <p className="text-sm font-medium text-gray-600 mb-1">ACCOUNT NAME</p>
+                              <p className="text-lg font-bold text-gray-900">{viewingInvoice.bank_account_name}</p>
+                            </div>
+                          )}
+                          {viewingInvoice.bank_account_number && (
+                            <div className="bg-white p-4 rounded-lg border">
+                              <p className="text-sm font-medium text-gray-600 mb-1">ACCOUNT NUMBER</p>
+                              <p className="text-xl font-bold text-blue-600">{viewingInvoice.bank_account_number}</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-4 text-center">
+                          <p className="text-sm font-semibold text-red-600">⚠️ Please use invoice number as payment reference</p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Footer */}
                     <div className="text-center text-gray-600 text-sm">

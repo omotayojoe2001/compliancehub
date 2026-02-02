@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContextClean";
 import { CompanyProvider } from "@/contexts/CompanyContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminRoute } from "@/components/auth/AdminRoute";
+import AdminLogin from "./pages/AdminLogin";
 import PublicLanding from "./pages/PublicLanding";
 import TaxCalculator from "./pages/TaxCalculator";
 import Dashboard from "./pages/Dashboard";
@@ -14,7 +15,13 @@ import Obligations from "./pages/Obligations";
 import Reminders from "./pages/Reminders";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
-import AdminTest from "./pages/AdminTest";
+import AdminPanel from "./pages/AdminPanel";
+import AdminUsers from "./pages/AdminUsers";
+import AdminTaxData from "./pages/AdminTaxData";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminSystem from "./pages/AdminSystem";
+import AdminContent from "./pages/AdminContent";
+import AdminSettings from "./pages/AdminSettings";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -56,7 +63,13 @@ function AppContent() {
       <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />
       <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute><AdminTest /></ProtectedRoute>} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+      <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+      <Route path="/admin/tax-data" element={<AdminRoute><AdminTaxData /></AdminRoute>} />
+      <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
+      <Route path="/admin/system" element={<AdminRoute><AdminSystem /></AdminRoute>} />
+      <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

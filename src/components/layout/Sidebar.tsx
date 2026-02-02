@@ -39,7 +39,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     ...(hasExpenseAccess ? [{ name: "Digital Cashbook", href: "/cashbook", icon: BookOpenCheck }] : []),
     ...(hasInvoicingAccess ? [{ name: "E-Invoicing", href: "/invoicing", icon: FileSpreadsheet }] : []),
     { name: "How-To Guides", href: "/guides", icon: BookOpen },
-    { name: "Payment", href: "/subscription", icon: CreditCard },
+    { name: "Subscriptions", href: "/subscription", icon: CreditCard },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 

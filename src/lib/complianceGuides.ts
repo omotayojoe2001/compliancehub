@@ -22,14 +22,14 @@ export interface GuideStep {
 
 export const complianceGuides: Guide[] = [
   {
-    id: 'vat-filing-nrs',
-    title: 'NRS VAT Filing Steps',
-    description: 'Complete step-by-step guide to file your VAT returns with NRS online',
+    id: 'vat-filing-lirs',
+    title: 'LIRS VAT Filing Steps',
+    description: 'Complete step-by-step guide to file your VAT returns with LIRS online',
     category: 'VAT',
     difficulty: 'Beginner',
     estimatedTime: '30-45 minutes',
     requirements: [
-      'NRS TIN (Tax Identification Number)',
+      'LIRS TIN (Tax Identification Number)',
       'VAT Certificate',
       'Monthly sales and purchase records',
       'Bank statements',
@@ -44,9 +44,9 @@ export const complianceGuides: Guide[] = [
     steps: [
       {
         id: 'step-1',
-        title: 'Visit NRS Online Portal',
-        description: 'Go to the official NRS website and log into your taxpayer portal',
-        action: 'Navigate to https://www.nrs.gov.ng and click "Taxpayer Portal"',
+        title: 'Visit LIRS Online Portal',
+        description: 'Go to the official LIRS website and log into your taxpayer portal',
+        action: 'Navigate to https://www.lirs.gov.ng and click "Taxpayer Portal"',
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
       },
       {
@@ -183,9 +183,9 @@ export const complianceGuides: Guide[] = [
       },
       {
         id: 'step-2',
-        title: 'Access NRS Portal',
-        description: 'Log into NRS taxpayer portal using company TIN',
-        action: 'Visit https://www.nrs.gov.ng and access taxpayer portal'
+        title: 'Access LIRS Portal',
+        description: 'Log into LIRS taxpayer portal using company TIN',
+        action: 'Visit https://www.lirs.gov.ng and access taxpayer portal'
       },
       {
         id: 'step-3',

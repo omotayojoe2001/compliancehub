@@ -16,7 +16,7 @@ export function Footer() {
             <h4 className="font-medium text-foreground mb-2">Resources</h4>
             <div className="space-y-1">
               <a href="#" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                NRS Portal <ExternalLink className="h-3 w-3" />
+                LIRS Portal <ExternalLink className="h-3 w-3" />
               </a>
               <a href="#" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 CAC Portal <ExternalLink className="h-3 w-3" />

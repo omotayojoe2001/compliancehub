@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { automationService } from '@/lib/automationService';
 import { testAutomationService } from '@/lib/testAutomationService';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextClean';
 import { supabase } from '@/lib/supabase';
 import { Play, Pause, TestTube, Plus } from 'lucide-react';
 

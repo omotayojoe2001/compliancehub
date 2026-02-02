@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useProfile } from "@/hooks/useProfile";
-import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
+import { useSubscription } from "@/hooks/useSubscription";
 import { dataExportService } from "@/lib/dataExportService";
 import { supabase } from "@/lib/supabase";
 import { Download, Calendar, CheckCircle, X, CreditCard } from "lucide-react";
@@ -16,7 +16,7 @@ export default function Settings() {
   const { user } = useAuth();
   const { currentCompany } = useCompany();
   const { profile, loading } = useProfile();
-  const { plan } = usePlanRestrictions();
+  const { planType, isActive } = useSubscription();
   
   // Form states - use current company data
   const [profileData, setProfileData] = useState({
@@ -418,7 +418,7 @@ export default function Settings() {
             <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 p-4 rounded mb-4">
                 <p className="text-sm text-blue-700">
-                  <Calendar className="inline h-4 w-4 mr-1" /> Your current plan: {plan?.toUpperCase() || 'FREE'}
+                  <Calendar className="inline h-4 w-4 mr-1" /> Your current plan: {planType?.toUpperCase() || 'FREE'}
                 </p>
               </div>
               
@@ -433,7 +433,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {plan !== 'free' ? (
+                    {planType !== 'free' && isActive ? (
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -461,7 +461,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {plan === 'pro' || plan === 'enterprise' ? (
+                    {(planType === 'pro' || planType === 'enterprise') && isActive ? (
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -489,7 +489,7 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {plan !== 'free' ? (
+                    {planType !== 'free' && isActive ? (
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -515,7 +515,7 @@ export default function Settings() {
               </div>
             </div>
             
-            {plan === 'free' && (
+            {(planType === 'free' || !isActive) && (
               <div className="mt-6">
                 <Button 
                   onClick={() => window.location.href = '/subscription'}

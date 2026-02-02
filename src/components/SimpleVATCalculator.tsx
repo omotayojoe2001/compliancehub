@@ -37,18 +37,19 @@ export function SimpleVATCalculator() {
       <div className="mb-4 flex items-center gap-2">
         <Calculator className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-semibold text-foreground">Quick VAT Calculator</h3>
+        <p className="text-xs text-muted-foreground mt-1">Calculate VAT on goods/services value</p>
       </div>
       
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2 text-foreground">
-            Enter Amount (₦)
+            Enter Goods/Services Value (₦)
           </label>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="100000"
+            placeholder="e.g., 100000 (value of goods/services sold)"
             className="w-full border border-border rounded-md px-3 py-2 text-foreground"
           />
         </div>
@@ -61,7 +62,7 @@ export function SimpleVATCalculator() {
           <div className="mt-4 p-4 bg-secondary rounded-md">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Base Amount:</span>
+                <span className="text-muted-foreground">Goods/Services Value:</span>
                 <span className="font-medium text-foreground">{formatCurrency(parseFloat(amount))}</span>
               </div>
               <div className="flex justify-between">

@@ -209,12 +209,12 @@ export default function PublicLanding() {
           
           {/* NRS Link */}
           <div className="text-center mb-8">
-            <a href="https://nrs.gov.ng" target="_blank" rel="noopener noreferrer" 
+            <a href="https://lirs.gov.ng" target="_blank" rel="noopener noreferrer" 
                className="inline-flex items-center gap-3 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
               <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                <span className="text-green-600 font-bold text-sm">NRS</span>
+                <span className="text-green-600 font-bold text-sm">LIRS</span>
               </div>
-              <span className="font-semibold">Nigerian Revenue Service Portal</span>
+              <span className="font-semibold">Lagos Internal Revenue Service Portal</span>
             </a>
           </div>
           

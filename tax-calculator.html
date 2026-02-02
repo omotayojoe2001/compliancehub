@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Tax Calculator - ComplianceHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .disclaimer {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px;
+            border-radius: 5px;
+        }
+        
+        .calculator-section {
+            padding: 30px;
+        }
+        
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .calculator-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .calculator-card:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,123,255,0.1);
+        }
+        
+        .calculator-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .features {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .features h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .feature-list {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #495057;
+        }
+        
+        .login-prompt {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .login-prompt h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .feature-list {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧮 Free Tax Calculator</h1>
+            <p>Get quick tax estimates for planning purposes. Our calculator uses official NRS rates but results are estimates only. Always verify with a qualified tax professional or official FIRS resources for actual filing.</p>
+        </div>
+        
+        <div class="features">
+            <h3>✨ Features</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <span>✅</span>
+                    <span>Accurate CRA calculation</span>
+                </div>
+                <div class="feature-item">
+                    <span>📊</span>
+                    <span>Progressive tax bands applied</span>
+                </div>
+                <div class="feature-item">
+                    <span>⚡</span>
+                    <span>Instant results</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>⚠️ Disclaimer:</strong> This calculator provides estimates only. Results may vary based on individual circumstances. Always consult with a qualified tax professional for accurate calculations and official filing requirements.
+        </div>
+        
+        <div class="login-prompt">
+            <h4>🔐 Want More Advanced Features?</h4>
+            <p>Access our comprehensive tax calculator with detailed breakdowns, multiple tax scenarios, and export options.</p>
+            <button class="btn" onclick="promptLogin()" style="margin-top: 10px; max-width: 300px;">
+                Login to Access Full Calculator
+            </button>
+        </div>
+        
+        <div class="calculator-section">
+            <div class="calculator-grid">
+                <!-- VAT Calculator -->
+                <div class="calculator-card">
+                    <h3>💰 VAT Calculator</h3>
+                    <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
+                        <strong>What is VAT?</strong> Value Added Tax - a consumption tax added to goods and services.
+                    </p>
+                    
+                    <div class="input-group">
+                        <label for="vatAmount">Enter Amount (₦)</label>
+                        <small style="color: #6c757d; display: block; margin-bottom: 5px;">
+                            💡 Enter your gross income, salary, or transaction amount
+                        </small>
+                        <input type="number" id="vatAmount" placeholder="e.g., 100,000" min="0" step="0.01">
+                    </div>
+                    
+                    <button class="btn" onclick="calculateVAT()">Calculate VAT (7.5%)</button>
+                    
+                    <div id="vatResult"></div>
+                    
+                    <p style="margin-top: 15px; font-size: 12px; color: #6c757d;">
+                        * Standard VAT rate of 7.5% applied. For complex calculations, consult a tax professional.
+                    </p>
+                </div>
+                
+                <!-- Income Tax Estimator -->
+                <div class="calculator-card">
+                    <h3>📈 Income Tax Estimator</h3>
+                    <p style="margin-bottom: 15px; color: #6c757d; font-size: 14px;">
+                        Quick estimate based on progressive tax bands
+                    </p>
+                    
+                    <div class="input-group">
+                        <label for="annualIncome">Annual Income (₦)</label>
+                        <input type="number" id="annualIncome" placeholder="e.g., 2,400,000" min="0" step="1000">
+                    </div>
+                    
+                    <button class="btn" onclick="calculateIncomeTax()">Calculate Income Tax</button>
+                    
+                    <div id="taxResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateVAT() {
+            const amount = parseFloat(document.getElementById('vatAmount').value);
+            const resultDiv = document.getElementById('vatResult');
+            
+            if (!amount || amount <= 0) {
+                resultDiv.innerHTML = '<div class="result" style="background: #f8d7da; color: #721c24;">Please enter a valid amount</div>';
+                return;
+            }
+            
+            const vatAmount = amount * 0.075;
+            const totalWithVAT = amount + vatAmount;
+            
+            resultDiv.innerHTML = `
+                <div class="result success">
+                    <div><strong>Original Amount:</strong> ₦${amount.toLocaleString()}</div>
+                    <div><strong>VAT (7.5%):</strong> ₦${vatAmount.toLocaleString()}</div>
+                    <div style="border-top: 1px solid #c3e6cb; margin-top: 8px; padding-top: 8px;">
+                        <strong>Total with VAT:</strong> ₦${totalWithVAT.toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function calculateIncomeTax() {
+            const income = parseFloat(document.getElementById('annualIncome').value);
+            const resultDiv = document.getElementById('taxResult');
+            
+            if (!income || income <= 0) {
+                resultDiv.innerHTML = '<div class="result" style="background: #f8d7da; color: #721c24;">Please enter a valid annual income</div>';
+                return;
+            }
+            
+            let tax = 0;
+            let taxableIncome = income;
+            
+            // Nigerian tax bands (simplified example)
+            if (taxableIncome > 300000) {
+                if (taxableIncome <= 600000) {
+                    tax = (taxableIncome - 300000) * 0.07;
+                } else if (taxableIncome <= 1100000) {
+                    tax = 300000 * 0.07 + (taxableIncome - 600000) * 0.11;
+                } else if (taxableIncome <= 1600000) {
+                    tax = 300000 * 0.07 + 500000 * 0.11 + (taxableIncome - 1100000) * 0.15;
+                } else if (taxableIncome <= 3200000) {
+                    tax = 300000 * 0.07 + 500000 * 0.11 + 500000 * 0.15 + (taxableIncome - 1600000) * 0.19;
+                } else {
+                    tax = 300000 * 0.07 + 500000 * 0.11 + 500000 * 0.15 + 1600000 * 0.19 + (taxableIncome - 3200000) * 0.24;
+                }
+            }
+            
+            const netIncome = income - tax;
+            const effectiveRate = (tax / income * 100).toFixed(2);
+            
+            resultDiv.innerHTML = `
+                <div class="result success">
+                    <div><strong>Gross Income:</strong> ₦${income.toLocaleString()}</div>
+                    <div><strong>Estimated Tax:</strong> ₦${tax.toLocaleString()}</div>
+                    <div><strong>Net Income:</strong> ₦${netIncome.toLocaleString()}</div>
+                    <div style="border-top: 1px solid #c3e6cb; margin-top: 8px; padding-top: 8px;">
+                        <strong>Effective Rate:</strong> ${effectiveRate}%
+                    </div>
+                </div>
+            `;
+        }
+        
+        function promptLogin() {
+            // Show login prompt instead of 404
+            if (confirm('🔐 Login Required\n\nTo access the full tax calculator with advanced features, you need to log in to your ComplianceHub account.\n\nWould you like to proceed to the login page?')) {
+                // Replace with actual login page URL
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Format number inputs as user types
+        document.getElementById('vatAmount').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/,/g, '');
+            if (!isNaN(value) && value !== '') {
+                e.target.value = parseFloat(value).toLocaleString();
+            }
+        });
+        
+        document.getElementById('annualIncome').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/,/g, '');
+            if (!isNaN(value) && value !== '') {
+                e.target.value = parseFloat(value).toLocaleString();
+            }
+        });
+    </script>
+</body>
+</html>

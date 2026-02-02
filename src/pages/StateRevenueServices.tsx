@@ -65,17 +65,17 @@ export default function StateRevenueServices() {
           <div className="flex items-center gap-4">
             <Building2 className="h-8 w-8 text-green-600" />
             <div>
-              <h3 className="font-semibold text-green-900">Nigerian Revenue Service (NRS)</h3>
+              <h3 className="font-semibold text-green-900">Lagos Internal Revenue Service (LIRS)</h3>
               <p className="text-green-700">
-                The coordinating body for all state internal revenue services in Nigeria.
+                The Lagos State Internal Revenue Service - Nigeria's largest state revenue service.
               </p>
               <a 
-                href="https://nrs.gov.ng" 
+                href="https://lirs.gov.ng" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-green-600 hover:underline mt-2"
               >
-                Visit NRS Website <ExternalLink className="h-3 w-3" />
+                Visit LIRS Website <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           </div>

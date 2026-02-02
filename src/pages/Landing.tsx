@@ -23,21 +23,21 @@ const features = [
   },
   {
     icon: FileText,
-    title: "Step-by-Step Guides",
+    title: "Clear Guidance",
     description:
-      "Simple, clear instructions on what to file and how. No more confusion about compliance requirements.",
+      "Simple, step-by-step instructions on what to file and how. We explain, you file on official government portals.",
   },
   {
     icon: Calculator,
     title: "Tax Calculator",
     description:
-      "Estimate your self-assessment tax instantly using official Nigeria NRS rates and formulas.",
+      "Estimate your self-assessment tax instantly using official Nigeria LIRS rates and formulas.",
   },
   {
     icon: Shield,
-    title: "Avoid Penalties",
+    title: "Stay Informed",
     description:
-      "Stay ahead of deadlines and avoid costly fines. Peace of mind for your business.",
+      "Get organised with deadlines and requirements. Reduce anxiety about compliance, but you handle the actual filing.",
   },
 ];
 
@@ -52,7 +52,7 @@ const howItWorks = [
     step: "02",
     title: "Choose Your Plan",
     description:
-      "Select Basic or Pro based on your needs. Affordable pricing starting at ₦3,000/month.",
+      "Select Basic (₦15,000/year), Pro (₦50,000/year), or Enterprise (₦150,000/year) based on your needs.",
   },
   {
     step: "03",
@@ -92,6 +92,8 @@ const pricing = [
       "Email Reminders",
       "Tax Calculator Access",
       "Filing Guides",
+      "Digital Cashbook",
+      "E-invoice",
       "Annual Summary Reports",
     ],
     popular: true,
@@ -110,6 +112,9 @@ const pricing = [
       "Dedicated Account Manager",
       "Advanced Analytics",
       "API Access",
+      "Digital Cashbook",
+      "E-invoice",
+      "Everything in Pro and Basic",
     ],
     popular: false,
   },
@@ -179,16 +184,14 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="mb-4 text-3xl font-semibold text-foreground md:text-4xl lg:text-5xl">
-              Never Miss a Tax Deadline Again
+              Taxes Can Be Confusing... Deadlines Even More So
             </h1>
             <p className="mb-8 text-base text-muted-foreground md:text-lg">
-              WhatsApp + Email compliance reminders for Nigerian businesses.
-              Get alerts before CAC, VAT, and PAYE deadlines with step-by-step
-              filing guides.
+              We help you stay on top of them with clear reminders, simple explanations, and easy-to-understand estimates, so nothing catches you by surprise. You'll get WhatsApp and email alerts for CAC, VAT, PAYE, and other key deadlines. Built specifically for Nigerian SMEs, freelancers, and growing businesses.
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
-                Start Free Trial
+                Try It Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <a href="#calculator">
@@ -198,7 +201,7 @@ export default function Landing() {
               </a>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
-              Starting at ₦15,000/year. Cancel anytime.
+              We help you stay organised and informed. Filings and payments are done directly on official government portals.
             </p>
           </div>
         </div>
@@ -228,10 +231,10 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">
             <h2 className="mb-2 text-2xl font-semibold text-foreground">
-              Everything You Need to Stay Compliant
+              Everything You Need to Stay Organised
             </h2>
             <p className="text-sm text-muted-foreground">
-              Cheap insurance against costly penalties
+              We don't file for you... but we make sure you never forget, never guess, and never walk in blind.
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -290,9 +293,13 @@ export default function Landing() {
               Simple, Transparent Pricing
             </h2>
             <p className="text-sm text-muted-foreground">
-              Less than what you pay an accountant. More peace of mind.
+              Affordable compliance assistance. Less than what you pay an accountant.
             </p>
-            
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-2xl mx-auto">
+              <p className="text-sm text-yellow-800">
+                <strong>Important:</strong> This service provides reminders and guidance only. You are responsible for actual tax filings and payments through official government portals. We are not liable for penalties resulting from missed deadlines or incorrect filings.
+              </p>
+            </div>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {pricing.map((plan) => (
@@ -360,9 +367,7 @@ export default function Landing() {
                 Free Tax Calculator
               </h2>
               <p className="mb-4 text-sm text-muted-foreground">
-                Estimate your Nigeria self-assessment tax instantly. Our
-                calculator uses official NRS rates including Consolidated
-                Relief Allowance (CRA) and progressive tax bands.
+                Get quick tax estimates for planning purposes. Our calculator uses official LIRS rates but results are estimates only. Always verify with a qualified tax professional or official FIRS resources for actual filing.
               </p>
               <ul className="mb-6 space-y-2">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -378,12 +383,10 @@ export default function Landing() {
                   Instant results
                 </li>
               </ul>
-              <Link to="/tax-calculator">
-                <Button>
-                  Open Full Calculator
-                  <Calculator className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <Button onClick={() => navigate('/login')}>
+                Open Full Calculator
+                <Calculator className="ml-2 h-4 w-4" />
+              </Button>
             </div>
             <SimpleVATCalculator />
           </div>
@@ -409,8 +412,7 @@ export default function Landing() {
                   WhatsApp Alerts
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Instant notifications on your phone. Reply to get help or ask
-                  questions.
+                  Instant notifications on your phone. Get general guidance and reminders. For specific tax advice, consult a qualified professional.
                 </p>
               </div>
             </div>

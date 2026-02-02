@@ -5,6 +5,7 @@ import { AlertBanner } from "@/components/dashboard/AlertBanner";
 import { UpcomingObligations } from "@/components/dashboard/UpcomingObligations";
 import { RecentReminders } from "@/components/dashboard/RecentReminders";
 import { AddTaxObligation } from "@/components/dashboard/AddTaxObligation";
+import { ComplianceReadiness } from "@/components/dashboard/ComplianceReadiness";
 import { WelcomePopup } from "@/components/onboarding/WelcomePopup";
 import { useProfileSimple } from "@/hooks/useProfileSimple";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -206,14 +207,19 @@ export default function Dashboard() {
           </div>
 
         {/* Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <AddTaxObligation />
-            
-            <UpcomingObligations />
-          </div>
+        <div className="space-y-6">
+          {/* Compliance Readiness - Full Width */}
+          <ComplianceReadiness />
           
-          <RecentReminders />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-6">
+              <AddTaxObligation />
+              
+              <UpcomingObligations />
+            </div>
+            
+            <RecentReminders />
+          </div>
         </div>
       </div>
     </DashboardLayout>

@@ -140,7 +140,7 @@ export const VAT_OVERDUE_SCHEDULE = [
   { days: 1, subject: 'VAT 1 Day Overdue - File Immediately', penalty: '₦50,000' },
   { days: 3, subject: 'VAT 3 Days Overdue - Penalties Applying', penalty: '₦100,000+' },
   { days: 7, subject: 'VAT 1 Week Overdue - Serious Penalties', penalty: '₦200,000+' },
-  { days: 14, subject: 'VAT 2 Weeks Overdue - Contact NRS', penalty: '₦500,000+' },
+  { days: 14, subject: 'VAT 2 Weeks Overdue - Contact LIRS', penalty: '₦500,000+' },
   // Then weekly until marked paid
 ];
 

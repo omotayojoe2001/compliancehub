@@ -1,68 +1,54 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContextClean';
-import { supabase } from '@/lib/supabase';
+import { ReactNode, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
 interface AdminRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-const ADMIN_EMAILS = [
-  'admin@compliancehub.ng',
-  'joshua@compliancehub.ng',
-  'support@compliancehub.ng',
-  'user@example.com' // Add your current email here
-];
-
 export function AdminRoute({ children }: AdminRouteProps) {
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    checkAdminAccess();
-  }, [user]);
+    const checkAdminAuth = () => {
+      const adminSession = localStorage.getItem('admin_session');
+      
+      if (!adminSession) {
+        setIsAuthenticated(false);
+        return;
+      }
 
-  const checkAdminAccess = async () => {
-    console.log('🔐 Checking admin access for user:', user?.email);
-    
-    if (!user?.email) {
-      console.log('🔐 No user email found');
-      setIsAdmin(false);
-      setLoading(false);
-      return;
-    }
+      try {
+        const session = JSON.parse(adminSession);
+        const loginTime = new Date(session.loginTime);
+        const now = new Date();
+        const hoursSinceLogin = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
 
-    // Allow all logged-in users for testing
-    console.log('🔐 Granting admin access to:', user.email);
-    setIsAdmin(true);
-    setLoading(false);
-  };
+        // Session expires after 8 hours
+        if (hoursSinceLogin > 8) {
+          localStorage.removeItem('admin_session');
+          setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        localStorage.removeItem('admin_session');
+        setIsAuthenticated(false);
+      }
+    };
 
-  console.log('🔐 AdminRoute render - loading:', loading, 'isAdmin:', isAdmin, 'user:', user?.email);
+    checkAdminAuth();
+  }, []);
 
-  if (loading) {
+  if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
-          <p className="text-muted-foreground mb-4">You don't have permission to access this page.</p>
-          <button 
-            onClick={() => window.history.back()}
-            className="text-primary hover:underline"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
   }
 
   return <>{children}</>;

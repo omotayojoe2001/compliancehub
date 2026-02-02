@@ -73,6 +73,9 @@ export interface Invoice {
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   company_logo_url?: string;
   notes?: string;
+  bank_name?: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
 }
 
 export interface InvoiceItem {
@@ -122,6 +125,28 @@ export interface GuideProgress {
   completed: boolean;
   completion_date?: string;
   notes?: string;
+}
+
+export interface Guide {
+  id?: string;
+  title: string;
+  description?: string;
+  duration?: number; // in minutes
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  youtube_video_id?: string;
+  requirements?: string[];
+  is_published: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface GuideStep {
+  id?: string;
+  guide_id: string;
+  step_number: number;
+  title: string;
+  content: string;
+  created_at?: string;
 }
 
 export interface GuideBookmark {
@@ -268,21 +293,30 @@ class ComprehensiveDbService {
 
   // Invoice Management
   async getInvoices(userId: string, companyId?: string): Promise<Invoice[]> {
-    let query = supabase
-      .from('invoices')
-      .select('*')
-      .eq('user_id', userId);
-    
-    if (companyId) {
-      query = query.eq('company_id', companyId);
+    try {
+      let query = supabase
+        .from('invoices')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50); // Reduced limit for faster loading
+      
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Invoice query error:', error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('getInvoices error:', error);
+      throw error;
     }
-    
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(100);
-    
-    if (error) throw error;
-    return data || [];
   }
 
   async createInvoice(invoice: Omit<Invoice, 'id'>): Promise<Invoice> {
@@ -484,6 +518,112 @@ class ComprehensiveDbService {
     
     if (error) throw error;
     return data;
+  }
+
+  // Guide Management (Admin)
+  async getAllGuides(): Promise<Guide[]> {
+    const { data, error } = await supabase
+      .from('guides')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getPublishedGuides(): Promise<Guide[]> {
+    const { data, error } = await supabase
+      .from('guides')
+      .select('*')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  }
+
+  async createGuide(guide: Omit<Guide, 'id' | 'created_at' | 'updated_at'>): Promise<Guide> {
+    const { data, error } = await supabase
+      .from('guides')
+      .insert(guide)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async updateGuide(id: string, guide: Partial<Guide>): Promise<Guide> {
+    const { data, error } = await supabase
+      .from('guides')
+      .update(guide)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteGuide(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('guides')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  async getGuideSteps(guideId: string): Promise<GuideStep[]> {
+    const { data, error } = await supabase
+      .from('guide_steps')
+      .select('*')
+      .eq('guide_id', guideId)
+      .order('step_number', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  }
+
+  async createGuideStep(step: Omit<GuideStep, 'id' | 'created_at'>): Promise<GuideStep> {
+    const { data, error } = await supabase
+      .from('guide_steps')
+      .insert(step)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async updateGuideStep(id: string, step: Partial<GuideStep>): Promise<GuideStep> {
+    const { data, error } = await supabase
+      .from('guide_steps')
+      .update(step)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteGuideStep(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('guide_steps')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  async deleteGuideSteps(guideId: string): Promise<void> {
+    const { error } = await supabase
+      .from('guide_steps')
+      .delete()
+      .eq('guide_id', guideId);
+    
+    if (error) throw error;
   }
 
   // Guide Bookmarks

@@ -219,7 +219,7 @@ export default function Register() {
                 className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                📄 Your company's Tax Identification Number from NRS
+                📄 Your company's Tax Identification Number from LIRS
               </p>
             </div>
 

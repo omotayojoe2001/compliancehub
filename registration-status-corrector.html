@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Status Auto-Corrector</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="registration-status-corrector.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #218838; }
+        .correction { background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Registration Status Auto-Corrector</h1>
+    
+    <div class="result info">
+        <strong>Purpose:</strong> Automatically detect and correct registration status mismatches based on system activity data.
+        <br><strong>Logic:</strong> If user has payments, filings, or tax numbers but shows "not registered" → auto-correct to "registered"
+    </div>
+    
+    <button onclick="createTable()">🏗️ Create Table</button>
+    <button onclick="createRealUserData()">🏢 Create Real User Data</button>
+    <button onclick="createTestData()">🧪 Create Test Data</button>
+    <button onclick="runSingleUserCorrection()">🔄 Fix Current User</button>
+    <button onclick="runBatchCorrection()">🔄 Fix All Users (Batch)</button>
+    <button onclick="previewCorrections()">👁️ Preview Corrections</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const supabaseUrl = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjUxNjAxNSwiZXhwIjoyMDgyMDkyMDE1fQ.HOJp8nBEKXeDGWv4XvA0cl_RDDmH0QIXv33wYfb8JoU';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const corrector = new RegistrationStatusCorrector(supabaseClient);
+        
+        // Test user ID for demo purposes
+        const TEST_USER_ID = 'test-user-123';
+        // Real user ID based on dashboard
+        const REAL_USER_ID = 'sportsprofit-user';
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        async function createTable() {
+            addResult('🏗️ Creating user_tax_data table...', 'warning');
+            
+            try {
+                const { error } = await supabaseClient.rpc('exec_sql', {
+                    sql: `
+                        CREATE TABLE IF NOT EXISTS user_tax_data (
+                            id SERIAL PRIMARY KEY,
+                            user_id TEXT NOT NULL,
+                            paye_registration_status TEXT DEFAULT 'not_registered',
+                            vat_registration_status TEXT DEFAULT 'not_registered',
+                            cit_registration_status TEXT DEFAULT 'not_registered',
+                            wht_registration_status TEXT DEFAULT 'not_registered',
+                            pit_registration_status TEXT DEFAULT 'not_registered',
+                            paye_number TEXT,
+                            vat_number TEXT,
+                            cit_number TEXT,
+                            wht_number TEXT,
+                            pit_number TEXT,
+                            payment_history JSONB DEFAULT '[]',
+                            filing_history JSONB DEFAULT '[]',
+                            upcoming_payments JSONB DEFAULT '[]',
+                            obligations JSONB DEFAULT '[]',
+                            returns JSONB DEFAULT '[]',
+                            created_at TIMESTAMP DEFAULT NOW(),
+                            updated_at TIMESTAMP DEFAULT NOW(),
+                            UNIQUE(user_id)
+                        );
+                        
+                        CREATE TABLE IF NOT EXISTS registration_status_corrections (
+                            id SERIAL PRIMARY KEY,
+                            user_id TEXT NOT NULL,
+                            tax_type TEXT NOT NULL,
+                            old_status TEXT NOT NULL,
+                            new_status TEXT NOT NULL,
+                            reason TEXT,
+                            correction_type TEXT DEFAULT 'auto',
+                            corrected_at TIMESTAMP DEFAULT NOW()
+                        );
+                    `
+                });
+                
+                if (error) throw error;
+                
+                addResult('✅ Tables created successfully!', 'success');
+                
+            } catch (error) {
+                addResult(`❌ Failed to create table: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createRealUserData() {
+            addResult('🏢 Creating real user data based on dashboard...', 'warning');
+            
+            try {
+                // Only use columns that exist in the table
+                const realData = {
+                    user_id: REAL_USER_ID,
+                    paye_registration_status: 'not_registered',
+                    vat_registration_status: 'not_registered',
+                    cit_registration_status: 'not_registered',
+                    pit_registration_status: 'not_registered',
+                    paye_number: '54223341213451098',
+                    vat_number: '54223341213451098',
+                    upcoming_payments: [
+                        { taxType: 'paye', amount: 0, dueDate: '2026-03-10' }
+                    ],
+                    payment_history: [
+                        { taxType: 'paye', amount: 50000, date: '2024-01-01' }
+                    ]
+                };
+                
+                const { error } = await supabaseClient
+                    .from('user_tax_data')
+                    .upsert(realData);
+                
+                if (error) throw error;
+                
+                addResult('✅ Real user data created successfully!', 'success');
+                addResult('📊 TIN: 54223341213451098 with PAYE due date but shows "Not Registered"', 'info');
+                
+            } catch (error) {
+                addResult(`❌ Failed to create real user data: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createTestData() {
+            addResult('🧪 Creating test data...', 'warning');
+            
+            try {
+                // Create test user tax data with mismatched statuses
+                const testData = {
+                    user_id: TEST_USER_ID,
+                    paye_registration_status: 'not_registered',
+                    vat_registration_status: 'not_registered', 
+                    cit_registration_status: 'registered',
+                    wht_registration_status: 'not_registered',
+                    pit_registration_status: 'not_registered',
+                    paye_number: 'PAYE123456',
+                    vat_number: null,
+                    payment_history: [
+                        { taxType: 'paye', amount: 50000, date: '2024-01-15' },
+                        { taxType: 'vat', amount: 25000, date: '2024-02-10' }
+                    ],
+                    filing_history: [
+                        { taxType: 'paye', date: '2024-01-31', status: 'filed' }
+                    ],
+                    upcoming_payments: [
+                        { taxType: 'wht', amount: 15000, dueDate: '2024-03-15' }
+                    ]
+                };
+                
+                const { error } = await supabaseClient
+                    .from('user_tax_data')
+                    .upsert(testData);
+                
+                if (error) throw error;
+                
+                addResult('✅ Test data created successfully!', 'success');
+                addResult('📊 Test scenario: User has PAYE number and payment history but status shows "not_registered"', 'info');
+                
+            } catch (error) {
+                addResult(`❌ Failed to create test data: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runSingleUserCorrection() {
+            addResult('🔄 Running registration status correction for real user...', 'warning');
+            
+            try {
+                const corrections = await corrector.autoCorrectRegistrationStatus(REAL_USER_ID);
+                
+                if (corrections.length === 0) {
+                    addResult('✅ No corrections needed - all statuses are accurate', 'success');
+                } else {
+                    addResult(`✅ Applied ${corrections.length} corrections:`, 'success');
+                    corrections.forEach(correction => {
+                        addResult(`
+                            <div class="correction">
+                                <strong>${correction.taxType.toUpperCase()}:</strong> 
+                                ${correction.from} → ${correction.to}
+                                <br><em>Reason: ${correction.reason}</em>
+                            </div>
+                        `, 'info');
+                    });
+                }
+                
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runBatchCorrection() {
+            addResult('🔄 Running batch correction for all users...', 'warning');
+            addResult('⚠️ This may take a while for large user bases', 'warning');
+            
+            try {
+                const results = await corrector.batchCorrectAllUsers();
+                
+                if (results.length === 0) {
+                    addResult('✅ No corrections needed across all users', 'success');
+                } else {
+                    addResult(`✅ Corrected ${results.length} users with registration status issues`, 'success');
+                    
+                    let totalCorrections = 0;
+                    results.forEach(result => {
+                        totalCorrections += result.corrections.length;
+                    });
+                    
+                    addResult(`📊 Total corrections applied: ${totalCorrections}`, 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Batch correction failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function previewCorrections() {
+            addResult('👁️ Previewing potential corrections for real user...', 'warning');
+            
+            try {
+                // Get user's tax data
+                const { data: userTaxData, error } = await supabaseClient
+                    .from('user_tax_data')
+                    .select('*')
+                    .eq('user_id', REAL_USER_ID);
+                
+                if (error) {
+                    addResult(`❌ Could not fetch tax data: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (!userTaxData || userTaxData.length === 0) {
+                    addResult('❌ No user data found. Create real user data first.', 'error');
+                    return;
+                }
+                
+                const userData = userTaxData[0]; // Get first record
+                const TAX_TYPES = ['paye', 'vat', 'cit', 'wht', 'pit'];
+                let previewCount = 0;
+                
+                TAX_TYPES.forEach(taxType => {
+                    const actualStatus = corrector.determineRegistrationStatus(userData, taxType);
+                    const recordedStatus = userData[`${taxType}_registration_status`];
+                    
+                    if (actualStatus !== recordedStatus) {
+                        previewCount++;
+                        const reason = corrector.getStatusReason(userData, taxType);
+                        addResult(`
+                            <div class="correction">
+                                <strong>${taxType.toUpperCase()}:</strong> 
+                                Would change ${recordedStatus} → ${actualStatus}
+                                <br><em>Reason: ${reason}</em>
+                            </div>
+                        `, 'warning');
+                    } else {
+                        addResult(`✅ ${taxType.toUpperCase()}: Status is correct (${recordedStatus})`, 'info');
+                    }
+                });
+                
+                if (previewCount === 0) {
+                    addResult('✅ No corrections needed - all statuses are accurate', 'success');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Preview failed: ${error.message}`, 'error');
+            }
+        }
+        
+        window.onload = function() {
+            addResult('🚀 Registration Status Auto-Corrector loaded', 'info');
+            addResult('💡 This tool fixes registration status mismatches based on actual system data', 'info');
+        };
+    </script>
+</body>
+</html>

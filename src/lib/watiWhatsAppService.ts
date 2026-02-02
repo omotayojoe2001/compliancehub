@@ -44,7 +44,7 @@ ${daysLeft <= 1 ? '🔥 *URGENT: File today to avoid penalties!*' :
   '📋 Friendly reminder - deadline approaching'}
 
 💰 Calculate tax: compliancehub.ng/calculator
-📄 File online: nrs.gov.ng
+📄 File online: lirs.gov.ng
 
 _ComplianceHub - Never miss a deadline_`;
 
