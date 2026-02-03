@@ -837,17 +837,17 @@ export default function EInvoicing() {
             ) : (
               <div className="space-y-3">
                 {invoices.map((invoice) => (
-                  <div key={invoice.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div key={invoice.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg gap-4">
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-blue-100 rounded-full">
                         <Building2 className="h-4 w-4 text-blue-600" />
                       </div>
-                      <div>
-                        <p className="font-medium">{invoice.invoice_number}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{invoice.client_name}</span>
-                          <span>{new Date(invoice.issue_date).toLocaleDateString()}</span>
-                          <span className={`px-2 py-1 rounded text-xs ${
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{invoice.invoice_number}</p>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                          <span className="truncate">{invoice.client_name}</span>
+                          <span className="whitespace-nowrap">{new Date(invoice.issue_date).toLocaleDateString()}</span>
+                          <span className={`px-2 py-1 rounded text-xs whitespace-nowrap ${
                             invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
                             invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' :
                             'bg-gray-100 text-gray-800'
@@ -857,9 +857,9 @@ export default function EInvoicing() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold">{formatCurrency(invoice.total_amount)}</span>
-                      <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <span className="font-semibold text-lg">{formatCurrency(invoice.total_amount)}</span>
+                      <div className="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" onClick={() => viewInvoice(invoice)}>
                           <Eye className="h-4 w-4" />
                         </Button>

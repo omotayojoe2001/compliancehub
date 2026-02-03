@@ -37,6 +37,12 @@ export function FilingRequestButton({
   const handleRequestFiling = async () => {
     if (!user?.id || !currentCompany?.id) return;
     
+    // Check if Paystack is loaded
+    if (!window.PaystackPop) {
+      alert('Payment system not loaded. Please refresh the page and try again.');
+      return;
+    }
+    
     setLoading(true);
     try {
       // Create filing request
@@ -47,13 +53,20 @@ export function FilingRequestButton({
         amount: 10000
       });
 
+      console.log('Filing request created:', filingRequestId);
+
       // Initialize payment
       await paymentService.initializePayment({
         email: user.email || '',
-        amount: 1000000, // ₦10,000 in kobo
+        amount: 1000000, // ₦10,000 in kobo (10,000 * 100)
         plan: 'filing_service',
         businessName: currentCompany.name,
-        filingRequestId
+        filingRequestId,
+        metadata: {
+          service_type: 'professional_filing',
+          company_id: currentCompany.id,
+          filing_request_id: filingRequestId
+        }
       });
 
       setStep('success');
@@ -90,8 +103,8 @@ export function FilingRequestButton({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl mx-4 p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Professional Filing Service</h2>
           <Button 
@@ -116,7 +129,7 @@ export function FilingRequestButton({
               </ul>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">Your Data Summary</h4>
                 <div className="space-y-2 text-sm">

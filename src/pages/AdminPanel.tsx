@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, DollarSign, TrendingUp, Activity, Mail, MessageSquare, 
-  Database, FileText, RefreshCw, Download
+  Database, FileText, RefreshCw, Download, Calculator
 } from 'lucide-react';
 
 interface SystemStats {
@@ -170,6 +170,10 @@ export default function AdminPanel() {
             <Button onClick={sendBulkEmail} className="h-20 flex-col">
               <Mail className="h-6 w-6 mb-2" />
               Send Bulk Email
+            </Button>
+            <Button variant="outline" className="h-20 flex-col" onClick={() => navigate('/admin/tax-rates')}>
+              <Calculator className="h-6 w-6 mb-2" />
+              Tax Rates
             </Button>
             <Button variant="outline" className="h-20 flex-col" onClick={() => navigate('/admin/users')}>
               <Users className="h-6 w-6 mb-2" />

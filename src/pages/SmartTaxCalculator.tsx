@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calculator, Lock, Crown } from 'lucide-react';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useSubscription } from '@/hooks/useSubscription';
+import { taxRatesService } from '@/lib/taxRatesService';
 import { Link } from 'react-router-dom';
 
 interface TaxCalculation {
@@ -18,6 +19,63 @@ export default function SmartTaxCalculator() {
   const { planType: plan } = useSubscription();
   const [activeTab, setActiveTab] = useState('vat');
   const [calculations, setCalculations] = useState<TaxCalculation[]>([]);
+  const [taxRates, setTaxRates] = useState({
+    vat: 7.5,
+    paye: 24,
+    cit: 30,
+    wht_professional: 5,
+    wht_dividend: 10,
+    wht_construction: 2.5,
+    cgt: 10
+  });
+  
+  // Load dynamic tax rates
+  useEffect(() => {
+    loadTaxRates();
+    
+    // Set up real-time updates
+    const interval = setInterval(() => {
+      loadTaxRates();
+    }, 10000); // Check for updates every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadTaxRates = async () => {
+    try {
+      // Clear cache first to get fresh data
+      taxRatesService.clearCache();
+      
+      const [vat, paye, cit, cgt] = await Promise.all([
+        taxRatesService.getCachedTaxRate('VAT'),
+        taxRatesService.getCachedTaxRate('PAYE'),
+        taxRatesService.getCachedTaxRate('CIT'),
+        taxRatesService.getCachedTaxRate('CGT')
+      ]);
+      
+      const whtRates = await taxRatesService.getWithholdingTaxRates();
+      
+      const newRates = {
+        vat,
+        paye,
+        cit,
+        wht_professional: whtRates.WHT_PROFESSIONAL || 5,
+        wht_dividend: whtRates.WHT_DIVIDEND || 10,
+        wht_construction: whtRates.WHT_CONSTRUCTION || 2.5,
+        cgt
+      };
+      
+      setTaxRates(newRates);
+      
+      // Update form data with new rates
+      setVatData(prev => ({ ...prev, vatRate: vat }));
+      setWhtData(prev => ({ ...prev, whtRate: whtRates.WHT_PROFESSIONAL || 5 }));
+      
+      console.log('✅ Tax rates updated:', newRates);
+    } catch (error) {
+      console.error('Failed to load tax rates:', error);
+    }
+  };
   
   // VAT Calculator
   const [vatData, setVatData] = useState({
@@ -70,12 +128,12 @@ export default function SmartTaxCalculator() {
 
   const calculateVAT = () => {
     const revenue = parseFloat(vatData.revenue) || 0;
-    const vatAmount = revenue * (vatData.vatRate / 100);
+    const vatAmount = revenue * (taxRates.vat / 100);
     
     const calculation: TaxCalculation = {
       type: 'VAT',
       amount: revenue,
-      rate: vatData.vatRate,
+      rate: taxRates.vat,
       result: vatAmount
     };
     
@@ -130,12 +188,12 @@ export default function SmartTaxCalculator() {
     const capitalAllowances = parseFloat(citData.capitalAllowances) || 0;
     
     const taxableProfit = Math.max(0, income - deductions - capitalAllowances);
-    const cit = taxableProfit * 0.30; // 30% CIT rate
+    const cit = taxableProfit * (taxRates.cit / 100); // Use dynamic CIT rate
     
     const calculation: TaxCalculation = {
       type: 'Company Income Tax',
       amount: income,
-      rate: 30,
+      rate: taxRates.cit,
       result: cit
     };
     
@@ -162,12 +220,12 @@ export default function SmartTaxCalculator() {
     const improvements = parseFloat(cgData.improvementCosts) || 0;
     
     const gain = Math.max(0, salePrice - costPrice - improvements);
-    const cgt = gain * 0.10; // 10% CGT rate
+    const cgt = gain * (taxRates.cgt / 100); // Use dynamic CGT rate
     
     const calculation: TaxCalculation = {
       type: 'Capital Gains Tax',
       amount: gain,
-      rate: 10,
+      rate: taxRates.cgt,
       result: cgt
     };
     
@@ -221,12 +279,12 @@ export default function SmartTaxCalculator() {
 
           {/* Tax Calculator Tabs */}
           <div className="border-b border-border">
-            <nav className="flex space-x-8">
+            <nav className="flex flex-wrap gap-2 sm:gap-0 sm:space-x-8">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => hasAccess(tab.id) && setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  className={`py-2 px-3 sm:px-1 border-b-2 font-medium text-xs sm:text-sm flex flex-col sm:flex-row items-center gap-1 sm:gap-2 min-w-0 ${
                     activeTab === tab.id && hasAccess(tab.id)
                       ? 'border-blue-500 text-blue-600'
                       : hasAccess(tab.id)
@@ -235,11 +293,13 @@ export default function SmartTaxCalculator() {
                   }`}
                   disabled={!hasAccess(tab.id)}
                 >
-                  {tab.name}
-                  {!hasAccess(tab.id) && <Lock className="h-3 w-3" />}
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {tab.plan}
-                  </span>
+                  <span className="truncate text-center sm:text-left">{tab.name}</span>
+                  <div className="flex items-center gap-1">
+                    {!hasAccess(tab.id) && <Lock className="h-3 w-3" />}
+                    <span className="text-xs bg-gray-100 px-1 sm:px-2 py-1 rounded whitespace-nowrap">
+                      {tab.plan}
+                    </span>
+                  </div>
                 </button>
               ))}
             </nav>
@@ -286,9 +346,10 @@ export default function SmartTaxCalculator() {
                         <input
                           type="number"
                           value={vatData.vatRate}
-                          onChange={(e) => setVatData({...vatData, vatRate: parseFloat(e.target.value)})}
+                          onChange={(e) => setVatData({...vatData, vatRate: parseFloat(e.target.value) || taxRates.vat})}
                           className="w-full border border-border rounded-md px-3 py-2"
                           step="0.1"
+                          placeholder={taxRates.vat.toString()}
                         />
                       </div>
                       <Button onClick={calculateVAT} className="w-full">
@@ -387,9 +448,9 @@ export default function SmartTaxCalculator() {
                           onChange={(e) => setWhtData({...whtData, whtRate: parseFloat(e.target.value)})}
                           className="w-full border border-border rounded-md px-3 py-2"
                         >
-                          <option value={5}>5% - Professional Services</option>
-                          <option value={10}>10% - Dividends</option>
-                          <option value={2.5}>2.5% - Construction</option>
+                          <option value={taxRates.wht_professional}>{taxRates.wht_professional}% - Professional Services</option>
+                          <option value={taxRates.wht_dividend}>{taxRates.wht_dividend}% - Dividends</option>
+                          <option value={taxRates.wht_construction}>{taxRates.wht_construction}% - Construction</option>
                         </select>
                       </div>
                       <Button onClick={calculateWithholding} className="w-full">

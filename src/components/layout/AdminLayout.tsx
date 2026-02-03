@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, Shield, Users, Database, Settings, BarChart3, FileText, TrendingUp } from "lucide-react";
+import { Menu, X, LogOut, Shield, Users, Database, Settings, BarChart3, FileText, TrendingUp, Calculator } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface AdminLayoutProps {
@@ -20,6 +20,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const adminNavItems = [
     { name: 'Overview', href: '/admin', icon: BarChart3 },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Tax Rates', href: '/admin/tax-rates', icon: Calculator },
     { name: 'Tax Data', href: '/admin/tax-data', icon: FileText },
     { name: 'Analytics', href: '/admin/analytics', icon: TrendingUp },
     { name: 'Content', href: '/admin/content', icon: FileText },
