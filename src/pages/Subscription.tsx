@@ -7,12 +7,33 @@ import { paymentService } from "@/lib/paymentService";
 import { useAuth } from "@/contexts/AuthContextClean";
 import { useProfile } from "@/hooks/useProfileClean";
 import { supabaseService } from "@/lib/supabaseService";
+import { contentService } from "@/lib/contentService";
 
 export default function Subscription() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const [loading, setLoading] = useState<string | null>(null);
-
+  const [content, setContent] = useState<any>(null);
+  const [actualSubscription, setActualSubscription] = useState<any>(null);
+  
+  useEffect(() => {
+    fetchContent();
+    if (user?.id) {
+      loadSubscriptionData();
+    }
+  }, [user?.id]);
+  
+  const fetchContent = async () => {
+    console.log('🔍 SUBSCRIPTION DEBUG - Starting fetchContent');
+    try {
+      const data = await contentService.getContent();
+      console.log('🔍 SUBSCRIPTION DEBUG - Raw data received:', data);
+      console.log('🔍 SUBSCRIPTION DEBUG - Enterprise price:', data?.pricing?.plans?.enterprise?.annualPrice);
+      setContent(data);
+    } catch (error) {
+      console.error('🔍 SUBSCRIPTION DEBUG - Error fetching content:', error);
+    }
+  };
   // Get plan display name
   const getPlanDisplayName = (planKey: string) => {
     const planNames = {
@@ -23,15 +44,6 @@ export default function Subscription() {
     };
     return planNames[planKey as keyof typeof planNames] || planKey;
   };
-
-  // Get actual subscription data instead of profile data
-  const [actualSubscription, setActualSubscription] = useState<any>(null);
-  
-  useEffect(() => {
-    if (user?.id) {
-      loadSubscriptionData();
-    }
-  }, [user?.id]);
   
   const loadSubscriptionData = async () => {
     if (!user?.id) return;
@@ -44,75 +56,122 @@ export default function Subscription() {
     }
   };
 
-const plans = [
-  {
-    name: "Free",
-    annualPrice: "₦0",
-    monthlyPrice: "₦0",
-    period: "/forever",
-    monthlyPeriod: "/forever",
-    features: [
-      "View compliance guides",
-      "Basic tax information",
-      "No reminders",
-    ],
-    current: actualSubscription?.plan_type === 'free',
-    planKey: 'free' as const,
-  },
-  {
-    name: "Basic",
-    annualPrice: "₦15,000",
-    monthlyPrice: "₦1,250",
-    period: "/year",
-    monthlyPeriod: "/month",
-    features: [
-      "1 Business Profile",
-      "Email Reminders",
-      "Tax Calculator Access",
-      "Filing Guides",
-      "Up to 3 tax obligations",
-    ],
-    current: actualSubscription?.plan_type === 'basic',
-    planKey: 'basic' as const,
-  },
-  {
-    name: "Pro",
-    annualPrice: "₦50,000",
-    monthlyPrice: "₦4,167",
-    period: "/year",
-    monthlyPeriod: "/month",
-    features: [
-      "Up to 5 Business Profiles",
-      "WhatsApp Reminders",
-      "Email Reminders",
-      "Advanced Tax Calculator",
-      "Filing Guides",
-      "Unlimited tax obligations",
-      "Priority Support",
-    ],
-    current: actualSubscription?.plan_type === 'pro',
-    planKey: 'pro' as const,
-  },
-  {
-    name: "Enterprise",
-    annualPrice: "₦150,000",
-    monthlyPrice: "₦12,500",
-    period: "/year",
-    monthlyPeriod: "/month",
-    features: [
-      "Unlimited Business Profiles",
-      "WhatsApp Reminders",
-      "Email Reminders",
-      "Advanced Tax Calculator",
-      "API Access",
-      "Multi-user Access",
-      "Dedicated Account Manager",
-      "Custom Integrations",
-    ],
-    current: actualSubscription?.plan_type === 'enterprise',
-    planKey: 'enterprise' as const,
-  },
-];
+  // Use dynamic pricing from content or fallback to defaults
+  const plans = (content?.pricing?.plans && 
+                 content.pricing.plans.free?.annualPrice !== undefined &&
+                 content.pricing.plans.basic?.annualPrice !== undefined &&
+                 content.pricing.plans.pro?.annualPrice !== undefined &&
+                 content.pricing.plans.enterprise?.annualPrice !== undefined) ? [
+    {
+      name: "Free",
+      annualPrice: `₦${content.pricing.plans.free.annualPrice.toLocaleString()}`,
+      monthlyPrice: `₦${content.pricing.plans.free.monthlyPrice.toLocaleString()}`,
+      period: "/forever",
+      monthlyPeriod: "/forever",
+      features: content.pricing.plans.free.features || [
+        "View compliance guides",
+        "Basic tax information",
+        "No reminders",
+      ],
+      current: actualSubscription?.plan_type === 'free',
+      planKey: 'free' as const,
+    },
+    {
+      name: "Basic",
+      annualPrice: `₦${content.pricing.plans.basic.annualPrice.toLocaleString()}`,
+      monthlyPrice: `₦${content.pricing.plans.basic.monthlyPrice.toLocaleString()}`,
+      period: "/year",
+      monthlyPeriod: "/month",
+      features: content.pricing.plans.basic.features || [
+        "1 Business Profile",
+        "Email Reminders",
+        "Tax Calculator Access",
+        "Filing Guides",
+        "Up to 3 tax obligations",
+      ],
+      current: actualSubscription?.plan_type === 'basic',
+      planKey: 'basic' as const,
+    },
+    {
+      name: "Pro",
+      annualPrice: `₦${content.pricing.plans.pro.annualPrice.toLocaleString()}`,
+      monthlyPrice: `₦${content.pricing.plans.pro.monthlyPrice.toLocaleString()}`,
+      period: "/year",
+      monthlyPeriod: "/month",
+      features: content.pricing.plans.pro.features || [
+        "Up to 5 Business Profiles",
+        "WhatsApp Reminders",
+        "Email Reminders",
+        "Advanced Tax Calculator",
+        "Filing Guides",
+        "Unlimited tax obligations",
+        "Priority Support",
+      ],
+      current: actualSubscription?.plan_type === 'pro',
+      planKey: 'pro' as const,
+    },
+    {
+      name: "Enterprise",
+      annualPrice: `₦${content.pricing.plans.enterprise.annualPrice.toLocaleString()}`,
+      monthlyPrice: `₦${content.pricing.plans.enterprise.monthlyPrice.toLocaleString()}`,
+      period: "/year",
+      monthlyPeriod: "/month",
+      features: content.pricing.plans.enterprise.features || [
+        "Unlimited Business Profiles",
+        "WhatsApp Reminders",
+        "Email Reminders",
+        "Advanced Tax Calculator",
+        "API Access",
+        "Multi-user Access",
+        "Dedicated Account Manager",
+        "Custom Integrations",
+      ],
+      current: actualSubscription?.plan_type === 'enterprise',
+      planKey: 'enterprise' as const,
+    },
+  ] : [
+    // Fallback hardcoded plans
+    {
+      name: "Free",
+      annualPrice: "₦0",
+      monthlyPrice: "₦0",
+      period: "/forever",
+      monthlyPeriod: "/forever",
+      features: ["View compliance guides", "Basic tax information", "No reminders"],
+      current: actualSubscription?.plan_type === 'free',
+      planKey: 'free' as const,
+    },
+    {
+      name: "Basic",
+      annualPrice: "₦15,000",
+      monthlyPrice: "₦1,250",
+      period: "/year",
+      monthlyPeriod: "/month",
+      features: ["1 Business Profile", "Email Reminders", "Tax Calculator Access"],
+      current: actualSubscription?.plan_type === 'basic',
+      planKey: 'basic' as const,
+    },
+    {
+      name: "Pro",
+      annualPrice: "₦50,000",
+      monthlyPrice: "₦4,167",
+      period: "/year",
+      monthlyPeriod: "/month",
+      features: ["Up to 5 Business Profiles", "WhatsApp Reminders", "Priority Support"],
+      current: actualSubscription?.plan_type === 'pro',
+      planKey: 'pro' as const,
+    },
+    {
+      name: "Enterprise",
+      annualPrice: "₦150,000",
+      monthlyPrice: "₦12,500",
+      period: "/year",
+      monthlyPeriod: "/month",
+      features: ["Unlimited Business Profiles", "API Access", "Dedicated Account Manager"],
+      current: actualSubscription?.plan_type === 'enterprise',
+      planKey: 'enterprise' as const,
+    },
+  ];
 
   const handleUpgrade = async (planType: 'free' | 'basic' | 'pro' | 'enterprise') => {
     if (!user || !profile) return;

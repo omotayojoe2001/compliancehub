@@ -23,6 +23,7 @@ import AdminSystem from "./pages/AdminSystem";
 import AdminContent from "./pages/AdminContent";
 import AdminSettings from "./pages/AdminSettings";
 import AdminTaxRates from "./pages/AdminTaxRates";
+import AdminGuides from "./pages/AdminGuides";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -68,6 +69,7 @@ function AppContent() {
       <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
       <Route path="/admin/tax-rates" element={<AdminRoute><AdminTaxRates /></AdminRoute>} />
+      <Route path="/admin/guides" element={<AdminRoute><AdminGuides /></AdminRoute>} />
       <Route path="/admin/tax-data" element={<AdminRoute><AdminTaxData /></AdminRoute>} />
       <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
       <Route path="/admin/system" element={<AdminRoute><AdminSystem /></AdminRoute>} />

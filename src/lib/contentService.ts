@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabaseService } from './supabaseService';
 
 interface SiteContent {
   siteInfo: {
@@ -144,43 +144,75 @@ const defaultContent: SiteContent = {
 
 export const contentService = {
   async getContent(): Promise<SiteContent> {
+    console.log('💾 CONTENT SERVICE DEBUG - Starting getContent');
     try {
-      const { data, error } = await supabase
-        .from('site_content')
-        .select('content')
-        .eq('id', 1)
-        .single();
+      const url = `${supabaseService.supabaseUrl}/rest/v1/site_content?id=eq.1&select=content`;
+      console.log('💾 CONTENT SERVICE DEBUG - Fetching from URL:', url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'apikey': supabaseService.supabaseKey,
+          'Authorization': `Bearer ${supabaseService.supabaseKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (error || !data) {
-        console.log('No content found, using defaults');
+      console.log('💾 CONTENT SERVICE DEBUG - Response status:', response.status);
+      
+      if (!response.ok) {
+        console.log('💾 CONTENT SERVICE DEBUG - Response not OK, using defaults');
         return defaultContent;
       }
 
-      return data.content as SiteContent;
+      const data = await response.json();
+      console.log('💾 CONTENT SERVICE DEBUG - Response data:', data);
+      
+      if (!data || data.length === 0) {
+        console.log('💾 CONTENT SERVICE DEBUG - No data found, using defaults');
+        return defaultContent;
+      }
+
+      console.log('💾 CONTENT SERVICE DEBUG - Returning content:', data[0].content);
+      // JSONB returns proper object, no parsing needed
+      return data[0].content as SiteContent;
     } catch (error) {
-      console.error('Error fetching content:', error);
+      console.error('💾 CONTENT SERVICE DEBUG - Error fetching content:', error);
       return defaultContent;
     }
   },
 
   async updateContent(content: SiteContent): Promise<boolean> {
+    console.log('💾 CONTENT SERVICE DEBUG - Starting updateContent with:', content);
     try {
-      const { error } = await supabase
-        .from('site_content')
-        .upsert({
+      const url = `${supabaseService.supabaseUrl}/rest/v1/site_content`;
+      console.log('💾 CONTENT SERVICE DEBUG - Updating at URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseService.supabaseKey,
+          'Authorization': `Bearer ${supabaseService.supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
           id: 1,
-          content: content,
+          content: content, // Don't double-stringify - JSONB handles this
           updated_at: new Date().toISOString()
-        });
+        })
+      });
 
-      if (error) {
-        console.error('Error updating content:', error);
+      console.log('💾 CONTENT SERVICE DEBUG - Update response status:', response.status);
+      
+      if (!response.ok) {
+        console.error('💾 CONTENT SERVICE DEBUG - Error updating content:', response.statusText);
         return false;
       }
 
+      console.log('💾 CONTENT SERVICE DEBUG - Update successful');
       return true;
     } catch (error) {
-      console.error('Error updating content:', error);
+      console.error('💾 CONTENT SERVICE DEBUG - Error updating content:', error);
       return false;
     }
   }

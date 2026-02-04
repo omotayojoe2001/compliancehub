@@ -64,20 +64,103 @@ export default function AdminContent() {
   }, []);
 
   const fetchContent = async () => {
+    console.log('⚙️ ADMIN DEBUG - Starting fetchContent');
     try {
       const data = await contentService.getContent();
-      setContent(data);
+      console.log('⚙️ ADMIN DEBUG - Raw data received:', data);
+      console.log('⚙️ ADMIN DEBUG - Enterprise price:', data?.pricing?.plans?.enterprise?.annualPrice);
+      // Provide default structure if data is null/undefined
+      const defaultContent = {
+        siteInfo: {
+          companyName: '',
+          tagline: '',
+          description: '',
+          phone: '',
+          email: '',
+          address: ''
+        },
+        pricing: {
+          plans: {
+            free: { name: 'Free', monthlyPrice: 0, annualPrice: 0, features: [] },
+            basic: { name: 'Basic', monthlyPrice: 1250, annualPrice: 15000, features: [] },
+            pro: { name: 'Pro', monthlyPrice: 4167, annualPrice: 50000, features: [] },
+            enterprise: { name: 'Enterprise', monthlyPrice: 12500, annualPrice: 150000, features: [] }
+          },
+          filingCharges: {
+            vat: 25000,
+            paye: 30000,
+            cit: 50000,
+            wht: 20000,
+            filing_service: 10000
+          }
+        },
+        features: [],
+        howItWorks: [],
+        targetAudience: [],
+        footer: {
+          aboutText: '',
+          quickLinks: [],
+          socialLinks: {
+            facebook: '',
+            twitter: '',
+            linkedin: ''
+          }
+        }
+      };
+      setContent(data || defaultContent);
     } catch (error) {
       console.error('Error fetching content:', error);
+      // Set default content on error
+      setContent({
+        siteInfo: {
+          companyName: '',
+          tagline: '',
+          description: '',
+          phone: '',
+          email: '',
+          address: ''
+        },
+        pricing: {
+          plans: {
+            free: { name: 'Free', monthlyPrice: 0, annualPrice: 0, features: [] },
+            basic: { name: 'Basic', monthlyPrice: 1250, annualPrice: 15000, features: [] },
+            pro: { name: 'Pro', monthlyPrice: 4167, annualPrice: 50000, features: [] },
+            enterprise: { name: 'Enterprise', monthlyPrice: 12500, annualPrice: 150000, features: [] }
+          },
+          filingCharges: {
+            vat: 25000,
+            paye: 30000,
+            cit: 50000,
+            wht: 20000,
+            filing_service: 10000
+          }
+        },
+        features: [],
+        howItWorks: [],
+        targetAudience: [],
+        footer: {
+          aboutText: '',
+          quickLinks: [],
+          socialLinks: {
+            facebook: '',
+            twitter: '',
+            linkedin: ''
+          }
+        }
+      });
     }
   };
 
   const handleSave = async () => {
     if (!content) return;
     
+    console.log('⚙️ ADMIN DEBUG - Saving content:', content);
+    console.log('⚙️ ADMIN DEBUG - Enterprise price being saved:', content.pricing?.plans?.enterprise?.annualPrice);
+    
     setLoading(true);
     try {
       const success = await contentService.updateContent(content);
+      console.log('⚙️ ADMIN DEBUG - Save result:', success);
       if (success) {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
@@ -85,7 +168,7 @@ export default function AdminContent() {
         alert('Failed to save content');
       }
     } catch (error) {
-      console.error('Failed to save content:', error);
+      console.error('⚙️ ADMIN DEBUG - Failed to save content:', error);
       alert('Failed to save content');
     }
     setLoading(false);
@@ -101,18 +184,18 @@ export default function AdminContent() {
     );
   }
 
-  const updateContent = (section: keyof ContentSettings, key: string, value: any) => {
-    setContent(prev => ({
+  const updateContent = (section: keyof SiteContent, key: string, value: any) => {
+    setContent(prev => prev ? ({
       ...prev,
       [section]: {
         ...prev[section],
         [key]: value
       }
-    }));
+    }) : null);
   };
 
-  const updateNestedContent = (section: keyof ContentSettings, subsection: string, key: string, value: any) => {
-    setContent(prev => ({
+  const updateNestedContent = (section: keyof SiteContent, subsection: string, key: string, value: any) => {
+    setContent(prev => prev ? ({
       ...prev,
       [section]: {
         ...prev[section],
@@ -121,7 +204,7 @@ export default function AdminContent() {
           [key]: value
         }
       }
-    }));
+    }) : null);
   };
 
   return (
@@ -169,48 +252,48 @@ export default function AdminContent() {
                     <Label htmlFor="companyName">Company Name</Label>
                     <Input
                       id="companyName"
-                      value={content.siteInfo.companyName}
-                      onChange={(e) => setContent({...content, siteInfo: {...content.siteInfo, companyName: e.target.value}})}
+                      value={content?.siteInfo?.companyName || ''}
+                      onChange={(e) => setContent(prev => prev ? {...prev, siteInfo: {...prev.siteInfo, companyName: e.target.value}} : null)}
                     />
                   </div>
                   <div>
                     <Label htmlFor="tagline">Tagline</Label>
                     <Input
                       id="tagline"
-                      value={content.siteInfo.tagline}
-                      onChange={(e) => setContent({...content, siteInfo: {...content.siteInfo, tagline: e.target.value}})}
+                      value={content?.siteInfo?.tagline || ''}
+                      onChange={(e) => setContent(prev => prev ? {...prev, siteInfo: {...prev.siteInfo, tagline: e.target.value}} : null)}
                     />
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
-                      value={content.siteInfo.description}
-                      onChange={(e) => setContent({...content, siteInfo: {...content.siteInfo, description: e.target.value}})}
+                      value={content?.siteInfo?.description || ''}
+                      onChange={(e) => setContent(prev => prev ? {...prev, siteInfo: {...prev.siteInfo, description: e.target.value}} : null)}
                     />
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
-                      value={content.siteInfo.phone}
-                      onChange={(e) => setContent({...content, siteInfo: {...content.siteInfo, phone: e.target.value}})}
+                      value={content?.siteInfo?.phone || ''}
+                      onChange={(e) => setContent(prev => prev ? {...prev, siteInfo: {...prev.siteInfo, phone: e.target.value}} : null)}
                     />
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
-                      value={content.siteInfo.email}
-                      onChange={(e) => setContent({...content, siteInfo: {...content.siteInfo, email: e.target.value}})}
+                      value={content?.siteInfo?.email || ''}
+                      onChange={(e) => setContent(prev => prev ? {...prev, siteInfo: {...prev.siteInfo, email: e.target.value}} : null)}
                     />
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="address">Address</Label>
                     <Input
                       id="address"
-                      value={content.siteInfo.address}
-                      onChange={(e) => setContent({...content, siteInfo: {...content.siteInfo, address: e.target.value}})}
+                      value={content?.siteInfo?.address || ''}
+                      onChange={(e) => setContent(prev => prev ? {...prev, siteInfo: {...prev.siteInfo, address: e.target.value}} : null)}
                     />
                   </div>
               </div>
@@ -232,7 +315,7 @@ export default function AdminContent() {
                       <Input
                         id="freeAnnual"
                         type="number"
-                        value={content.pricing.plans.free.annualPrice}
+                        value={content?.pricing?.plans?.free?.annualPrice || 0}
                         onChange={(e) => {
                           const newContent = { ...content };
                           newContent.pricing.plans.free.annualPrice = parseInt(e.target.value);
@@ -245,7 +328,7 @@ export default function AdminContent() {
                       <Input
                         id="freeMonthly"
                         type="number"
-                        value={content.pricing.plans.free.monthlyPrice}
+                        value={content?.pricing?.plans?.free?.monthlyPrice || 0}
                         onChange={(e) => {
                           const newContent = { ...content };
                           newContent.pricing.plans.free.monthlyPrice = parseInt(e.target.value);
@@ -258,9 +341,12 @@ export default function AdminContent() {
                       <Input
                         id="basicAnnual"
                         type="number"
-                        value={content.pricing.plans.basic.annualPrice}
+                        value={content?.pricing?.plans?.basic?.annualPrice || 15000}
                         onChange={(e) => {
                           const newContent = { ...content };
+                          if (!newContent.pricing.plans.basic.features) {
+                            newContent.pricing.plans.basic.features = ["1 Business Profile", "Email Reminders", "Tax Calculator Access"];
+                          }
                           newContent.pricing.plans.basic.annualPrice = parseInt(e.target.value);
                           setContent(newContent);
                         }}
@@ -271,7 +357,7 @@ export default function AdminContent() {
                       <Input
                         id="basicMonthly"
                         type="number"
-                        value={content.pricing.plans.basic.monthlyPrice}
+                        value={content?.pricing?.plans?.basic?.monthlyPrice || 1250}
                         onChange={(e) => {
                           const newContent = { ...content };
                           newContent.pricing.plans.basic.monthlyPrice = parseInt(e.target.value);
@@ -284,9 +370,12 @@ export default function AdminContent() {
                       <Input
                         id="proAnnual"
                         type="number"
-                        value={content.pricing.plans.pro.annualPrice}
+                        value={content?.pricing?.plans?.pro?.annualPrice || 50000}
                         onChange={(e) => {
                           const newContent = { ...content };
+                          if (!newContent.pricing.plans.pro.features) {
+                            newContent.pricing.plans.pro.features = ["Up to 5 Business Profiles", "WhatsApp Reminders", "Priority Support"];
+                          }
                           newContent.pricing.plans.pro.annualPrice = parseInt(e.target.value);
                           setContent(newContent);
                         }}
@@ -297,7 +386,7 @@ export default function AdminContent() {
                       <Input
                         id="proMonthly"
                         type="number"
-                        value={content.pricing.plans.pro.monthlyPrice}
+                        value={content?.pricing?.plans?.pro?.monthlyPrice || 4167}
                         onChange={(e) => {
                           const newContent = { ...content };
                           newContent.pricing.plans.pro.monthlyPrice = parseInt(e.target.value);
@@ -310,9 +399,12 @@ export default function AdminContent() {
                       <Input
                         id="enterpriseAnnual"
                         type="number"
-                        value={content.pricing.plans.enterprise.annualPrice}
+                        value={content?.pricing?.plans?.enterprise?.annualPrice || 150000}
                         onChange={(e) => {
                           const newContent = { ...content };
+                          if (!newContent.pricing.plans.enterprise.features) {
+                            newContent.pricing.plans.enterprise.features = ["Unlimited Business Profiles", "API Access", "Dedicated Account Manager"];
+                          }
                           newContent.pricing.plans.enterprise.annualPrice = parseInt(e.target.value);
                           setContent(newContent);
                         }}
@@ -323,7 +415,7 @@ export default function AdminContent() {
                       <Input
                         id="enterpriseMonthly"
                         type="number"
-                        value={content.pricing.plans.enterprise.monthlyPrice}
+                        value={content?.pricing?.plans?.enterprise?.monthlyPrice || 12500}
                         onChange={(e) => {
                           const newContent = { ...content };
                           newContent.pricing.plans.enterprise.monthlyPrice = parseInt(e.target.value);
@@ -342,7 +434,7 @@ export default function AdminContent() {
                       <Input
                         id="vatCharge"
                         type="number"
-                        value={content.pricing.filingCharges.vat}
+                        value={content?.pricing?.filingCharges?.vat || 25000}
                         onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'vat', parseInt(e.target.value))}
                       />
                     </div>
@@ -351,7 +443,7 @@ export default function AdminContent() {
                       <Input
                         id="payeCharge"
                         type="number"
-                        value={content.pricing.filingCharges.paye}
+                        value={content?.pricing?.filingCharges?.paye || 30000}
                         onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'paye', parseInt(e.target.value))}
                       />
                     </div>
@@ -360,7 +452,7 @@ export default function AdminContent() {
                       <Input
                         id="citCharge"
                         type="number"
-                        value={content.pricing.filingCharges.cit}
+                        value={content?.pricing?.filingCharges?.cit || 50000}
                         onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'cit', parseInt(e.target.value))}
                       />
                     </div>
@@ -369,7 +461,7 @@ export default function AdminContent() {
                       <Input
                         id="whtCharge"
                         type="number"
-                        value={content.pricing.filingCharges.wht}
+                        value={content?.pricing?.filingCharges?.wht || 20000}
                         onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'wht', parseInt(e.target.value))}
                       />
                     </div>
@@ -389,6 +481,116 @@ export default function AdminContent() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="content">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Lightbulb className="h-5 w-5" />
+                Features & How It Works
+              </h2>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-medium mb-3">Features</h3>
+                  <div className="space-y-4">
+                    {content?.features?.map((feature, index) => (
+                      <div key={index} className="grid gap-2 md:grid-cols-2">
+                        <div>
+                          <Label htmlFor={`feature-title-${index}`}>Feature Title</Label>
+                          <Input
+                            id={`feature-title-${index}`}
+                            value={feature.title}
+                            onChange={(e) => {
+                              const newFeatures = [...(content?.features || [])];
+                              newFeatures[index] = { ...newFeatures[index], title: e.target.value };
+                              setContent(prev => prev ? { ...prev, features: newFeatures } : null);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`feature-desc-${index}`}>Description</Label>
+                          <Textarea
+                            id={`feature-desc-${index}`}
+                            value={feature.description}
+                            onChange={(e) => {
+                              const newFeatures = [...(content?.features || [])];
+                              newFeatures[index] = { ...newFeatures[index], description: e.target.value };
+                              setContent(prev => prev ? { ...prev, features: newFeatures } : null);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )) || []}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium mb-3">How It Works Steps</h3>
+                  <div className="space-y-4">
+                    {content?.howItWorks?.map((step, index) => (
+                      <div key={index} className="grid gap-2 md:grid-cols-3">
+                        <div>
+                          <Label htmlFor={`step-num-${index}`}>Step Number</Label>
+                          <Input
+                            id={`step-num-${index}`}
+                            value={step.step}
+                            onChange={(e) => {
+                              const newSteps = [...(content?.howItWorks || [])];
+                              newSteps[index] = { ...newSteps[index], step: e.target.value };
+                              setContent(prev => prev ? { ...prev, howItWorks: newSteps } : null);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`step-title-${index}`}>Step Title</Label>
+                          <Input
+                            id={`step-title-${index}`}
+                            value={step.title}
+                            onChange={(e) => {
+                              const newSteps = [...(content?.howItWorks || [])];
+                              newSteps[index] = { ...newSteps[index], title: e.target.value };
+                              setContent(prev => prev ? { ...prev, howItWorks: newSteps } : null);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`step-desc-${index}`}>Description</Label>
+                          <Textarea
+                            id={`step-desc-${index}`}
+                            value={step.description}
+                            onChange={(e) => {
+                              const newSteps = [...(content?.howItWorks || [])];
+                              newSteps[index] = { ...newSteps[index], description: e.target.value };
+                              setContent(prev => prev ? { ...prev, howItWorks: newSteps } : null);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )) || []}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="audience">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Target Audience
+              </h2>
+              <div>
+                <Label htmlFor="targetAudience">Target Audience (comma separated)</Label>
+                <Input
+                  id="targetAudience"
+                  value={content?.targetAudience?.join(', ') || ''}
+                  onChange={(e) => setContent(prev => prev ? {
+                    ...prev,
+                    targetAudience: e.target.value ? e.target.value.split(', ') : []
+                  } : null)}
+                  placeholder="SMEs & Startups, Freelancers with CAC, Traders & Exporters"
+                />
+              </div>
+            </Card>
+          </TabsContent>
           <TabsContent value="footer">
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4">Footer Content</h2>
@@ -397,7 +599,7 @@ export default function AdminContent() {
                   <Label htmlFor="aboutText">About Text</Label>
                   <Textarea
                     id="aboutText"
-                    value={content.footer.aboutText}
+                    value={content?.footer?.aboutText || ''}
                     onChange={(e) => updateContent('footer', 'aboutText', e.target.value)}
                     rows={4}
                   />
@@ -406,8 +608,8 @@ export default function AdminContent() {
                   <Label htmlFor="quickLinks">Quick Links (comma separated)</Label>
                   <Input
                     id="quickLinks"
-                    value={content.footer.quickLinks.join(', ')}
-                    onChange={(e) => updateContent('footer', 'quickLinks', e.target.value.split(', '))}
+                    value={content?.footer?.quickLinks?.join(', ') || ''}
+                    onChange={(e) => updateContent('footer', 'quickLinks', e.target.value ? e.target.value.split(', ') : [])}
                   />
                 </div>
               </div>
@@ -425,7 +627,7 @@ export default function AdminContent() {
                   <Label htmlFor="facebook">Facebook URL</Label>
                   <Input
                     id="facebook"
-                    value={content.footer.socialLinks.facebook}
+                    value={content?.footer?.socialLinks?.facebook || ''}
                     onChange={(e) => updateNestedContent('footer', 'socialLinks', 'facebook', e.target.value)}
                   />
                 </div>
@@ -433,7 +635,7 @@ export default function AdminContent() {
                   <Label htmlFor="twitter">Twitter URL</Label>
                   <Input
                     id="twitter"
-                    value={content.footer.socialLinks.twitter}
+                    value={content?.footer?.socialLinks?.twitter || ''}
                     onChange={(e) => updateNestedContent('footer', 'socialLinks', 'twitter', e.target.value)}
                   />
                 </div>
@@ -441,7 +643,7 @@ export default function AdminContent() {
                   <Label htmlFor="linkedin">LinkedIn URL</Label>
                   <Input
                     id="linkedin"
-                    value={content.footer.socialLinks.linkedin}
+                    value={content?.footer?.socialLinks?.linkedin || ''}
                     onChange={(e) => updateNestedContent('footer', 'socialLinks', 'linkedin', e.target.value)}
                   />
                 </div>

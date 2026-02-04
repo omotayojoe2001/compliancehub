@@ -47,12 +47,6 @@ export default function Settings() {
 
   // Update form data when current company changes
   useEffect(() => {
-    console.log('⚙️ SETTINGS DEBUG - Company changed:', {
-      currentCompany: currentCompany?.name || 'none',
-      companyId: currentCompany?.id || 'none',
-      companyTin: currentCompany?.tin || 'none'
-    });
-    
     if (currentCompany && user) {
       setBusinessData({
         business_name: currentCompany.name || '',
@@ -79,13 +73,13 @@ export default function Settings() {
   }, [currentCompany, user, profile]);
 
   const loadCompanyData = async () => {
-    if (!currentCompany?.id) return;
+    if (!user?.id) return;
     
     try {
       const { data, error } = await supabase
         .from('company_profiles')
         .select('*')
-        .eq('id', currentCompany.id)
+        .eq('user_id', user.id)
         .single();
       
       if (data && !error) {
@@ -157,6 +151,7 @@ export default function Settings() {
       if (error) throw error;
       alert('Profile updated successfully!');
     } catch (error) {
+      console.error('Profile save failed:', error);
       alert('Failed to update profile');
     } finally {
       setSaving(false);
@@ -164,25 +159,48 @@ export default function Settings() {
   };
 
   const saveBusiness = async () => {
-    if (!user?.id || !currentCompany?.id) return;
+    if (!user?.id) return;
     
     setSaving(true);
     try {
-      // Update the specific company, not the primary one
-      const { error } = await supabase
+      // First try to update existing record
+      const { data: existing } = await supabase
         .from('company_profiles')
-        .update({
-          company_name: businessData.business_name,
-          cac_number: businessData.rc_number,
-          tin: businessData.tin,
-          business_type: businessData.industry,
-          address: businessData.business_address,
-          phone: businessData.business_phone
-        })
-        .eq('id', currentCompany.id);
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
       
-      if (error) throw error;
-
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from('company_profiles')
+          .update({
+            company_name: businessData.business_name,
+            cac_number: businessData.rc_number,
+            tin: businessData.tin,
+            address: businessData.business_address,
+            phone: businessData.business_phone
+          })
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('company_profiles')
+          .insert({
+            user_id: user.id,
+            company_name: businessData.business_name,
+            cac_number: businessData.rc_number,
+            tin: businessData.tin,
+            address: businessData.business_address,
+            phone: businessData.business_phone
+          });
+        
+        if (error) throw error;
+      }
+      
+      // Also update profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -197,8 +215,6 @@ export default function Settings() {
       if (profileError) throw profileError;
 
       alert('Business details updated successfully!');
-      
-      // Reload company data instead of full page refresh
       await loadCompanyData();
       await loadComplianceData();
     } catch (error) {
@@ -509,7 +525,9 @@ export default function Settings() {
               </div>
               
               <div className="mt-6">
-                <Button onClick={() => alert('Notification preferences saved!')}>
+                <Button onClick={() => {
+                  alert('Notification preferences saved!');
+                }}>
                   Save Notification Settings
                 </Button>
               </div>

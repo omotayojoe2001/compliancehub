@@ -1,6 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { SimpleVATCalculator } from "@/components/SimpleVATCalculator";
+import { contentService } from "@/lib/contentService";
 import {
   Bell,
   Calculator,
@@ -130,6 +133,159 @@ const targetAudience = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [content, setContent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    console.log('🏠 LANDING DEBUG - Starting fetchContent');
+    try {
+      const data = await contentService.getContent();
+      console.log('🏠 LANDING DEBUG - Raw data received:', data);
+      console.log('🏠 LANDING DEBUG - Enterprise price:', data?.pricing?.plans?.enterprise?.annualPrice);
+      setContent(data);
+    } catch (error) {
+      console.error('🏠 LANDING DEBUG - Error fetching content:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use dynamic content or fallback to defaults
+  const features = content?.features || [
+    {
+      title: "Automated Reminders",
+      description: "Get WhatsApp and email alerts before every deadline. Never miss a CAC, VAT, or PAYE filing again.",
+    },
+    {
+      title: "Clear Guidance",
+      description: "Simple, step-by-step instructions on what to file and how. We explain, you file on official government portals.",
+    },
+    {
+      title: "Tax Calculator",
+      description: "Estimate your self-assessment tax instantly using official Nigeria LIRS rates and formulas.",
+    },
+    {
+      title: "Stay Informed",
+      description: "Get organised with deadlines and requirements. Reduce anxiety about compliance, but you handle the actual filing.",
+    },
+  ];
+
+  const howItWorks = content?.howItWorks || [
+    {
+      step: "01",
+      title: "Register Your Business",
+      description: "Enter your business details, CAC date, VAT and PAYE status. Takes less than 2 minutes.",
+    },
+    {
+      step: "02",
+      title: "Choose Your Plan",
+      description: "Select Basic (₦15,000/year), Pro (₦50,000/year), or Enterprise (₦150,000/year) based on your needs.",
+    },
+    {
+      step: "03",
+      title: "Receive Reminders",
+      description: "Get timely WhatsApp and email reminders before every deadline with clear action steps.",
+    },
+  ];
+
+  const pricing = (content?.pricing?.plans && 
+                   content.pricing.plans.basic?.name &&
+                   content.pricing.plans.pro?.name &&
+                   content.pricing.plans.enterprise?.name &&
+                   content.pricing.plans.basic?.annualPrice !== undefined &&
+                   content.pricing.plans.pro?.annualPrice !== undefined &&
+                   content.pricing.plans.enterprise?.annualPrice !== undefined) ? [
+    {
+      name: content.pricing.plans.basic.name,
+      monthlyPrice: `₦${content.pricing.plans.basic.monthlyPrice.toLocaleString()}`,
+      annualPrice: `₦${content.pricing.plans.basic.annualPrice.toLocaleString()}`,
+      period: "/month",
+      annualPeriod: "/year",
+      description: "Perfect for single business owners",
+      features: content.pricing.plans.basic.features,
+      popular: false,
+    },
+    {
+      name: content.pricing.plans.pro.name,
+      monthlyPrice: `₦${content.pricing.plans.pro.monthlyPrice.toLocaleString()}`,
+      annualPrice: `₦${content.pricing.plans.pro.annualPrice.toLocaleString()}`,
+      period: "/month",
+      annualPeriod: "/year",
+      description: "For agencies and multi-business owners",
+      features: content.pricing.plans.pro.features,
+      popular: true,
+    },
+    {
+      name: content.pricing.plans.enterprise.name,
+      monthlyPrice: `₦${content.pricing.plans.enterprise.monthlyPrice.toLocaleString()}`,
+      annualPrice: `₦${content.pricing.plans.enterprise.annualPrice.toLocaleString()}`,
+      period: "/month",
+      annualPeriod: "/year",
+      description: "For large organizations",
+      features: content.pricing.plans.enterprise.features,
+      popular: false,
+    },
+  ] : [
+    {
+      name: "Basic",
+      monthlyPrice: "₦1,250",
+      annualPrice: "₦15,000",
+      period: "/month",
+      annualPeriod: "/year",
+      description: "Perfect for single business owners",
+      features: ["1 Business Profile", "WhatsApp Reminders", "Email Reminders", "Tax Calculator Access", "Filing Guides"],
+      popular: false,
+    },
+    {
+      name: "Pro",
+      monthlyPrice: "₦4,167",
+      annualPrice: "₦50,000",
+      period: "/month",
+      annualPeriod: "/year",
+      description: "For agencies and multi-business owners",
+      features: ["Up to 5 Business Profiles", "Priority WhatsApp Reminders", "Email Reminders", "Tax Calculator Access", "Filing Guides", "Digital Cashbook", "E-invoice", "Annual Summary Reports"],
+      popular: true,
+    },
+    {
+      name: "Enterprise",
+      monthlyPrice: "₦12,500",
+      annualPrice: "₦150,000",
+      period: "/month",
+      annualPeriod: "/year",
+      description: "For large organizations",
+      features: ["Unlimited Business Profiles", "Priority Support", "Custom Integrations", "Dedicated Account Manager", "Advanced Analytics", "API Access", "Digital Cashbook", "E-invoice", "Everything in Pro and Basic"],
+      popular: false,
+    },
+  ];
+
+  const targetAudience = content?.targetAudience || [
+    "SMEs & Startups",
+    "Freelancers with CAC",
+    "Traders & Exporters",
+    "Digital Agencies",
+    "E-commerce Sellers",
+  ];
+
+  const siteInfo = content?.siteInfo || {
+    companyName: "TaxandCompliance T&C",
+    tagline: "Your Tax Compliance Partner",
+    description: "Simplifying tax compliance for Nigerian businesses",
+    phone: "+234 800 000 0000",
+    email: "hello@taxandcompliance.ng",
+    address: "Lagos, Nigeria"
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,7 +295,7 @@ export default function Landing() {
           <Link to="/" className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-foreground">
-              TaxandCompliance T&C
+              {siteInfo.companyName}
             </span>
           </Link>
           <nav className="hidden items-center gap-6 md:flex">
@@ -184,10 +340,10 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="mb-4 text-3xl font-semibold text-foreground md:text-4xl lg:text-5xl">
-              Taxes Can Be Confusing... Deadlines Even More So
+              {siteInfo.tagline || "Taxes Can Be Confusing... Deadlines Even More So"}
             </h1>
             <p className="mb-8 text-base text-muted-foreground md:text-lg">
-              We help you stay on top of them with clear reminders, simple explanations, and easy-to-understand estimates, so nothing catches you by surprise. You'll get WhatsApp and email alerts for CAC, VAT, PAYE, and other key deadlines. Built specifically for Nigerian SMEs, freelancers, and growing businesses.
+              {siteInfo.description || "We help you stay on top of them with clear reminders, simple explanations, and easy-to-understand estimates, so nothing catches you by surprise."}
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
@@ -238,12 +394,14 @@ export default function Landing() {
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature) => (
+            {features.map((feature, index) => (
               <div
                 key={feature.title}
                 className="border border-border bg-card p-6"
               >
-                <feature.icon className="mb-4 h-8 w-8 text-primary" />
+                {[Bell, FileText, Calculator, Shield][index] && 
+                  React.createElement([Bell, FileText, Calculator, Shield][index], { className: "mb-4 h-8 w-8 text-primary" })
+                }
                 <h3 className="mb-2 text-sm font-semibold text-foreground">
                   {feature.title}
                 </h3>
@@ -462,11 +620,11 @@ export default function Landing() {
               <div className="mb-4 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
                 <span className="text-sm font-semibold text-foreground">
-                  TaxandCompliance T&C
+                  {siteInfo.companyName}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Automated compliance reminders for Nigerian businesses.
+                {content?.footer?.aboutText || "Automated compliance reminders for Nigerian businesses."}
               </p>
             </div>
             <div>
@@ -545,16 +703,16 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2">
                 <li className="text-sm text-muted-foreground">
-                  hello@taxandcompliance.ng
+                  {siteInfo.email}
                 </li>
                 <li className="text-sm text-muted-foreground">
-                  Lagos, Nigeria
+                  {siteInfo.address}
                 </li>
               </ul>
             </div>
           </div>
           <div className="mt-8 border-t border-border pt-8 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} TaxandCompliance T&C. All rights reserved.
+            © {new Date().getFullYear()} {siteInfo.companyName}. All rights reserved.
           </div>
         </div>
       </footer>

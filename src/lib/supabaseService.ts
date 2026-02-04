@@ -1,6 +1,10 @@
 import { supabase } from './supabase';
 
 export const supabaseService = {
+  // Supabase configuration
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+
   // Input validation helper
   validateUserId(userId: string): void {
     if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
