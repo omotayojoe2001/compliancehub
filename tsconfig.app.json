@@ -32,8 +32,12 @@
     "src/lib/overdueMonitoringService.ts",
     "src/lib/subscriptionReminderService.ts",
     "src/lib/vatNotificationAutomation.ts",
+    "src/lib/emailService.ts",
+    "src/lib/filingService.ts",
     "src/pages/AutomationTestClean.tsx",
     "src/pages/RemindersDebug.tsx",
-    "src/pages/RemindersDebugFixed.tsx"
+    "src/pages/RemindersDebugFixed.tsx",
+    "src/pages/EInvoicing.tsx",
+    "src/pages/AdminGuides.tsx"
   ]
 }
