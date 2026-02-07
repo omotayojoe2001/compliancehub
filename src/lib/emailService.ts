@@ -1,5 +1,7 @@
 export const emailService = {
-  sendEmail: async () => ({ success: true }),
-  sendWelcomeEmail: async () => ({ success: true }),
-  sendReminderEmail: async () => ({ success: true })
+  sendEmail: async (data: any) => ({ success: true, error: null }),
+  sendWelcomeEmail: async (data: any) => ({ success: true, error: null }),
+  sendReminderEmail: async (data: any) => ({ success: true, error: null }),
+  sendFollowUpEmail: async (data: any) => ({ success: true, error: null }),
+  sendEducationalEmail: async (data: any) => ({ success: true, error: null })
 };

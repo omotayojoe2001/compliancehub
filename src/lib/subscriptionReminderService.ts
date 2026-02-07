@@ -1,3 +1,4 @@
 export const subscriptionReminderService = {
-  sendReminder: async () => {}
+  sendReminder: async () => {},
+  checkAndSendExpirationReminders: async () => {}
 };
