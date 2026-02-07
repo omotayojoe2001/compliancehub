@@ -40,12 +40,21 @@ export function HowToGuidesAdmin() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    subheading: string;
+    duration: number;
+    difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+    youtube_video_id: string;
+    requirements: string;
+    is_published: boolean;
+  }>({
     title: '',
     description: '',
     subheading: '',
     duration: 0,
-    difficulty_level: 'beginner' as const,
+    difficulty_level: 'beginner',
     youtube_video_id: '',
     requirements: '',
     is_published: false
