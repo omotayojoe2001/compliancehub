@@ -527,7 +527,7 @@ export function HowToGuidesAdmin() {
               </div>
               <div>
                 <label className="text-sm font-medium">Difficulty Level</label>
-                <Select value={formData.difficulty_level} onValueChange={(value: any) => setFormData({ ...formData, difficulty_level: value })}>
+                <Select value={formData.difficulty_level} onValueChange={(value: 'beginner' | 'intermediate' | 'advanced') => setFormData({ ...formData, difficulty_level: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
