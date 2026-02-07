@@ -15,10 +15,10 @@ export function Footer() {
           <div>
             <h4 className="font-medium text-foreground mb-2">Resources</h4>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+              <a href="https://lirs.gov.ng" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 LIRS Portal <ExternalLink className="h-3 w-3" />
               </a>
-              <a href="#" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+              <a href="https://cac.gov.ng" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 CAC Portal <ExternalLink className="h-3 w-3" />
               </a>
             </div>
