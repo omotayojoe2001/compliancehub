@@ -25,7 +25,8 @@ export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodMo
     async function fetchPlan() {
       if (!user?.id) return setPlan('enterprise');
       try {
-        const { data: subscription } = await window.supabase
+        const { supabase } = await import('@/lib/supabase');
+        const { data: subscription } = await supabase
           .from('subscriptions')
           .select('plan_type, plan')
           .eq('user_id', user.id)

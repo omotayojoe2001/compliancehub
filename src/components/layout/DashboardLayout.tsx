@@ -16,7 +16,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Try to use company context, fallback if not available
   let currentCompany = null;
-  let setCurrentCompany = () => {};
+  let setCurrentCompany: (company: any) => void = () => {};
   
   try {
     const companyContext = useCompany();
