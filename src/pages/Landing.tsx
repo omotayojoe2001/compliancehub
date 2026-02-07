@@ -615,7 +615,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="bg-card py-12">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="grid gap-8 md:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-5">
             <div>
               <div className="mb-4 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
@@ -694,6 +694,33 @@ export default function Landing() {
                   >
                     Terms and Conditions
                   </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wide text-foreground">
+                Official Links
+              </h4>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="https://www.nrs.gov.ng/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    NRS - Nigeria Revenue Service
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://cac.gov.ng/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    CAC - Corporate Affairs Commission
+                  </a>
                 </li>
               </ul>
             </div>

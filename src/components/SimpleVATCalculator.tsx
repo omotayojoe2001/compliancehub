@@ -34,10 +34,12 @@ export function SimpleVATCalculator() {
 
   return (
     <div className="border border-border bg-card p-6 rounded-lg">
-      <div className="mb-4 flex items-center gap-2">
-        <Calculator className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Quick VAT Calculator</h3>
-        <p className="text-xs text-muted-foreground mt-1">Calculate VAT on goods/services value</p>
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Calculator className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">Quick VAT Calculator</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">Calculate VAT on goods/services value</p>
       </div>
       
       <div className="space-y-4">
