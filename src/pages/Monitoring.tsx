@@ -86,52 +86,52 @@ export default function Monitoring() {
 
         {/* System Health Status */}
         {monitoring && (
-          <Card className=\"p-6\">
-            <div className=\"flex items-center justify-between mb-4\">
-              <h2 className=\"text-lg font-semibold\">System Health</h2>
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">System Health</h2>
               <Badge className={getHealthColor(monitoring.systemHealth)}>
-                <div className=\"flex items-center gap-1\">
+                <div className="flex items-center gap-1">
                   {getHealthIcon(monitoring.systemHealth)}
                   {monitoring.systemHealth.toUpperCase()}
                 </div>
               </Badge>
             </div>
             
-            <div className=\"grid grid-cols-2 md:grid-cols-4 gap-4 mb-4\">
-              <div className=\"text-center\">
-                <div className=\"flex items-center justify-center mb-2\">
-                  <Users className=\"h-8 w-8 text-blue-600\" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <Users className="h-8 w-8 text-blue-600" />
                 </div>
-                <div className=\"text-2xl font-bold\">{monitoring.totalUsers}</div>
-                <div className=\"text-sm text-muted-foreground\">Total Users</div>
+                <div className="text-2xl font-bold">{monitoring.totalUsers}</div>
+                <div className="text-sm text-muted-foreground">Total Users</div>
               </div>
               
-              <div className=\"text-center\">
-                <div className=\"flex items-center justify-center mb-2\">
-                  <CheckCircle className=\"h-8 w-8 text-green-600\" />
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <div className=\"text-2xl font-bold\">{monitoring.activeSubscriptions}</div>
-                <div className=\"text-sm text-muted-foreground\">Active Subscriptions</div>
+                <div className="text-2xl font-bold">{monitoring.activeSubscriptions}</div>
+                <div className="text-sm text-muted-foreground">Active Subscriptions</div>
               </div>
               
-              <div className=\"text-center\">
-                <div className=\"flex items-center justify-center mb-2\">
-                  <Calendar className=\"h-8 w-8 text-orange-600\" />
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <Calendar className="h-8 w-8 text-orange-600" />
                 </div>
-                <div className=\"text-2xl font-bold\">{monitoring.upcomingDeadlines}</div>
-                <div className=\"text-sm text-muted-foreground\">Upcoming Deadlines</div>
+                <div className="text-2xl font-bold">{monitoring.upcomingDeadlines}</div>
+                <div className="text-sm text-muted-foreground">Upcoming Deadlines</div>
               </div>
               
-              <div className=\"text-center\">
-                <div className=\"flex items-center justify-center mb-2\">
-                  <Mail className=\"h-8 w-8 text-purple-600\" />
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <Mail className="h-8 w-8 text-purple-600" />
                 </div>
-                <div className=\"text-2xl font-bold\">{monitoring.remindersSent}</div>
-                <div className=\"text-sm text-muted-foreground\">Reminders Sent Today</div>
+                <div className="text-2xl font-bold">{monitoring.remindersSent}</div>
+                <div className="text-sm text-muted-foreground">Reminders Sent Today</div>
               </div>
             </div>
             
-            <div className=\"text-xs text-muted-foreground text-center\">
+            <div className="text-xs text-muted-foreground text-center">
               Last checked: {lastCheck}
             </div>
           </Card>
@@ -139,15 +139,15 @@ export default function Monitoring() {
 
         {/* Issues & Alerts */}
         {monitoring && monitoring.issues.length > 0 && (
-          <Card className=\"p-4 border-yellow-200 bg-yellow-50\">
-            <h3 className=\"font-semibold text-yellow-800 mb-3 flex items-center gap-2\">
-              <AlertTriangle className=\"h-4 w-4\" />
+          <Card className="p-4 border-yellow-200 bg-yellow-50">
+            <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
               System Issues Detected
             </h3>
-            <ul className=\"space-y-2\">
+            <ul className="space-y-2">
               {monitoring.issues.map((issue, index) => (
-                <li key={index} className=\"text-sm text-yellow-700 flex items-start gap-2\">
-                  <span className=\"text-yellow-600\">•</span>
+                <li key={index} className="text-sm text-yellow-700 flex items-start gap-2">
+                  <span className="text-yellow-600">•</span>
                   {issue}
                 </li>
               ))}
@@ -156,64 +156,64 @@ export default function Monitoring() {
         )}
 
         {/* What We're Actually Watching */}
-        <Card className=\"p-6\">
-          <h2 className=\"text-lg font-semibold mb-4\">What We're Actually Watching</h2>
-          <div className=\"grid gap-4 md:grid-cols-2\">
-            <div className=\"space-y-3\">
-              <h3 className=\"font-medium text-green-700\">✅ Currently Monitoring</h3>
-              <ul className=\"space-y-2 text-sm\">
-                <li className=\"flex items-center gap-2\">
-                  <CheckCircle className=\"h-4 w-4 text-green-600\" />
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">What We're Actually Watching</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <h3 className="font-medium text-green-700">✅ Currently Monitoring</h3>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   VAT filing deadlines (21st of each month)
                 </li>
-                <li className=\"flex items-center gap-2\">
-                  <CheckCircle className=\"h-4 w-4 text-green-600\" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   PAYE remittance deadlines (10th of each month)
                 </li>
-                <li className=\"flex items-center gap-2\">
-                  <CheckCircle className=\"h-4 w-4 text-green-600\" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   CAC annual returns (42 days after anniversary)
                 </li>
-                <li className=\"flex items-center gap-2\">
-                  <CheckCircle className=\"h-4 w-4 text-green-600\" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   Withholding tax deadlines (21st of each month)
                 </li>
-                <li className=\"flex items-center gap-2\">
-                  <CheckCircle className=\"h-4 w-4 text-green-600\" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   User subscription status
                 </li>
-                <li className=\"flex items-center gap-2\">
-                  <CheckCircle className=\"h-4 w-4 text-green-600\" />
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   Email delivery status
                 </li>
               </ul>
             </div>
             
-            <div className=\"space-y-3\">
-              <h3 className=\"font-medium text-blue-700\">📊 How We Validate</h3>
-              <ul className=\"space-y-2 text-sm\">
-                <li className=\"flex items-start gap-2\">
-                  <span className=\"text-blue-600\">•</span>
+            <div className="space-y-3">
+              <h3 className="font-medium text-blue-700">📊 How We Validate</h3>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600">•</span>
                   Check database every hour for upcoming deadlines
                 </li>
-                <li className=\"flex items-start gap-2\">
-                  <span className=\"text-blue-600\">•</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600">•</span>
                   Send reminders 7, 3, and 1 days before due dates
                 </li>
-                <li className=\"flex items-start gap-2\">
-                  <span className=\"text-blue-600\">•</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600">•</span>
                   Log all reminder attempts (success/failure)
                 </li>
-                <li className=\"flex items-start gap-2\">
-                  <span className=\"text-blue-600\">•</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600">•</span>
                   Monitor system health and alert on issues
                 </li>
-                <li className=\"flex items-start gap-2\">
-                  <span className=\"text-blue-600\">•</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600">•</span>
                   Track email delivery confirmations
                 </li>
-                <li className=\"flex items-start gap-2\">
-                  <span className=\"text-blue-600\">•</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600">•</span>
                   Verify user subscription status before sending
                 </li>
               </ul>
@@ -222,23 +222,23 @@ export default function Monitoring() {
         </Card>
 
         {/* Proof of Work */}
-        <Card className=\"p-6 bg-green-50 border-green-200\">
-          <h2 className=\"text-lg font-semibold text-green-800 mb-4\">🔍 Proof We're Working</h2>
-          <div className=\"grid gap-4 md:grid-cols-3\">
-            <div className=\"text-center\">
-              <div className=\"text-3xl font-bold text-green-700\">{monitoring?.activeSubscriptions || 0}</div>
-              <div className=\"text-sm text-green-600\">Users We're Actively Monitoring</div>
+        <Card className="p-6 bg-green-50 border-green-200">
+          <h2 className="text-lg font-semibold text-green-800 mb-4">🔍 Proof We're Working</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-700">{monitoring?.activeSubscriptions || 0}</div>
+              <div className="text-sm text-green-600">Users We're Actively Monitoring</div>
             </div>
-            <div className=\"text-center\">
-              <div className=\"text-3xl font-bold text-green-700\">{monitoring?.upcomingDeadlines || 0}</div>
-              <div className=\"text-sm text-green-600\">Deadlines We're Tracking</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-700">{monitoring?.upcomingDeadlines || 0}</div>
+              <div className="text-sm text-green-600">Deadlines We're Tracking</div>
             </div>
-            <div className=\"text-center\">
-              <div className=\"text-3xl font-bold text-green-700\">{monitoring?.remindersSent || 0}</div>
-              <div className=\"text-sm text-green-600\">Reminders Sent Today</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-700">{monitoring?.remindersSent || 0}</div>
+              <div className="text-sm text-green-600">Reminders Sent Today</div>
             </div>
           </div>
-          <div className=\"mt-4 text-center text-sm text-green-700\">
+          <div className="mt-4 text-center text-sm text-green-700">
             This page updates in real-time to show you exactly what we're monitoring and when we last sent reminders.
           </div>
         </Card>
