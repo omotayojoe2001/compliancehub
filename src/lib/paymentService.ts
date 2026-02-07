@@ -15,6 +15,7 @@ interface PaymentData {
   plan: 'free' | 'basic' | 'pro' | 'enterprise' | 'filing_service';
   businessName?: string;
   filingRequestId?: string;
+  metadata?: Record<string, any>;
 }
 
 const PLAN_PRICES = {
@@ -26,7 +27,7 @@ const PLAN_PRICES = {
 };
 
 export const paymentService = {
-  async initializePayment({ email, amount, plan, businessName, filingRequestId }: PaymentData) {
+  async initializePayment({ email, amount, plan, businessName, filingRequestId, metadata }: PaymentData) {
     return new Promise((resolve, reject) => {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
@@ -36,7 +37,8 @@ export const paymentService = {
         metadata: {
           plan_type: plan,
           business_name: businessName,
-          filing_request_id: filingRequestId
+          filing_request_id: filingRequestId,
+          ...metadata
         },
         callback: (response: any) => {
           console.log('💳 Payment successful:', response);

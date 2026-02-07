@@ -83,7 +83,7 @@ export default function AdminUsers() {
   };
 
   const filteredUsers = users.filter(user => 
-    user.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -138,7 +138,7 @@ export default function AdminUsers() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{user.client_name || 'No Name'}</p>
+                      <p className="font-medium">{user.full_name || 'No Name'}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                       <p className="text-xs text-muted-foreground">{user.business_name}</p>
                     </div>
@@ -169,7 +169,7 @@ export default function AdminUsers() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Full Name:</span>
-                      <span>{selectedUser.client_name || 'Not provided'}</span>
+                      <span>{selectedUser.full_name || 'Not provided'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Email:</span>
@@ -219,7 +219,7 @@ export default function AdminUsers() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">CAC Date:</span>
-                      <span>{selectedUser.cac_date ? new Date(selectedUser.cac_date).toLocaleDateString() : 'Not provided'}</span>
+                      <span>{selectedUser.cac_registration_date ? new Date(selectedUser.cac_registration_date).toLocaleDateString() : 'Not provided'}</span>
                     </div>
                   </div>
                 </div>
@@ -234,23 +234,23 @@ export default function AdminUsers() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">VAT Registered:</span>
                       <div className="flex items-center gap-1">
-                        {selectedUser.vat_status ? (
+                        {selectedUser.vat_registered ? (
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         ) : (
                           <XCircle className="h-4 w-4 text-red-600" />
                         )}
-                        <span>{selectedUser.vat_status ? 'Yes' : 'No'}</span>
+                        <span>{selectedUser.vat_registered ? 'Yes' : 'No'}</span>
                       </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">PAYE Registered:</span>
                       <div className="flex items-center gap-1">
-                        {selectedUser.paye_status ? (
+                        {selectedUser.paye_registered ? (
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         ) : (
                           <XCircle className="h-4 w-4 text-red-600" />
                         )}
-                        <span>{selectedUser.paye_status ? 'Yes' : 'No'}</span>
+                        <span>{selectedUser.paye_registered ? 'Yes' : 'No'}</span>
                       </div>
                     </div>
                   </div>
