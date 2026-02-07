@@ -239,7 +239,7 @@ export default function Monitoring() {
             </div>
           </div>
           <div className="mt-4 text-center text-sm text-green-700">
-            This page updates in real-time to show you exactly what we're monitoring and when we last sent reminders.
+            This page updates in real-time to show you exactly what we are monitoring and when we last sent reminders.
           </div>
         </Card>
       </div>

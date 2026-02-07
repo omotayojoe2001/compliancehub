@@ -444,7 +444,7 @@ export default function Subscription() {
                     disabled={loading === plan.planKey}
                   >
                     {loading === plan.planKey ? 'Processing...' : 
-                     {`${profile?.plan && planHierarchy[plan.planKey] < planHierarchy[profile.plan as keyof typeof planHierarchy] ? 'Downgrade to' : 'Upgrade to'} ${plan.name}`}
+                     `${profile?.plan && planHierarchy[plan.planKey] < planHierarchy[profile.plan as keyof typeof planHierarchy] ? 'Downgrade to' : 'Upgrade to'} ${plan.name}`}
                   </Button>
                 )}
               </div>
