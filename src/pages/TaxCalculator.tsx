@@ -110,7 +110,7 @@ export default function TaxCalculator() {
   };
 
   return (
-    <SubscriptionGate feature="Tax Calculator">
+    <SubscriptionGate feature="hasAdvancedCalculator">
       <div className="min-h-screen bg-background">
       {/* Navigation */}
       <header className="sticky top-0 z-50 border-b border-border bg-background">

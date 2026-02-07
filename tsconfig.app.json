@@ -26,5 +26,14 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/lib/comprehensiveAutomationService.ts",
+    "src/lib/overdueMonitoringService.ts",
+    "src/lib/subscriptionReminderService.ts",
+    "src/lib/vatNotificationAutomation.ts",
+    "src/pages/AutomationTestClean.tsx",
+    "src/pages/RemindersDebug.tsx",
+    "src/pages/RemindersDebugFixed.tsx"
+  ]
 }
