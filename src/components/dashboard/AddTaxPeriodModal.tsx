@@ -28,13 +28,13 @@ export function AddTaxPeriodModal({ isOpen, onClose, onSuccess }: AddTaxPeriodMo
         const { supabase } = await import('@/lib/supabase');
         const { data: subscription } = await supabase
           .from('subscriptions')
-          .select('plan_type, plan')
+          .select('plan_type')
           .eq('user_id', user.id)
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
-        setPlan(subscription?.plan_type || subscription?.plan || 'enterprise');
+        setPlan(subscription?.plan_type || 'enterprise');
       } catch (error) {
         console.error('Failed to fetch subscription plan:', error);
         setPlan('enterprise'); // Default to enterprise for full access

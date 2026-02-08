@@ -63,7 +63,7 @@ export const reminderService = {
       console.log(`🔍 Checking subscription for user: ${userId}`);
       const { data: subscription, error } = await supabase
         .from('subscriptions')
-        .select('plan, plan_type')
+        .select('plan_type')
         .eq('user_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -75,8 +75,7 @@ export const reminderService = {
         console.log(`📋 Using default enterprise plan for full access`);
         truePlan = 'enterprise';
       } else if (subscription) {
-        // Try plan_type first, then plan field
-        truePlan = subscription.plan_type || subscription.plan || 'enterprise';
+        truePlan = subscription.plan_type || 'enterprise';
         console.log(`✅ Found user subscription: ${truePlan}`);
       }
     } catch (error) {
@@ -317,7 +316,7 @@ export const reminderService = {
     try {
       const { data: subscription } = await supabase
         .from('subscriptions')
-        .select('plan_type, plan')
+        .select('plan_type')
         .eq('user_id', obligation.user_id)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -325,7 +324,7 @@ export const reminderService = {
         .single();
       
       if (subscription) {
-        userPlan = subscription.plan_type || subscription.plan || 'enterprise';
+        userPlan = subscription.plan_type || 'enterprise';
       }
     } catch (error) {
       console.error('Failed to fetch user plan, using enterprise default:', error);
