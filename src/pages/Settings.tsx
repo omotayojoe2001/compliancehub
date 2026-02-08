@@ -73,12 +73,13 @@ export default function Settings() {
   }, [currentCompany, user, profile]);
 
   const loadCompanyData = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
     
     try {
       const { data, error } = await supabase
         .from('company_profiles')
         .select('*')
+        .eq('id', currentCompany.id)
         .eq('user_id', user.id)
         .single();
       
@@ -159,53 +160,30 @@ export default function Settings() {
   };
 
   const saveBusiness = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
     
     setSaving(true);
     try {
-      // First try to update existing record
-      const { data: existing } = await supabase
+      // Update the CURRENT company profile
+      const { error: companyError } = await supabase
         .from('company_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+        .update({
+          company_name: businessData.business_name,
+          cac_number: businessData.rc_number,
+          tin: businessData.tin,
+          address: businessData.business_address,
+          phone: businessData.business_phone,
+          business_type: businessData.industry
+        })
+        .eq('id', currentCompany.id)
+        .eq('user_id', user.id);
       
-      if (existing) {
-        // Update existing record
-        const { error } = await supabase
-          .from('company_profiles')
-          .update({
-            company_name: businessData.business_name,
-            cac_number: businessData.rc_number,
-            tin: businessData.tin,
-            address: businessData.business_address,
-            phone: businessData.business_phone
-          })
-          .eq('user_id', user.id);
-        
-        if (error) throw error;
-      } else {
-        // Insert new record
-        const { error } = await supabase
-          .from('company_profiles')
-          .insert({
-            user_id: user.id,
-            company_name: businessData.business_name,
-            cac_number: businessData.rc_number,
-            tin: businessData.tin,
-            address: businessData.business_address,
-            phone: businessData.business_phone
-          });
-        
-        if (error) throw error;
-      }
+      if (companyError) throw companyError;
       
-      // Also update profiles table
+      // Also update profiles table for compliance data
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          business_name: businessData.business_name,
-          phone: businessData.business_phone || null,
           cac_date: complianceData.cac_date || null,
           vat_status: complianceData.vat_status,
           paye_status: complianceData.paye_status
@@ -214,12 +192,12 @@ export default function Settings() {
 
       if (profileError) throw profileError;
 
-      alert('Business details updated successfully!');
+      alert('Business details saved successfully!');
       await loadCompanyData();
       await loadComplianceData();
     } catch (error) {
       console.error('Update error:', error);
-      alert('Failed to update business details');
+      alert('Failed to save business details');
     } finally {
       setSaving(false);
     }

@@ -21,9 +21,6 @@ export function usePlanRestrictions() {
       setLoading(false);
       
       try {
-        console.group('🔍 PLAN RESTRICTIONS DEBUG');
-        console.log('Fetching subscription for user:', user.id);
-        
         const { data: subscription, error } = await supabase
           .from('subscriptions')
           .select('plan_type')
@@ -33,38 +30,16 @@ export function usePlanRestrictions() {
           .limit(1)
           .single();
         
-        console.log('Subscription query result:', { subscription, error });
+        if (error) return;
         
-        if (error) {
-          console.log('⚠️ No subscription found, defaulting to enterprise:', error.message);
-          console.groupEnd();
-          // Keep enterprise default
-          return;
-        }
-        
-        // Validate plan_type value, default to enterprise
         const rawPlan = subscription?.plan_type;
         const validPlans = ['free', 'basic', 'pro', 'enterprise'];
         const plan = (rawPlan && validPlans.includes(rawPlan.toLowerCase())) 
           ? rawPlan.toLowerCase() 
           : 'enterprise';
         
-        console.log('📊 Plan detection:', {
-          rawPlanType: subscription?.plan_type,
-          detectedPlan: plan,
-          isValid: validPlans.includes(plan)
-        });
-        
-        if (plan !== 'enterprise') {
-          console.warn('⚠️ NON-ENTERPRISE PLAN DETECTED:', plan);
-          console.warn('User should have enterprise access but has:', plan);
-        }
-        
-        console.groupEnd();
         setUserPlan(plan);
       } catch (error) {
-        console.error('❌ Failed to fetch subscription plan:', error);
-        console.groupEnd();
         // Keep enterprise default
       }
     }

@@ -44,28 +44,10 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
   const loadUserCompanies = async () => {
     if (!user?.id) return;
     
-    console.group('🏢 COMPANY DEBUG - Load Companies');
-    console.log('📊 Loading companies for user:', {
-      userId: user.id,
-      userEmail: user.email,
-      timestamp: new Date().toISOString()
-    });
-    
     try {
-      // Try to load real companies from database
       const userCompanies = await supabaseService.getUserCompanies(user.id);
-      console.log('📊 Database response:', {
-        companiesFound: userCompanies?.length || 0,
-        companies: userCompanies?.map(c => ({
-          id: c.id,
-          name: c.company_name,
-          tin: c.tin,
-          isPrimary: c.is_primary
-        })) || []
-      });
       
       if (userCompanies && userCompanies.length > 0) {
-        // Remove duplicates by company name
         const uniqueCompanies = userCompanies.filter((company, index, self) => 
           index === self.findIndex(c => c.company_name === company.company_name)
         );
@@ -77,52 +59,40 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
           isPrimary: company.is_primary
         }));
         
-        console.log('✅ Companies processed successfully:', mappedCompanies);
         setCompanies(mappedCompanies);
         
-        // Update current company data if it exists
         if (currentCompany) {
           const updatedCurrentCompany = mappedCompanies.find(c => c.id === currentCompany.id);
           if (updatedCurrentCompany && 
               (updatedCurrentCompany.tin !== currentCompany.tin || 
                updatedCurrentCompany.name !== currentCompany.name)) {
-            console.log('🔄 Updating current company with fresh data');
             onCompanyChange(updatedCurrentCompany);
           }
         } else {
-          // Set primary company as current if none selected
           const primaryCompany = mappedCompanies.find(c => c.isPrimary) || mappedCompanies[0];
           if (primaryCompany) {
-            console.log('🎯 Setting primary company as current:', primaryCompany);
             onCompanyChange(primaryCompany);
           }
         }
       } else {
-        // No companies exist - create default one from user profile
-        console.log('⚠️ No companies found, creating default company');
         await createDefaultCompany();
       }
     } catch (error) {
-      console.error('❌ Error loading companies:', error);
-      // If database fails, try to create a default company
+      console.error('Error loading companies:', error);
       try {
         await createDefaultCompany();
       } catch (createError) {
-        console.error('❌ Error creating default company:', createError);
-        // Final fallback
         const fallbackCompany = {
           id: 'fallback-1',
           name: 'My Business',
           tin: '',
           isPrimary: true
         };
-        console.log('🆘 Using fallback company:', fallbackCompany);
         setCompanies([fallbackCompany]);
         onCompanyChange(fallbackCompany);
       }
     } finally {
       setLoading(false);
-      console.groupEnd();
     }
   };
 

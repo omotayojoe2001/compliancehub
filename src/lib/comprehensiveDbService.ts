@@ -294,28 +294,18 @@ class ComprehensiveDbService {
   // Invoice Management
   async getInvoices(userId: string, companyId?: string): Promise<Invoice[]> {
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('invoices')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-        .limit(50); // Reduced limit for faster loading
+        .limit(50);
       
-      if (companyId) {
-        query = query.eq('company_id', companyId);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Invoice query error:', error);
-        throw error;
-      }
-      
+      if (error) throw error;
       return data || [];
     } catch (error) {
       console.error('getInvoices error:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -334,7 +324,8 @@ class ComprehensiveDbService {
     const { data, error } = await supabase
       .from('invoice_items')
       .select('*')
-      .eq('invoice_id', invoiceId);
+      .eq('invoice_id', invoiceId)
+      .limit(100);
     
     if (error) throw error;
     return data || [];

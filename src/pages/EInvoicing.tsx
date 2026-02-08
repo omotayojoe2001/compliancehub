@@ -45,6 +45,7 @@ export default function EInvoicing() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
@@ -85,44 +86,17 @@ export default function EInvoicing() {
   const loadInvoices = async () => {
     if (!user?.id) return;
 
-    let settled = false;
-    const timeoutId = window.setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      setLoadError("Request timed out. Please try again.");
-      setLoading(false);
-    }, 5000); // Reduced timeout to 5 seconds
-
     setLoadError(null);
     setLoading(true);
     
     try {
-      // Simple query without company filter first
       const data = await comprehensiveDbService.getInvoices(user.id);
-      if (settled) return;
-      
       setInvoices(data || []);
     } catch (error) {
-      if (settled) return;
       console.error('Error loading invoices:', error);
       setInvoices([]);
-      
-      // More specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
-          setLoadError("Connection timeout. Please check your internet and try again.");
-        } else if (error.message.includes('network')) {
-          setLoadError("Network error. Please check your connection.");
-        } else {
-          setLoadError(`Error: ${error.message}`);
-        }
-      } else {
-        setLoadError("Couldn't load invoices. Please try again.");
-      }
+      setLoadError("Couldn't load invoices. Please try again.");
     } finally {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -191,31 +165,48 @@ export default function EInvoicing() {
   };
 
   const saveInvoice = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      alert('You must be logged in to create an invoice');
+      return;
+    }
     
-    const { subtotal, vatAmount, total } = calculateTotals();
-    const invoiceNumber = `INV-${Date.now()}`;
+    if (!formData.clientName.trim()) {
+      alert('Please enter client name');
+      return;
+    }
     
-    const newInvoice = {
-      user_id: user.id,
-      company_id: currentCompany?.id || null,
-      invoice_number: invoiceNumber,
-      client_name: formData.clientName,
-      client_address: formData.clientAddress,
-      issue_date: new Date().toISOString().split('T')[0],
-      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      subtotal,
-      vat_amount: vatAmount,
-      total_amount: total,
-      status: 'draft' as const,
-      company_logo_url: companyLogo,
-      bank_name: formData.bankName,
-      bank_account_name: formData.bankAccountName,
-      bank_account_number: formData.bankAccountNumber
-    };
-
+    if (!formData.clientAddress.trim()) {
+      alert('Please enter client address');
+      return;
+    }
+    
+    console.log('🧾 Saving invoice...', editingInvoiceId ? 'EDIT' : 'CREATE');
+    setSaving(true);
+    
     try {
+      const { subtotal, vatAmount, total } = calculateTotals();
+      const invoiceNumber = `INV-${Date.now()}`;
+      
+      const newInvoice = {
+        user_id: user.id,
+        company_id: currentCompany?.id || null,
+        invoice_number: invoiceNumber,
+        client_name: formData.clientName,
+        client_address: formData.clientAddress,
+        issue_date: new Date().toISOString().split('T')[0],
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        subtotal,
+        vat_amount: vatAmount,
+        total_amount: total,
+        status: 'draft' as const,
+        company_logo_url: companyLogo,
+        bank_name: formData.bankName,
+        bank_account_name: formData.bankAccountName,
+        bank_account_number: formData.bankAccountNumber
+      };
+
       if (editingInvoiceId) {
+        console.log('🧾 Updating invoice:', editingInvoiceId);
         await comprehensiveDbService.updateInvoice(editingInvoiceId, {
           client_name: formData.clientName,
           client_address: formData.clientAddress,
@@ -228,8 +219,13 @@ export default function EInvoicing() {
           bank_account_name: formData.bankAccountName,
           bank_account_number: formData.bankAccountNumber
         });
+        console.log('🧾 Invoice updated');
 
+        console.log('🧾 Deleting old items');
         await comprehensiveDbService.deleteInvoiceItems(editingInvoiceId);
+        console.log('🧾 Old items deleted');
+        
+        console.log('🧾 Creating new items');
         const updatedItems = formData.items.map(item => ({
           invoice_id: editingInvoiceId,
           description: item.description,
@@ -238,8 +234,11 @@ export default function EInvoicing() {
           total_price: item.amount
         }));
         await comprehensiveDbService.createInvoiceItems(updatedItems);
+        console.log('🧾 New items created');
       } else {
+        console.log('🧾 Creating new invoice');
         const createdInvoice = await comprehensiveDbService.createInvoice(newInvoice);
+        console.log('🧾 Invoice created:', createdInvoice.id);
 
         const invoiceItems = formData.items.map(item => ({
           invoice_id: createdInvoice.id!,
@@ -249,11 +248,16 @@ export default function EInvoicing() {
           total_price: item.amount
         }));
         
+        console.log('🧾 Creating items');
         await comprehensiveDbService.createInvoiceItems(invoiceItems);
+        console.log('🧾 Items created');
       }
       
-      // Reload invoices
+      console.log('🧾 Reloading invoices');
       await loadInvoices();
+      console.log('🧾 Invoices reloaded');
+      
+      alert(editingInvoiceId ? 'Invoice updated successfully!' : 'Invoice created successfully!');
       
       // Reset form
       setFormData({
@@ -268,8 +272,11 @@ export default function EInvoicing() {
       setEditingInvoiceId(null);
       setEditingInvoiceStatus('draft');
     } catch (error) {
-      console.error('Error saving invoice:', error);
-      alert('Failed to save invoice. Please try again.');
+      console.error('🧾 Error saving invoice:', error);
+      alert(`Failed to save invoice: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
+      console.log('🧾 Save complete');
     }
   };
 
@@ -649,8 +656,11 @@ export default function EInvoicing() {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={saveInvoice}>
-                  {editingInvoiceId ? 'Save Changes' : 'Create Invoice'}
+                <Button 
+                  onClick={saveInvoice}
+                  disabled={saving || !formData.clientName.trim() || !formData.clientAddress.trim() || formData.items.some(item => !item.description.trim())}
+                >
+                  {saving ? 'Saving...' : (editingInvoiceId ? 'Save Changes' : 'Create Invoice')}
                 </Button>
                 <Button
                   type="button"

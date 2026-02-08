@@ -1,0 +1,3 @@
+-- Re-enable RLS after testing
+ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
