@@ -25,12 +25,12 @@ interface Invoice {
   issue_date: string;
   due_date: string;
   client_name: string;
-  client_address: string;
+  client_address?: string;
   items?: InvoiceItem[];
   subtotal: number;
   vat_amount: number;
   total_amount: number;
-  status: 'draft' | 'sent' | 'paid';
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   company_logo_url?: string;
   bank_name?: string;
   bank_account_name?: string;

@@ -59,7 +59,7 @@ export interface Expense {
 }
 
 export interface Invoice {
-  id?: string;
+  id: string;
   user_id: string;
   invoice_number: string;
   client_name: string;
