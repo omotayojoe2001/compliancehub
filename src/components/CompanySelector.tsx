@@ -200,8 +200,15 @@ export default function CompanySelector({ currentCompany, onCompanyChange }: Com
   const handleAddCompanyClick = () => {
     setIsOpen(false);
     
+    console.log('🏢 Add Company Click:', {
+      currentPlan: plan,
+      companiesCount: companies.length,
+      canCreate: canCreateCompanyProfile(companies.length)
+    });
+    
     // Check if user can create more company profiles
     if (!canCreateCompanyProfile(companies.length)) {
+      console.log('⚠️ Cannot create more companies, showing upgrade prompt');
       setShowUpgradePrompt(true);
       return;
     }

@@ -669,24 +669,24 @@ export default function EInvoicing() {
 
           {/* Invoice Preview/PDF Template */}
           {viewingInvoice && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Invoice Preview</h3>
-                    <div className="flex gap-2">
-                      <Button onClick={() => generatePDF(viewingInvoice)} size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download PDF
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+              <div className="bg-white rounded-lg w-full max-w-4xl max-h-[95vh] overflow-auto">
+                <div className="p-3 sm:p-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold">Invoice Preview</h3>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button onClick={() => generatePDF(viewingInvoice)} size="sm" className="flex-1 sm:flex-none">
+                        <Download className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Download PDF</span>
                       </Button>
-                      <Button variant="outline" onClick={() => setViewingInvoice(null)} size="sm">
+                      <Button variant="outline" onClick={() => setViewingInvoice(null)} size="sm" className="flex-1 sm:flex-none">
                         Close
                       </Button>
                     </div>
                   </div>
                   
                   {/* Invoice Template */}
-                  <div ref={invoiceRef} className="bg-white p-8 border" style={{ minHeight: '800px', fontSize: '14px', lineHeight: '1.4' }}>
+                  <div ref={invoiceRef} className="bg-white p-4 sm:p-8 border text-xs sm:text-sm" style={{ minHeight: '800px', lineHeight: '1.4' }}>
                     {/* Header */}
                     <div className="flex justify-between items-start mb-8">
                       <div>
