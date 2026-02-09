@@ -36,6 +36,8 @@ import Guides from "./pages/Guides";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import Terms from "./pages/Terms";
+import TestInvoices from "./pages/TestInvoices";
+import InvoicesWorking from "./pages/InvoicesWorking";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,7 @@ function AppContent() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<EmailConfirmation />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/test-invoices" element={<TestInvoices />} />
       
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/obligations" element={<ProtectedRoute><Obligations /></ProtectedRoute>} />

@@ -42,6 +42,8 @@ export default function EInvoicing() {
   const { currentCompany } = useCompany();
   const { profile } = useProfileSimple();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [displayLimit, setDisplayLimit] = useState(2); // Only show 2 initially
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'yesterday' | 'week'>('all');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -90,7 +92,14 @@ export default function EInvoicing() {
     setLoading(true);
     
     try {
-      const data = await comprehensiveDbService.getInvoices(user.id);
+      // Load only recent invoices with limit
+      const { data } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50); // Max 50 invoices
+      
       setInvoices(data || []);
     } catch (error) {
       console.error('Error loading invoices:', error);
@@ -206,8 +215,7 @@ export default function EInvoicing() {
       };
 
       if (editingInvoiceId) {
-        console.log('🧾 Updating invoice:', editingInvoiceId);
-        await comprehensiveDbService.updateInvoice(editingInvoiceId, {
+        await supabase.from('invoices').update({
           client_name: formData.clientName,
           client_address: formData.clientAddress,
           subtotal,
@@ -218,14 +226,10 @@ export default function EInvoicing() {
           bank_name: formData.bankName,
           bank_account_name: formData.bankAccountName,
           bank_account_number: formData.bankAccountNumber
-        });
-        console.log('🧾 Invoice updated');
+        }).eq('id', editingInvoiceId);
 
-        console.log('🧾 Deleting old items');
-        await comprehensiveDbService.deleteInvoiceItems(editingInvoiceId);
-        console.log('🧾 Old items deleted');
+        await supabase.from('invoice_items').delete().eq('invoice_id', editingInvoiceId);
         
-        console.log('🧾 Creating new items');
         const updatedItems = formData.items.map(item => ({
           invoice_id: editingInvoiceId,
           description: item.description,
@@ -233,29 +237,22 @@ export default function EInvoicing() {
           unit_price: item.rate,
           total_price: item.amount
         }));
-        await comprehensiveDbService.createInvoiceItems(updatedItems);
-        console.log('🧾 New items created');
+        await supabase.from('invoice_items').insert(updatedItems);
       } else {
-        console.log('🧾 Creating new invoice');
-        const createdInvoice = await comprehensiveDbService.createInvoice(newInvoice);
-        console.log('🧾 Invoice created:', createdInvoice.id);
+        const { data: createdInvoice } = await supabase.from('invoices').insert(newInvoice).select().single();
 
         const invoiceItems = formData.items.map(item => ({
-          invoice_id: createdInvoice.id!,
+          invoice_id: createdInvoice.id,
           description: item.description,
           quantity: item.quantity,
           unit_price: item.rate,
           total_price: item.amount
         }));
         
-        console.log('🧾 Creating items');
-        await comprehensiveDbService.createInvoiceItems(invoiceItems);
-        console.log('🧾 Items created');
+        await supabase.from('invoice_items').insert(invoiceItems);
       }
       
-      console.log('🧾 Reloading invoices');
       await loadInvoices();
-      console.log('🧾 Invoices reloaded');
       
       alert(editingInvoiceId ? 'Invoice updated successfully!' : 'Invoice created successfully!');
       
@@ -367,8 +364,8 @@ export default function EInvoicing() {
   };
 
   const loadInvoiceItems = async (invoiceId: string) => {
-    const items = await comprehensiveDbService.getInvoiceItems(invoiceId);
-    return items.map((item) => ({
+    const { data } = await supabase.from('invoice_items').select('*').eq('invoice_id', invoiceId);
+    return (data || []).map((item) => ({
       description: item.description,
       quantity: item.quantity,
       rate: item.unit_price,
@@ -427,13 +424,41 @@ export default function EInvoicing() {
     if (!confirm(`Delete invoice ${invoice.invoice_number}?`)) return;
 
     try {
-      await comprehensiveDbService.deleteInvoiceItems(invoice.id);
-      await comprehensiveDbService.deleteInvoice(invoice.id);
+      await supabase.from('invoice_items').delete().eq('invoice_id', invoice.id);
+      await supabase.from('invoices').delete().eq('id', invoice.id);
       await loadInvoices();
+      alert('Invoice deleted successfully!');
     } catch (error) {
       console.error('Error deleting invoice:', error);
+      alert('Failed to delete invoice');
     }
   };
+
+  // Filter invoices by date
+  const getFilteredInvoices = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    return invoices.filter(invoice => {
+      const invoiceDate = new Date(invoice.issue_date);
+      
+      if (dateFilter === 'today') {
+        return invoiceDate >= today;
+      } else if (dateFilter === 'yesterday') {
+        return invoiceDate >= yesterday && invoiceDate < today;
+      } else if (dateFilter === 'week') {
+        return invoiceDate >= weekAgo;
+      }
+      return true;
+    });
+  };
+
+  const filteredInvoices = getFilteredInvoices();
+  const displayedInvoices = filteredInvoices.slice(0, displayLimit);
 
   const { subtotal, vatAmount, total } = calculateTotals();
 
@@ -827,7 +852,21 @@ export default function EInvoicing() {
 
           {/* Invoices List */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Your Invoices</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Your Invoices</h3>
+              <div className="flex gap-2">
+                <select 
+                  value={dateFilter} 
+                  onChange={(e) => setDateFilter(e.target.value as any)}
+                  className="border rounded px-3 py-1 text-sm"
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="week">Last 7 Days</option>
+                </select>
+              </div>
+            </div>
             
             {loadError ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -840,13 +879,14 @@ export default function EInvoicing() {
                   Retry
                 </button>
               </div>
-            ) : invoices.length === 0 ? (
+            ) : filteredInvoices.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {loading ? 'Loading invoices...' : 'No invoices created yet. Create your first professional invoice.'}
+                {loading ? 'Loading invoices...' : 'No invoices found for selected filter.'}
               </div>
             ) : (
-              <div className="space-y-3">
-                {invoices.map((invoice) => (
+              <>
+                <div className="space-y-3">
+                  {displayedInvoices.map((invoice) => (
                   <div key={invoice.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg gap-4">
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-blue-100 rounded-full">
@@ -894,6 +934,17 @@ export default function EInvoicing() {
                   </div>
                 ))}
               </div>
+              {displayLimit < filteredInvoices.length && (
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setDisplayLimit(prev => prev + 10)}
+                  >
+                    Load More ({filteredInvoices.length - displayLimit} remaining)
+                  </Button>
+                </div>
+              )}
+            </>
             )}
           </Card>
         </div>

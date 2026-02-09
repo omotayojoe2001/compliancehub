@@ -286,12 +286,23 @@ export const supabaseService = {
 
   // Invoices
   async getInvoices(userId: string) {
+    console.log('🔍 supabaseService.getInvoices START', { userId, timestamp: new Date().toISOString() });
+    const startTime = Date.now();
+    
     const { data, error } = await supabase
       .from('invoices')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(100);
+    
+    const endTime = Date.now();
+    console.log('🔍 supabaseService.getInvoices END', { 
+      duration: `${endTime - startTime}ms`, 
+      success: !error, 
+      count: data?.length || 0,
+      error: error?.message 
+    });
     
     if (error) throw error;
     return data;
