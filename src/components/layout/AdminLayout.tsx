@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, Shield, Users, Database, Settings, BarChart3, FileText, TrendingUp, Calculator, BookOpen } from "lucide-react";
+import { Menu, X, LogOut, Shield, Users, Database, Settings, BarChart3, FileText, TrendingUp, Calculator, BookOpen, Zap } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface AdminLayoutProps {
@@ -24,6 +24,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Guides', href: '/admin/guides', icon: BookOpen },
     { name: 'Tax Data', href: '/admin/tax-data', icon: FileText },
     { name: 'Analytics', href: '/admin/analytics', icon: TrendingUp },
+    { name: 'Automations', href: '/admin/automations', icon: Zap },
     { name: 'Content', href: '/admin/content', icon: FileText },
     { name: 'System', href: '/admin/system', icon: Database },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

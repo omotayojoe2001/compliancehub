@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContextClean";
 import { CompanyProvider } from "@/contexts/CompanyContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminRoute } from "@/components/auth/AdminRoute";
+import { scheduledMessageService } from "@/lib/scheduledMessageService";
 import AdminLogin from "./pages/AdminLogin";
 import PublicLanding from "./pages/PublicLanding";
 import TaxCalculator from "./pages/TaxCalculator";
@@ -38,8 +39,13 @@ import Landing from "./pages/Landing";
 import Terms from "./pages/Terms";
 import TestInvoices from "./pages/TestInvoices";
 import InvoicesWorking from "./pages/InvoicesWorking";
+import WhatsAppSettings from "./pages/WhatsAppSettings";
+import AutomationManagement from "./pages/AutomationManagement";
 
 const queryClient = new QueryClient();
+
+// Start scheduled message processor
+scheduledMessageService.startScheduler();
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -68,6 +74,8 @@ function AppContent() {
       <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />
       <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/whatsapp-settings" element={<ProtectedRoute><WhatsAppSettings /></ProtectedRoute>} />
+      <Route path="/admin/automations" element={<AdminRoute><AutomationManagement /></AdminRoute>} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />

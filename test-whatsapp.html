@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WhatsApp API</title>
+</head>
+<body>
+    <h1>Test WhatsApp Direct API</h1>
+    <input type="text" id="phone" placeholder="2347016190271" value="2347016190271">
+    <button onclick="sendTest()">Send Test</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function sendTest() {
+            const phone = document.getElementById('phone').value;
+            const message = 'Test from HTML page';
+            
+            const url = `https://wawp.net/wp-json/awp/v1/send?instance_id=C5A0B44DFCA6&access_token=mBV1vrB8zxaMNX&chatId=${phone}@c.us&message=${encodeURIComponent(message)}`;
+            
+            document.getElementById('result').textContent = 'Sending to: ' + url + '\n\nTrying with instance_id=C5A0B44DFCA6';
+            
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

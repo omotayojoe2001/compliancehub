@@ -5,6 +5,7 @@ import { Building2, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { comprehensiveAutomationService } from "@/lib/comprehensiveAutomationService";
 import { freshDbService } from "@/lib/freshDbService";
+import { whatsappService } from "@/lib/whatsappService";
 
 export default function EmailConfirmation() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -39,6 +40,13 @@ export default function EmailConfirmation() {
                 // Get user profile
                 const profile = await freshDbService.getProfile(session.user.id);
                 if (profile) {
+                  // Send WhatsApp welcome message immediately
+                  if (profile.phone) {
+                    const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${profile.business_name || 'there'}, we're excited to help you manage your tax compliance.\n\nGet started now by logging into your dashboard!`;
+                    await whatsappService.sendMessage(profile.phone, welcomeMessage);
+                    console.log('✅ WhatsApp welcome message sent');
+                  }
+                  
                   // Now trigger welcome email since email is verified
                   await comprehensiveAutomationService.scheduleUserOnboarding(
                     session.user.id,
