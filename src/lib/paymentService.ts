@@ -27,6 +27,34 @@ const PLAN_PRICES = {
 };
 
 export const paymentService = {
+  async getPlanPrice(plan: 'free' | 'basic' | 'pro' | 'enterprise' | 'filing_service'): Promise<number> {
+    // Try to get price from database first
+    try {
+      const serviceName = plan === 'filing_service' ? 'filing_service' : `subscription_${plan}`;
+      console.log('🔍 Fetching price for:', serviceName);
+      
+      const { data, error } = await supabase
+        .from('pricing_config')
+        .select('price_kobo')
+        .eq('service_name', serviceName)
+        .eq('is_active', true)
+        .single();
+      
+      console.log('💰 Database response:', { data, error });
+      
+      if (data) {
+        console.log('✅ Using database price:', data.price_kobo, 'kobo =', data.price_kobo / 100, 'naira');
+        return data.price_kobo;
+      }
+    } catch (error) {
+      console.error('❌ Database price fetch error:', error);
+    }
+    
+    // Fallback to hardcoded prices
+    console.log('⚠️ Using fallback price for', plan, ':', PLAN_PRICES[plan]);
+    return PLAN_PRICES[plan];
+  },
+
   async initializePayment({ email, amount, plan, businessName, filingRequestId, metadata }: PaymentData) {
     return new Promise((resolve, reject) => {
       const handler = window.PaystackPop.setup({
@@ -109,10 +137,6 @@ export const paymentService = {
 
       handler.openIframe();
     });
-  },
-
-  getPlanPrice(plan: 'free' | 'basic' | 'pro' | 'enterprise' | 'filing_service'): number {
-    return PLAN_PRICES[plan];
   },
 
   formatPrice(kobo: number): string {

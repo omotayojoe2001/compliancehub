@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { FileText, CreditCard, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { filingService } from '@/lib/filingService';
+import { paymentService } from '@/lib/paymentService';
 import { useAuth } from '@/contexts/AuthContextClean';
 
 interface FilingRequestCardProps {
@@ -23,6 +24,15 @@ export function FilingRequestCard({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [filingPrice, setFilingPrice] = useState(10000);
+
+  useEffect(() => {
+    const loadPrice = async () => {
+      const price = await paymentService.getPlanPrice('filing_service');
+      setFilingPrice(price / 100); // Convert kobo to naira
+    };
+    loadPrice();
+  }, [showDetails]); // Reload when details toggle
 
   const handleRequestFiling = async () => {
     if (!user) return;
@@ -34,7 +44,7 @@ export function FilingRequestCard({
         companyProfileId,
         filingType: 'tax_filing',
         filingPeriod: new Date().toISOString().slice(0, 7), // Current month YYYY-MM
-        amount: 10000
+        amount: filingPrice
       });
 
       // Process payment
@@ -65,7 +75,9 @@ export function FilingRequestCard({
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-blue-600">₦10,000</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {filingService.formatCurrency(filingPrice)}
+          </div>
           <div className="text-xs text-gray-500">One-time fee</div>
         </div>
       </div>
@@ -146,7 +158,6 @@ export function FilingRequestCard({
       <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
         <AlertCircle className="h-3 w-3" />
         <span>
-          This service is separate from your subscription. 
           We'll automatically collect all your {companyName} transaction data for filing.
         </span>
       </div>

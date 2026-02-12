@@ -232,11 +232,9 @@ export default function AdminContent() {
         </div>
 
         <Tabs defaultValue="site-info" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="site-info">Site Info</TabsTrigger>
             <TabsTrigger value="pricing">Pricing</TabsTrigger>
-            <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="audience">Audience</TabsTrigger>
             <TabsTrigger value="footer">Footer</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
           </TabsList>
@@ -308,7 +306,7 @@ export default function AdminContent() {
               </h2>
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-medium mb-3">Subscription Plans</h3>
+                  <h3 className="font-medium mb-3">Subscription Plans (Annual)</h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label htmlFor="freeAnnual">Free Plan - Annual (₦)</Label>
@@ -319,19 +317,6 @@ export default function AdminContent() {
                         onChange={(e) => {
                           const newContent = { ...content };
                           newContent.pricing.plans.free.annualPrice = parseInt(e.target.value);
-                          setContent(newContent);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="freeMonthly">Free Plan - Monthly (₦)</Label>
-                      <Input
-                        id="freeMonthly"
-                        type="number"
-                        value={content?.pricing?.plans?.free?.monthlyPrice || 0}
-                        onChange={(e) => {
-                          const newContent = { ...content };
-                          newContent.pricing.plans.free.monthlyPrice = parseInt(e.target.value);
                           setContent(newContent);
                         }}
                       />
@@ -353,19 +338,6 @@ export default function AdminContent() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="basicMonthly">Basic Plan - Monthly (₦)</Label>
-                      <Input
-                        id="basicMonthly"
-                        type="number"
-                        value={content?.pricing?.plans?.basic?.monthlyPrice || 1250}
-                        onChange={(e) => {
-                          const newContent = { ...content };
-                          newContent.pricing.plans.basic.monthlyPrice = parseInt(e.target.value);
-                          setContent(newContent);
-                        }}
-                      />
-                    </div>
-                    <div>
                       <Label htmlFor="proAnnual">Pro Plan - Annual (₦)</Label>
                       <Input
                         id="proAnnual"
@@ -377,19 +349,6 @@ export default function AdminContent() {
                             newContent.pricing.plans.pro.features = ["Up to 5 Business Profiles", "WhatsApp Reminders", "Priority Support"];
                           }
                           newContent.pricing.plans.pro.annualPrice = parseInt(e.target.value);
-                          setContent(newContent);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="proMonthly">Pro Plan - Monthly (₦)</Label>
-                      <Input
-                        id="proMonthly"
-                        type="number"
-                        value={content?.pricing?.plans?.pro?.monthlyPrice || 4167}
-                        onChange={(e) => {
-                          const newContent = { ...content };
-                          newContent.pricing.plans.pro.monthlyPrice = parseInt(e.target.value);
                           setContent(newContent);
                         }}
                       />
@@ -410,187 +369,13 @@ export default function AdminContent() {
                         }}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="enterpriseMonthly">Enterprise Plan - Monthly (₦)</Label>
-                      <Input
-                        id="enterpriseMonthly"
-                        type="number"
-                        value={content?.pricing?.plans?.enterprise?.monthlyPrice || 12500}
-                        onChange={(e) => {
-                          const newContent = { ...content };
-                          newContent.pricing.plans.enterprise.monthlyPrice = parseInt(e.target.value);
-                          setContent(newContent);
-                        }}
-                      />
-                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <h3 className="font-medium mb-3">Filing Charges (₦)</h3>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="vatCharge">VAT Filing</Label>
-                      <Input
-                        id="vatCharge"
-                        type="number"
-                        value={content?.pricing?.filingCharges?.vat || 25000}
-                        onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'vat', parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="payeCharge">PAYE Filing</Label>
-                      <Input
-                        id="payeCharge"
-                        type="number"
-                        value={content?.pricing?.filingCharges?.paye || 30000}
-                        onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'paye', parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="citCharge">CIT Filing</Label>
-                      <Input
-                        id="citCharge"
-                        type="number"
-                        value={content?.pricing?.filingCharges?.cit || 50000}
-                        onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'cit', parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="whtCharge">WHT Filing</Label>
-                      <Input
-                        id="whtCharge"
-                        type="number"
-                        value={content?.pricing?.filingCharges?.wht || 20000}
-                        onChange={(e) => updateNestedContent('pricing', 'filingCharges', 'wht', parseInt(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Current Pricing Structure:</strong><br/>
-                    • Free: ₦0/year (₦0/month)<br/>
-                    • Basic: ₦15,000/year (₦1,250/month)<br/>
-                    • Pro: ₦50,000/year (₦4,167/month)<br/>
-                    • Enterprise: ₦150,000/year (₦12,500/month)
-                  </p>
-                </div>
+
               </div>
             </Card>
           </TabsContent>
 
-          <TabsContent value="content">
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Lightbulb className="h-5 w-5" />
-                Features & How It Works
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-medium mb-3">Features</h3>
-                  <div className="space-y-4">
-                    {content?.features?.map((feature, index) => (
-                      <div key={index} className="grid gap-2 md:grid-cols-2">
-                        <div>
-                          <Label htmlFor={`feature-title-${index}`}>Feature Title</Label>
-                          <Input
-                            id={`feature-title-${index}`}
-                            value={feature.title}
-                            onChange={(e) => {
-                              const newFeatures = [...(content?.features || [])];
-                              newFeatures[index] = { ...newFeatures[index], title: e.target.value };
-                              setContent(prev => prev ? { ...prev, features: newFeatures } : null);
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`feature-desc-${index}`}>Description</Label>
-                          <Textarea
-                            id={`feature-desc-${index}`}
-                            value={feature.description}
-                            onChange={(e) => {
-                              const newFeatures = [...(content?.features || [])];
-                              newFeatures[index] = { ...newFeatures[index], description: e.target.value };
-                              setContent(prev => prev ? { ...prev, features: newFeatures } : null);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )) || []}
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium mb-3">How It Works Steps</h3>
-                  <div className="space-y-4">
-                    {content?.howItWorks?.map((step, index) => (
-                      <div key={index} className="grid gap-2 md:grid-cols-3">
-                        <div>
-                          <Label htmlFor={`step-num-${index}`}>Step Number</Label>
-                          <Input
-                            id={`step-num-${index}`}
-                            value={step.step}
-                            onChange={(e) => {
-                              const newSteps = [...(content?.howItWorks || [])];
-                              newSteps[index] = { ...newSteps[index], step: e.target.value };
-                              setContent(prev => prev ? { ...prev, howItWorks: newSteps } : null);
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`step-title-${index}`}>Step Title</Label>
-                          <Input
-                            id={`step-title-${index}`}
-                            value={step.title}
-                            onChange={(e) => {
-                              const newSteps = [...(content?.howItWorks || [])];
-                              newSteps[index] = { ...newSteps[index], title: e.target.value };
-                              setContent(prev => prev ? { ...prev, howItWorks: newSteps } : null);
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`step-desc-${index}`}>Description</Label>
-                          <Textarea
-                            id={`step-desc-${index}`}
-                            value={step.description}
-                            onChange={(e) => {
-                              const newSteps = [...(content?.howItWorks || [])];
-                              newSteps[index] = { ...newSteps[index], description: e.target.value };
-                              setContent(prev => prev ? { ...prev, howItWorks: newSteps } : null);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )) || []}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="audience">
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Target Audience
-              </h2>
-              <div>
-                <Label htmlFor="targetAudience">Target Audience (comma separated)</Label>
-                <Input
-                  id="targetAudience"
-                  value={content?.targetAudience?.join(', ') || ''}
-                  onChange={(e) => setContent(prev => prev ? {
-                    ...prev,
-                    targetAudience: e.target.value ? e.target.value.split(', ') : []
-                  } : null)}
-                  placeholder="SMEs & Startups, Freelancers with CAC, Traders & Exporters"
-                />
-              </div>
-            </Card>
-          </TabsContent>
           <TabsContent value="footer">
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4">Footer Content</h2>

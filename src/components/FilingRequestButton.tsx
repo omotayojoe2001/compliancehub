@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { FileText, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
@@ -25,6 +25,7 @@ export function FilingRequestButton({
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'preview' | 'payment' | 'success'>('preview');
+  const [filingPrice, setFilingPrice] = useState(10000);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -33,6 +34,17 @@ export function FilingRequestButton({
       minimumFractionDigits: 0
     }).format(amount);
   };
+
+  useEffect(() => {
+    const loadPrice = async () => {
+      console.log('🔄 Loading filing price...');
+      const price = await paymentService.getPlanPrice('filing_service');
+      console.log('💵 Received price:', price, 'kobo =', price / 100, 'naira');
+      setFilingPrice(price / 100); // Convert kobo to naira
+      console.log('✅ Filing price state updated to:', price / 100);
+    };
+    loadPrice();
+  }, [showModal]); // Reload when modal opens
 
   const handleRequestFiling = async () => {
     if (!user?.id || !currentCompany?.id) return;
@@ -50,7 +62,7 @@ export function FilingRequestButton({
         companyProfileId: currentCompany.id,
         filingType: 'tax_filing',
         filingPeriod: new Date().toISOString().slice(0, 7), // YYYY-MM format
-        amount: 10000
+        amount: filingPrice
       });
 
       console.log('Filing request created:', filingRequestId);
@@ -58,7 +70,7 @@ export function FilingRequestButton({
       // Initialize payment
       await paymentService.initializePayment({
         email: user.email || '',
-        amount: 1000000, // ₦10,000 in kobo (10,000 * 100)
+        amount: filingPrice * 100, // Convert to kobo
         plan: 'filing_service',
         businessName: currentCompany.name,
         filingRequestId,
@@ -154,9 +166,8 @@ export function FilingRequestButton({
 
               <div className="bg-green-50 p-4 rounded-lg">
                 <h4 className="font-medium text-green-900 mb-2">Service Fee</h4>
-                <div className="text-2xl font-bold text-green-600 mb-2">₦10,000</div>
+                <div className="text-2xl font-bold text-green-600 mb-2">{formatCurrency(filingPrice)}</div>
                 <p className="text-sm text-green-700">One-time payment</p>
-                <p className="text-xs text-green-600 mt-2">Separate from your subscription</p>
               </div>
             </div>
 
@@ -181,7 +192,7 @@ export function FilingRequestButton({
                 className="flex-1"
               >
                 <CreditCard className="h-4 w-4 mr-2" />
-                {loading ? 'Processing...' : 'Pay ₦10,000 & Request Filing'}
+                {loading ? 'Processing...' : `Pay ${formatCurrency(filingPrice)} & Request Filing`}
               </Button>
               <Button 
                 variant="outline" 
