@@ -179,7 +179,7 @@ export default function Subscription() {
     setLoading(planType);
     
     try {
-      const amount = paymentService.getPlanPrice(planType);
+      const amount = await paymentService.getPlanPrice(planType);
       
       await paymentService.initializePayment({
         email: user.email || '',

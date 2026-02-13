@@ -307,7 +307,7 @@ export default function Subscription() {
       console.log('👤 User:', user.email);
       console.log('🏢 Business:', profile.business_name);
       
-      const amount = paymentService.getPlanPrice(planType);
+      const amount = await paymentService.getPlanPrice(planType);
       console.log('💰 Amount:', amount);
       
       await paymentService.initializePayment({

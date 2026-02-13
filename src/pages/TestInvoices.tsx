@@ -30,7 +30,11 @@ export default function TestInvoices() {
         .limit(10);
       
       console.log('⏱️ END:', new Date().toISOString(), 'Count:', data?.length);
-      setInvoices(data || []);
+      setInvoices((data || []).map(inv => ({
+        ...inv,
+        issue_date: inv.issue_date || new Date().toISOString(),
+        status: inv.status || 'draft'
+      })));
     } catch (error) {
       console.error('Error:', error);
     } finally {

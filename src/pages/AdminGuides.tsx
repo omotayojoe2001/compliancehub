@@ -408,7 +408,7 @@ export default function AdminGuides() {
                       {guide.difficulty}
                     </span>
                     {guide.youtube_url && (
-                      <Video className="h-4 w-4 text-red-600" title="Has video" />
+                      <Video className="h-4 w-4 text-red-600" />
                     )}
                   </div>
                   

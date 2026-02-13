@@ -86,9 +86,9 @@ export default function SystemTest() {
 
       updateTest('Paystack Integration', 'pending', 'Testing payment service...');
       try {
-        const basicPrice = paymentService.getPlanPrice('basic');
-        const proPrice = paymentService.getPlanPrice('pro');
-        const enterprisePrice = paymentService.getPlanPrice('enterprise');
+        const basicPrice = await paymentService.getPlanPrice('basic');
+        const proPrice = await paymentService.getPlanPrice('pro');
+        const enterprisePrice = await paymentService.getPlanPrice('enterprise');
         
         if (basicPrice === 1200000 && proPrice === 3000000 && enterprisePrice === 5000000) {
           updateTest('Paystack Integration', 'success', 'Payment service configured correctly');
