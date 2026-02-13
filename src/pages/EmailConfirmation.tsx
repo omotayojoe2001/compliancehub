@@ -35,16 +35,24 @@ export default function EmailConfirmation() {
             
             // Get user session to trigger welcome email
             const { data: { session } } = await supabase.auth.getSession();
+            console.log('📧 Email confirmed for user:', session?.user?.id);
+            
             if (session?.user) {
               try {
                 // Get user profile
+                console.log('🔍 Fetching profile...');
                 const profile = await freshDbService.getProfile(session.user.id);
+                console.log('👤 Profile loaded:', profile);
+                
                 if (profile) {
                   // Send WhatsApp welcome message immediately
                   if (profile.phone) {
+                    console.log('📱 Sending WhatsApp to:', profile.phone);
                     const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${profile.business_name || 'there'}, we're excited to help you manage your tax compliance.\n\nGet started now by logging into your dashboard!`;
-                    await whatsappService.sendMessage(profile.phone, welcomeMessage);
-                    console.log('✅ WhatsApp welcome message sent');
+                    const sent = await whatsappService.sendMessage(profile.phone, welcomeMessage);
+                    console.log('✅ WhatsApp send result:', sent);
+                  } else {
+                    console.warn('⚠️ No phone number in profile');
                   }
                   
                   // Now trigger welcome email since email is verified
@@ -55,9 +63,11 @@ export default function EmailConfirmation() {
                     profile.phone || undefined,
                     true // Email is now verified
                   );
+                } else {
+                  console.error('❌ Profile not found for user:', session.user.id);
                 }
               } catch (profileError) {
-                console.log('Could not load profile for welcome email:', profileError);
+                console.error('❌ Profile error:', profileError);
               }
             }
             

@@ -29,6 +29,8 @@ export const freshDbService = {
   async saveProfile(userId: string, profile: any) {
     const headers = await getAuthHeaders();
     
+    console.log('💾 Saving profile for user:', userId, profile);
+    
     // First try to get existing profile
     const existingProfile = await this.getProfile(userId);
     
@@ -39,7 +41,11 @@ export const freshDbService = {
         headers,
         body: JSON.stringify(profile)
       });
-      console.log('🔄 UPDATE profile response:', response.status, response.statusText);
+      const result = await response.text();
+      console.log('🔄 UPDATE profile response:', response.status, result);
+      if (!response.ok) {
+        console.error('❌ UPDATE failed:', result);
+      }
       return response.ok;
     } else {
       // INSERT new profile
@@ -48,7 +54,11 @@ export const freshDbService = {
         headers,
         body: JSON.stringify({ ...profile, id: userId })
       });
-      console.log('➕ INSERT profile response:', response.status, response.statusText);
+      const result = await response.text();
+      console.log('➕ INSERT profile response:', response.status, result);
+      if (!response.ok) {
+        console.error('❌ INSERT failed:', result);
+      }
       return response.ok;
     }
   },
