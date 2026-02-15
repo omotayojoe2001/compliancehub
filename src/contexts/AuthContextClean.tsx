@@ -65,7 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        data: metadata
+        data: metadata,
+        emailRedirectTo: 'https://www.taxandcompliance.com.ng/confirm-email'
       }
     });
     return { data, error };

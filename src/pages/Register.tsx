@@ -89,7 +89,7 @@ export default function Register() {
       
       // Send welcome notifications
       try {
-        // Save profile data
+        // Save profile data (without plan field)
         await freshDbService.saveProfile(data.user.id, {
           client_name: formData.clientName,
           business_name: formData.businessName,
@@ -98,27 +98,43 @@ export default function Register() {
           email: formData.email,
           cac_date: formData.cacDate,
           vat_status: formData.vatStatus,
-          paye_status: formData.payeStatus,
-          plan: 'free',
-          subscription_status: 'inactive'
+          paye_status: formData.payeStatus
         });
         
-        // Schedule WhatsApp welcome message for 2 minutes after registration
-        const scheduledTime = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
+        // Schedule WhatsApp welcome message using service account (no auth required)
+        const scheduledTime = new Date(Date.now() + 2 * 60 * 1000);
         const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${formData.businessName}, we're excited to help you manage your tax compliance.\n\nPlease check your email to verify your account and get started!`;
         
-        await supabase.from('scheduled_messages').insert({
-          target_type: 'individual',
-          target_email: formData.email,
-          target_phone: formData.phone,
-          send_via_whatsapp: true,
-          send_via_email: false,
-          message_body: welcomeMessage,
-          scheduled_time: scheduledTime.toISOString(),
-          status: 'pending'
-        });
-        
-        console.log('📅 Scheduled WhatsApp welcome message for:', scheduledTime.toISOString());
+        try {
+          const response = await fetch('https://fyhhcqjclcedpylhyjwy.supabase.co/rest/v1/scheduled_messages', {
+            method: 'POST',
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8',
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              target_type: 'individual',
+              target_email: formData.email,
+              target_phone: formData.phone,
+              send_via_whatsapp: true,
+              send_via_email: false,
+              message_body: welcomeMessage,
+              scheduled_time: scheduledTime.toISOString(),
+              status: 'pending'
+            })
+          });
+          
+          if (response.ok) {
+            console.log('📅 Scheduled WhatsApp welcome message for:', scheduledTime.toISOString());
+          } else {
+            const error = await response.text();
+            console.error('❌ Failed to schedule message:', error);
+          }
+        } catch (scheduleError) {
+          console.error('❌ Schedule error:', scheduleError);
+        }
       } catch (notificationError) {
         console.error('Welcome notifications failed:', notificationError);
       }
