@@ -1,15 +1,9 @@
--- Check current RLS status and policies
-SELECT schemaname, tablename, rowsecurity
-FROM pg_tables
-WHERE schemaname = 'public'
-AND tablename IN ('user_profiles', 'company_profiles', 'tax_obligations', 'reminder_logs', 'cashbook_entries', 'invoices')
-ORDER BY tablename;
+-- Check if RLS is enabled on profiles table
+SELECT tablename, rowsecurity 
+FROM pg_tables 
+WHERE tablename = 'profiles';
 
 -- Check existing policies
-SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check
 FROM pg_policies
-WHERE schemaname = 'public'
-ORDER BY tablename, policyname;
-
--- Check if we can see any data with service role (bypass RLS)
--- This will show if data exists but is blocked by RLS
+WHERE tablename = 'profiles';

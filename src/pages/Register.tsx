@@ -56,7 +56,6 @@ export default function Register() {
     const { data, error } = await signUp(formData.email, formData.password, {
       full_name: formData.clientName,
       business_name: formData.businessName,
-      tin: formData.tin,
       phone: formData.phone,
       cac_date: formData.cacDate,
       vat_status: formData.vatStatus,
@@ -87,24 +86,8 @@ export default function Register() {
     } else if (data.user && !data.session) {
       console.log('📝 Email confirmation required')
       
-      // Send welcome notifications
+      // Profile is auto-created by database trigger, just schedule WhatsApp
       try {
-        // Save profile data - ONLY use columns that exist in profiles table
-        const profileData = {
-          client_name: formData.clientName,
-          business_name: formData.businessName,
-          phone: formData.phone,
-          email: formData.email,
-          cac_date: formData.cacDate || null,
-          vat_status: formData.vatStatus,
-          paye_status: formData.payeStatus,
-          subscription_status: 'inactive'
-        };
-        
-        console.log('💾 Attempting to save profile:', profileData);
-        const saved = await freshDbService.saveProfile(data.user.id, profileData);
-        console.log('💾 Profile save result:', saved);
-        
         // Schedule WhatsApp welcome message using service account (no auth required)
         const scheduledTime = new Date(Date.now() + 2 * 60 * 1000);
         const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${formData.businessName}, we're excited to help you manage your tax compliance.\n\nPlease check your email to verify your account and get started!`;

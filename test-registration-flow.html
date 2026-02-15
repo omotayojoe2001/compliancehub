@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Data Flow Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Registration Data Flow Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://fyhhcqjclcedpylhyjwy.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5aGhjcWpjbGNlZHB5bGh5and5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMTUsImV4cCI6MjA4MjA5MjAxNX0.qH7Qg65wEQxmI6p4dVA7Mg-C5ZxEdmULmUDAUOasdy8';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function testFlow() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Testing Registration Data Flow...</h2>';
+
+            // Test data
+            const testEmail = `test${Date.now()}@test.com`;
+            const testData = {
+                clientName: 'Test User',
+                businessName: 'Test Business Ltd',
+                phone: '2348012345678',
+                email: testEmail,
+                cacDate: '2020-01-15',
+                vatStatus: true,
+                payeStatus: false
+            };
+
+            try {
+                // Step 1: Sign up
+                results.innerHTML += '<p>✅ Step 1: Signing up...</p>';
+                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
+                    email: testEmail,
+                    password: 'TestPassword123!',
+                    options: {
+                        data: {
+                            full_name: testData.clientName,
+                            business_name: testData.businessName
+                        }
+                    }
+                });
+
+                if (signUpError) throw signUpError;
+                results.innerHTML += `<p>✅ User created: ${signUpData.user.id}</p>`;
+
+                // Get the session token for authenticated requests
+                const sessionToken = signUpData.session?.access_token;
+                if (!sessionToken) throw new Error('No session token received');
+                results.innerHTML += `<p>✅ Session token received</p>`;
+
+                // Step 2: Save profile
+                results.innerHTML += '<p>✅ Step 2: Saving profile...</p>';
+                const profileData = {
+                    id: signUpData.user.id,
+                    client_name: testData.clientName,
+                    business_name: testData.businessName,
+                    phone: testData.phone,
+                    email: testData.email,
+                    cac_date: testData.cacDate,
+                    vat_status: testData.vatStatus,
+                    paye_status: testData.payeStatus,
+                    subscription_status: 'inactive'
+                };
+
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`Profile save failed: ${error}`);
+                }
+
+                results.innerHTML += '<p>✅ Profile saved successfully</p>';
+
+                // Step 3: Verify profile can be loaded
+                results.innerHTML += '<p>✅ Step 3: Loading profile...</p>';
+                const { data: loadedProfile, error: loadError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', signUpData.user.id)
+                    .single();
+
+                if (loadError) throw loadError;
+
+                results.innerHTML += '<p>✅ Profile loaded successfully:</p>';
+                results.innerHTML += `<pre>${JSON.stringify(loadedProfile, null, 2)}</pre>`;
+
+                // Step 4: Verify all fields match
+                results.innerHTML += '<p>✅ Step 4: Verifying data...</p>';
+                const checks = [
+                    { field: 'client_name', expected: testData.clientName, actual: loadedProfile.client_name },
+                    { field: 'business_name', expected: testData.businessName, actual: loadedProfile.business_name },
+                    { field: 'phone', expected: testData.phone, actual: loadedProfile.phone },
+                    { field: 'email', expected: testData.email, actual: loadedProfile.email },
+                    { field: 'cac_date', expected: testData.cacDate, actual: loadedProfile.cac_date },
+                    { field: 'vat_status', expected: testData.vatStatus, actual: loadedProfile.vat_status },
+                    { field: 'paye_status', expected: testData.payeStatus, actual: loadedProfile.paye_status }
+                ];
+
+                let allMatch = true;
+                checks.forEach(check => {
+                    const match = check.expected == check.actual;
+                    allMatch = allMatch && match;
+                    results.innerHTML += `<p>${match ? '✅' : '❌'} ${check.field}: ${check.actual} ${match ? '(matches)' : `(expected: ${check.expected})`}</p>`;
+                });
+
+                if (allMatch) {
+                    results.innerHTML += '<h2 style="color: green;">✅ ALL TESTS PASSED!</h2>';
+                } else {
+                    results.innerHTML += '<h2 style="color: red;">❌ SOME TESTS FAILED</h2>';
+                }
+
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        }
+
+        // Run test on page load
+        testFlow();
+    </script>
+</body>
+</html>
