@@ -90,7 +90,7 @@ export default function SystemTest() {
         const proPrice = await paymentService.getPlanPrice('pro');
         const enterprisePrice = await paymentService.getPlanPrice('enterprise');
         
-        if (basicPrice === 1200000 && proPrice === 3000000 && enterprisePrice === 5000000) {
+        if (await basicPrice === 1200000 && await proPrice === 3000000 && await enterprisePrice === 5000000) {
           updateTest('Paystack Integration', 'success', 'Payment service configured correctly');
         } else {
           updateTest('Paystack Integration', 'error', 'Payment prices incorrect');
