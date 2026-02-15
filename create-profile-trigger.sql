@@ -10,8 +10,13 @@ BEGIN
     COALESCE(new.raw_user_meta_data->>'phone', ''),
     COALESCE(new.raw_user_meta_data->>'full_name', new.email),
     'inactive'
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN new;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE WARNING 'Error creating profile: %', SQLERRM;
+    RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
