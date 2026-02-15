@@ -47,68 +47,45 @@ export default function Settings() {
 
   // Update form data when current company changes
   useEffect(() => {
-    if (currentCompany && user) {
-      setBusinessData({
-        business_name: currentCompany.name || '',
-        rc_number: '',
-        tin: currentCompany.tin || '',
-        industry: '',
-        business_address: '',
-        business_phone: ''
-      });
-      
-      // Load additional company data from database
-      loadCompanyData();
-    }
-    
     if (user) {
-      // Profile data should be user's personal info, not company info
-      setProfileData({
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-        email: user.email || '',
-        phone: profile?.phone || ''
-      });
-      loadComplianceData();
+      loadProfileData();
     }
-  }, [currentCompany, user, profile]);
+  }, [user]);
 
-  const loadCompanyData = async () => {
-    if (!user?.id || !currentCompany?.id) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('company_profiles')
-        .select('*')
-        .eq('id', currentCompany.id)
-        .eq('user_id', user.id)
-        .single();
-      
-      if (data && !error) {
-        setBusinessData({
-          business_name: data.company_name || '',
-          rc_number: data.cac_number || '',
-          tin: data.tin || '',
-          industry: data.business_type || '',
-          business_address: data.address || '',
-          business_phone: data.phone || ''
-        });
-      }
-    } catch (error) {
-      console.error('Error loading company data:', error);
+  // Update form data when current company changes
+  useEffect(() => {
+    if (user) {
+      loadProfileData();
     }
-  };
+  }, [user]);
 
-  const loadComplianceData = async () => {
+  const loadProfileData = async () => {
     if (!user?.id) return;
-
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('cac_date, vat_status, paye_status')
+        .select('*')
         .eq('id', user.id)
         .maybeSingle();
-
+      
       if (data && !error) {
+        console.log('👤 Loaded profile:', data);
+        setProfileData({
+          full_name: data.client_name || user.email?.split('@')[0] || '',
+          email: data.email || user.email || '',
+          phone: data.phone || ''
+        });
+        
+        setBusinessData({
+          business_name: data.business_name || '',
+          rc_number: '',
+          tin: '',
+          industry: '',
+          business_address: '',
+          business_phone: data.phone || ''
+        });
+        
         setComplianceData({
           cac_date: data.cac_date || '',
           vat_status: !!data.vat_status,
@@ -116,7 +93,7 @@ export default function Settings() {
         });
       }
     } catch (error) {
-      console.error('Error loading compliance data:', error);
+      console.error('Error loading profile:', error);
     }
   };
 
@@ -143,14 +120,16 @@ export default function Settings() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .update({
+          client_name: profileData.full_name,
           phone: profileData.phone
         })
         .eq('id', user.id);
       
       if (error) throw error;
       alert('Profile updated successfully!');
+      await loadProfileData();
     } catch (error) {
       console.error('Profile save failed:', error);
       alert('Failed to update profile');
@@ -160,41 +139,25 @@ export default function Settings() {
   };
 
   const saveBusiness = async () => {
-    if (!user?.id || !currentCompany?.id) return;
+    if (!user?.id) return;
     
     setSaving(true);
     try {
-      // Update the CURRENT company profile
-      const { error: companyError } = await supabase
-        .from('company_profiles')
-        .update({
-          company_name: businessData.business_name,
-          cac_number: businessData.rc_number,
-          tin: businessData.tin,
-          address: businessData.business_address,
-          phone: businessData.business_phone,
-          business_type: businessData.industry
-        })
-        .eq('id', currentCompany.id)
-        .eq('user_id', user.id);
-      
-      if (companyError) throw companyError;
-      
-      // Also update profiles table for compliance data
-      const { error: profileError } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({
+          business_name: businessData.business_name,
+          phone: businessData.business_phone,
           cac_date: complianceData.cac_date || null,
           vat_status: complianceData.vat_status,
           paye_status: complianceData.paye_status
         })
         .eq('id', user.id);
 
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       alert('Business details saved successfully!');
-      await loadCompanyData();
-      await loadComplianceData();
+      await loadProfileData();
     } catch (error) {
       console.error('Update error:', error);
       alert('Failed to save business details');
