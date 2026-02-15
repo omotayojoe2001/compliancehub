@@ -18,11 +18,14 @@ export default function EmailConfirmation() {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const searchAccessToken = searchParams.get('access_token');
       const searchRefreshToken = searchParams.get('refresh_token');
+      const searchToken = searchParams.get('token');
       const hashAccessToken = hashParams.get('access_token');
       const hashRefreshToken = hashParams.get('refresh_token');
+      const hashToken = hashParams.get('token');
       
       const accessToken = searchAccessToken || hashAccessToken;
       const refreshToken = searchRefreshToken || hashRefreshToken;
+      const token = searchToken || hashToken;
       const type = searchParams.get('type') || hashParams.get('type');
 
       console.log('📧 Confirmation page loaded');
@@ -30,9 +33,56 @@ export default function EmailConfirmation() {
       console.log('📧 Hash params:', Object.fromEntries(hashParams));
       console.log('📧 Access token:', accessToken ? 'Present' : 'Missing');
       console.log('📧 Refresh token:', refreshToken ? 'Present' : 'Missing');
+      console.log('📧 Token hash:', token ? 'Present' : 'Missing');
       console.log('📧 Type:', type);
 
-      if (type === 'signup' && accessToken && refreshToken) {
+      // Handle token hash from email link
+      if (type === 'signup' && token) {
+        try {
+          console.log('📧 Verifying token hash...');
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'signup'
+          });
+
+          if (error) {
+            console.error('❌ Token verification failed:', error);
+            setStatus('error');
+            setMessage('Failed to confirm email. Please try again.');
+          } else {
+            console.log('✅ Token verified successfully');
+            setStatus('success');
+            setMessage('Email confirmed successfully! You can now access your account.');
+            
+            // Get user session
+            const { data: { session } } = await supabase.auth.getSession();
+            console.log('📧 Email confirmed for user:', session?.user?.id);
+            
+            if (session?.user) {
+              try {
+                const profile = await freshDbService.getProfile(session.user.id);
+                console.log('👤 Profile loaded:', profile);
+                
+                if (profile?.phone) {
+                  console.log('📱 Sending WhatsApp to:', profile.phone);
+                  const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${profile.business_name || 'there'}, we're excited to help you manage your tax compliance.\n\nGet started now by logging into your dashboard!`;
+                  await whatsappService.sendMessage(profile.phone, welcomeMessage);
+                }
+              } catch (profileError) {
+                console.error('❌ Profile error:', profileError);
+              }
+            }
+            
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 3000);
+          }
+        } catch (error) {
+          console.error('❌ Verification error:', error);
+          setStatus('error');
+          setMessage('An error occurred while confirming your email.');
+        }
+      } else if (type === 'signup' && accessToken && refreshToken) {
         try {
           // Set the session with the tokens
           const { error } = await supabase.auth.setSession({
