@@ -14,9 +14,23 @@ export default function EmailConfirmation() {
 
   useEffect(() => {
     const handleEmailConfirmation = async () => {
-      const accessToken = searchParams.get('access_token');
-      const refreshToken = searchParams.get('refresh_token');
-      const type = searchParams.get('type');
+      // Check URL hash first (Supabase uses hash)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const searchAccessToken = searchParams.get('access_token');
+      const searchRefreshToken = searchParams.get('refresh_token');
+      const hashAccessToken = hashParams.get('access_token');
+      const hashRefreshToken = hashParams.get('refresh_token');
+      
+      const accessToken = searchAccessToken || hashAccessToken;
+      const refreshToken = searchRefreshToken || hashRefreshToken;
+      const type = searchParams.get('type') || hashParams.get('type');
+
+      console.log('📧 Confirmation page loaded');
+      console.log('📧 Search params:', Object.fromEntries(searchParams));
+      console.log('📧 Hash params:', Object.fromEntries(hashParams));
+      console.log('📧 Access token:', accessToken ? 'Present' : 'Missing');
+      console.log('📧 Refresh token:', refreshToken ? 'Present' : 'Missing');
+      console.log('📧 Type:', type);
 
       if (type === 'signup' && accessToken && refreshToken) {
         try {
