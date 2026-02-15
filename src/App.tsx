@@ -46,7 +46,7 @@ import AdminPricing from "./pages/AdminPricing";
 const queryClient = new QueryClient();
 
 // Start scheduled message processor
-scheduledMessageService.startScheduler();
+scheduledMessageService.start();
 
 function AppContent() {
   const { user, loading } = useAuth();
