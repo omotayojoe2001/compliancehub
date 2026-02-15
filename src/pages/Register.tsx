@@ -83,8 +83,12 @@ export default function Register() {
       } else {
         setError(error.message);
       }
+      setLoading(false);
     } else if (data.user && !data.session) {
       console.log('📝 Email confirmation required')
+      
+      // Scroll to top to show success message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
       // Profile is auto-created by database trigger, just schedule WhatsApp
       try {
@@ -127,11 +131,11 @@ export default function Register() {
       }
       
       setError('Welcome! Please check your email to confirm your account and get started.');
+      setLoading(false);
     } else {
       console.log('📝 Registration successful - user logged in')
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,13 +246,27 @@ export default function Register() {
                 type="tel"
                 name="phone"
                 value={formData.phone}
-                onChange={handleChange}
-                placeholder="08012345678"
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                  
+                  // Auto-format to 234 format
+                  if (value.startsWith('0')) {
+                    value = '234' + value.substring(1);
+                  } else if (value.startsWith('234')) {
+                    // Already correct
+                  } else if (value.length > 0 && !value.startsWith('234')) {
+                    value = '234' + value;
+                  }
+                  
+                  setFormData({...formData, phone: value});
+                }}
+                placeholder="2348012345678"
                 required
+                maxLength={13}
                 className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                📱 This number should be registered on WhatsApp to receive notifications
+                📱 Format: 2348012345678 (starts with 234, no + or spaces)
               </p>
             </div>
 
