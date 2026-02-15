@@ -103,14 +103,22 @@ export default function Register() {
           subscription_status: 'inactive'
         });
         
-        // Schedule complete onboarding notification sequence (but skip welcome email until verified)
-        await comprehensiveAutomationService.scheduleUserOnboarding(
-          data.user.id,
-          formData.email,
-          formData.clientName || formData.businessName,
-          formData.phone,
-          false // Email not verified yet
-        );
+        // Schedule WhatsApp welcome message for 2 minutes after registration
+        const scheduledTime = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
+        const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${formData.businessName}, we're excited to help you manage your tax compliance.\n\nPlease check your email to verify your account and get started!`;
+        
+        await supabase.from('scheduled_messages').insert({
+          target_type: 'individual',
+          target_email: formData.email,
+          target_phone: formData.phone,
+          send_via_whatsapp: true,
+          send_via_email: false,
+          message_body: welcomeMessage,
+          scheduled_time: scheduledTime.toISOString(),
+          status: 'pending'
+        });
+        
+        console.log('📅 Scheduled WhatsApp welcome message for:', scheduledTime.toISOString());
       } catch (notificationError) {
         console.error('Welcome notifications failed:', notificationError);
       }
