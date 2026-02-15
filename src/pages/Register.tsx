@@ -89,17 +89,21 @@ export default function Register() {
       
       // Send welcome notifications
       try {
-        // Save profile data (without plan field)
-        await freshDbService.saveProfile(data.user.id, {
+        // Save profile data - ONLY use columns that exist in profiles table
+        const profileData = {
           client_name: formData.clientName,
           business_name: formData.businessName,
-          tin: formData.tin,
           phone: formData.phone,
           email: formData.email,
-          cac_date: formData.cacDate,
+          cac_date: formData.cacDate || null,
           vat_status: formData.vatStatus,
-          paye_status: formData.payeStatus
-        });
+          paye_status: formData.payeStatus,
+          subscription_status: 'inactive'
+        };
+        
+        console.log('💾 Attempting to save profile:', profileData);
+        const saved = await freshDbService.saveProfile(data.user.id, profileData);
+        console.log('💾 Profile save result:', saved);
         
         // Schedule WhatsApp welcome message using service account (no auth required)
         const scheduledTime = new Date(Date.now() + 2 * 60 * 1000);
