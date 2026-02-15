@@ -81,8 +81,8 @@ export default function AdminGuides() {
       description: guide.description,
       duration: guide.duration,
       difficulty: guide.difficulty,
-      steps: guide.steps,
-      requirements: guide.requirements,
+      steps: (guide.steps || []).length > 0 ? guide.steps : [''],
+      requirements: (guide.requirements || []).length > 0 ? guide.requirements : [''],
       youtube_url: guide.youtube_url || '',
       is_active: guide.is_active
     });
@@ -421,7 +421,7 @@ export default function AdminGuides() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      {guide.steps.length} steps
+                      {(guide.steps || []).length} steps
                     </div>
                     <div>
                       Updated: {new Date(guide.updated_at).toLocaleDateString()}
