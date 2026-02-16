@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { comprehensiveAutomationService } from "@/lib/comprehensiveAutomationService";
 import { freshDbService } from "@/lib/freshDbService";
 import { whatsappService } from "@/lib/whatsappService";
+import { emailService } from "@/lib/emailService";
 
 export default function EmailConfirmation() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -68,6 +69,13 @@ export default function EmailConfirmation() {
                   const welcomeMessage = `🎉 Welcome to TaxandCompliance T&C!\n\nHi ${profile.business_name || 'there'}, we're excited to help you manage your tax compliance.\n\nGet started now by logging into your dashboard!`;
                   await whatsappService.sendMessage(profile.phone, welcomeMessage);
                 }
+                
+                // Send welcome email
+                console.log('📧 Sending welcome email to:', session.user.email);
+                await emailService.sendWelcomeEmail({
+                  to: session.user.email || '',
+                  businessName: profile.business_name || 'there'
+                });
               } catch (profileError) {
                 console.error('❌ Profile error:', profileError);
               }
