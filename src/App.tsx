@@ -42,6 +42,7 @@ import InvoicesWorking from "./pages/InvoicesWorking";
 import WhatsAppSettings from "./pages/WhatsAppSettings";
 import AutomationManagement from "./pages/AutomationManagement";
 import AdminPricing from "./pages/AdminPricing";
+import AdminTemplates from "./pages/AdminTemplates";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ function AppContent() {
       <Route path="/whatsapp-settings" element={<ProtectedRoute><WhatsAppSettings /></ProtectedRoute>} />
       <Route path="/admin/automations" element={<AdminRoute><AutomationManagement /></AdminRoute>} />
       <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
+      <Route path="/admin/templates" element={<AdminRoute><AdminTemplates /></AdminRoute>} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
