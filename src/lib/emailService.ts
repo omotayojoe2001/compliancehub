@@ -1,14 +1,26 @@
-// Email service using Supabase Edge Function
+import { Resend } from 'resend';
+
+const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
+
 export const emailService = {
   sendEmail: async (data: { to: string; subject: string; body: string }) => {
     try {
       console.log('📧 Sending email to:', data.to);
       console.log('📧 Subject:', data.subject);
       
-      // For now, log to console. You need to set up Resend or SendGrid
-      // TODO: Implement actual email sending
-      console.log('⚠️ Email service not configured. Email would be sent:', data);
+      const { data: result, error } = await resend.emails.send({
+        from: 'TaxandCompliance <noreply@taxandcompliance.com.ng>',
+        to: data.to,
+        subject: data.subject,
+        html: data.body.replace(/\n/g, '<br>')
+      });
       
+      if (error) {
+        console.error('❌ Email send failed:', error);
+        return { success: false, error };
+      }
+      
+      console.log('✅ Email sent successfully:', result);
       return { success: true, error: null };
     } catch (error) {
       console.error('❌ Email send failed:', error);
