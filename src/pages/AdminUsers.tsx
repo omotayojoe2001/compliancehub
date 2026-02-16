@@ -55,8 +55,8 @@ export default function AdminUsers() {
           tin: user.tin || 'Not provided',
           business_address: user.business_address || 'Not provided',
           business_phone: user.phone || 'Not provided',
-          email_notifications: false,
-          whatsapp_notifications: false
+          email_notifications: user.email_notifications || false,
+          whatsapp_notifications: user.whatsapp_notifications || false
         }));
         
         setUsers(enrichedUsers);
@@ -230,7 +230,7 @@ export default function AdminUsers() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">CAC Date:</span>
-                      <span>{selectedUser.cac_registration_date ? new Date(selectedUser.cac_registration_date).toLocaleDateString() : 'Not provided'}</span>
+                      <span>{selectedUser.cac_date ? new Date(selectedUser.cac_date).toLocaleDateString() : 'Not provided'}</span>
                     </div>
                   </div>
                 </div>
@@ -277,15 +277,23 @@ export default function AdminUsers() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Email Notifications:</span>
                       <div className="flex items-center gap-1">
-                        <XCircle className="h-4 w-4 text-red-600" />
-                        <span>Disabled (Not Saved)</span>
+                        {selectedUser.email_notifications ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        )}
+                        <span>{selectedUser.email_notifications ? 'Enabled' : 'Disabled'}</span>
                       </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">WhatsApp Notifications:</span>
                       <div className="flex items-center gap-1">
-                        <XCircle className="h-4 w-4 text-red-600" />
-                        <span>Disabled (Not Saved)</span>
+                        {selectedUser.whatsapp_notifications ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        )}
+                        <span>{selectedUser.whatsapp_notifications ? 'Enabled' : 'Disabled'}</span>
                       </div>
                     </div>
                   </div>

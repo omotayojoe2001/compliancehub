@@ -91,6 +91,12 @@ export default function Settings() {
           vat_status: data.vat_status === 'yes' || data.vat_status === true,
           paye_status: data.paye_status === 'yes' || data.paye_status === true
         });
+        
+        setNotificationPrefs({
+          emailReminders: data.email_notifications || false,
+          whatsappReminders: data.whatsapp_notifications || false,
+          deadlineAlerts: data.deadline_alerts || false
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -479,10 +485,28 @@ export default function Settings() {
               </div>
               
               <div className="mt-6">
-                <Button onClick={() => {
-                  alert('Notification preferences saved!');
-                }}>
-                  Save Notification Settings
+                <Button onClick={async () => {
+                  if (!user?.id) return;
+                  setSaving(true);
+                  try {
+                    const { error } = await supabase
+                      .from('profiles')
+                      .update({
+                        email_notifications: notificationPrefs.emailReminders,
+                        whatsapp_notifications: notificationPrefs.whatsappReminders,
+                        deadline_alerts: notificationPrefs.deadlineAlerts
+                      })
+                      .eq('id', user.id);
+                    
+                    if (error) throw error;
+                    alert('Notification preferences saved!');
+                  } catch (error) {
+                    alert('Failed to save preferences');
+                  } finally {
+                    setSaving(false);
+                  }
+                }} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Notification Settings'}
                 </Button>
               </div>
             </div>
