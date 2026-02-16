@@ -18,9 +18,9 @@ interface UserProfile {
   tin: string;
   business_address: string;
   business_phone: string;
-  cac_registration_date: string;
-  vat_registered: boolean;
-  paye_registered: boolean;
+  cac_date: string;
+  vat_status: string | boolean;
+  paye_status: string | boolean;
   email_notifications: boolean;
   whatsapp_notifications: boolean;
   created_at: string;
