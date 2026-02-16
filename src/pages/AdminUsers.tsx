@@ -245,23 +245,23 @@ export default function AdminUsers() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">VAT Registered:</span>
                       <div className="flex items-center gap-1">
-                        {selectedUser.vat_registered ? (
+                        {(selectedUser.vat_status === 'yes' || selectedUser.vat_status === true) ? (
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         ) : (
                           <XCircle className="h-4 w-4 text-red-600" />
                         )}
-                        <span>{selectedUser.vat_registered ? 'Yes' : 'No'}</span>
+                        <span>{(selectedUser.vat_status === 'yes' || selectedUser.vat_status === true) ? 'Yes' : 'No'}</span>
                       </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">PAYE Registered:</span>
                       <div className="flex items-center gap-1">
-                        {selectedUser.paye_registered ? (
+                        {(selectedUser.paye_status === 'yes' || selectedUser.paye_status === true) ? (
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         ) : (
                           <XCircle className="h-4 w-4 text-red-600" />
                         )}
-                        <span>{selectedUser.paye_registered ? 'Yes' : 'No'}</span>
+                        <span>{(selectedUser.paye_status === 'yes' || selectedUser.paye_status === true) ? 'Yes' : 'No'}</span>
                       </div>
                     </div>
                   </div>

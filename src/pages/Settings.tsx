@@ -88,8 +88,8 @@ export default function Settings() {
         
         setComplianceData({
           cac_date: data.cac_date || '',
-          vat_status: !!data.vat_status,
-          paye_status: !!data.paye_status
+          vat_status: data.vat_status === 'yes' || data.vat_status === true,
+          paye_status: data.paye_status === 'yes' || data.paye_status === true
         });
       }
     } catch (error) {
@@ -143,6 +143,12 @@ export default function Settings() {
     
     setSaving(true);
     try {
+      console.log('💾 Saving business data:', {
+        vat_status: complianceData.vat_status,
+        paye_status: complianceData.paye_status,
+        cac_date: complianceData.cac_date
+      });
+      
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -152,13 +158,17 @@ export default function Settings() {
           business_address: businessData.business_address,
           phone: businessData.business_phone,
           cac_date: complianceData.cac_date || null,
-          vat_status: complianceData.vat_status,
-          paye_status: complianceData.paye_status
+          vat_status: complianceData.vat_status ? 'yes' : 'no',
+          paye_status: complianceData.paye_status ? 'yes' : 'no'
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Save error:', error);
+        throw error;
+      }
 
+      console.log('✅ Business details saved');
       alert('Business details saved successfully!');
       await loadProfileData();
     } catch (error) {
