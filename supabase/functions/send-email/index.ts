@@ -21,9 +21,10 @@ serve(async (req) => {
 
     const { data, error } = await resend.emails.send({
       from: 'ComplianceHub <kolajo@forecourtlimited.com>',
-      to,
+      to: [to],
       subject,
-      html: body.replace(/\n/g, '<br>')
+      html: body.replace(/\n/g, '<br>'),
+      text: body
     })
     
     console.log('📬 Resend response:', { data, error })
