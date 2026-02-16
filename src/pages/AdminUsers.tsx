@@ -51,9 +51,9 @@ export default function AdminUsers() {
         const enrichedUsers = profilesData.map(user => ({
           ...user,
           full_name: user.client_name || user.business_name || 'No Name',
-          rc_number: 'Not provided',
-          tin: 'Not provided',
-          business_address: 'Not provided',
+          rc_number: user.rc_number || 'Not provided',
+          tin: user.tin || 'Not provided',
+          business_address: user.business_address || 'Not provided',
           business_phone: user.phone || 'Not provided',
           email_notifications: false,
           whatsapp_notifications: false

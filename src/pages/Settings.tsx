@@ -79,10 +79,10 @@ export default function Settings() {
         
         setBusinessData({
           business_name: data.business_name || '',
-          rc_number: '',
-          tin: '',
+          rc_number: data.rc_number || '',
+          tin: data.tin || '',
           industry: '',
-          business_address: '',
+          business_address: data.business_address || '',
           business_phone: data.phone || ''
         });
         
@@ -147,6 +147,9 @@ export default function Settings() {
         .from('profiles')
         .update({
           business_name: businessData.business_name,
+          rc_number: businessData.rc_number,
+          tin: businessData.tin,
+          business_address: businessData.business_address,
           phone: businessData.business_phone,
           cac_date: complianceData.cac_date || null,
           vat_status: complianceData.vat_status,
