@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabaseService } from '@/lib/supabaseService';
+import { supabase } from '@/lib/supabase';
 import { Users, Search, Mail, Phone, Building2, Calendar, CheckCircle, XCircle } from 'lucide-react';
 
 interface UserProfile {
@@ -72,21 +73,20 @@ export default function AdminUsers() {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
     
     try {
-      const response = await fetch(`${supabaseService.supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'apikey': supabaseService.supabaseKey,
-          'Authorization': `Bearer ${supabaseService.supabaseKey}`,
-        }
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
       
-      if (response.ok) {
-        alert('User deleted successfully');
-        setSelectedUser(null);
-        fetchUsers();
-      } else {
-        alert('Failed to delete user');
+      if (error) {
+        console.error('Delete error:', error);
+        alert('Failed to delete user: ' + error.message);
+        return;
       }
+      
+      alert('User deleted successfully');
+      setSelectedUser(null);
+      fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Error deleting user');
