@@ -15,6 +15,9 @@ serve(async (req) => {
 
   try {
     const { to, subject, body } = await req.json()
+    
+    console.log('📧 Attempting to send email:', { to, subject })
+    console.log('🔑 API Key exists:', !!Deno.env.get('RESEND_API_KEY'))
 
     const { data, error } = await resend.emails.send({
       from: 'ComplianceHub <kolajo@forecourtlimited.com>',
@@ -22,18 +25,23 @@ serve(async (req) => {
       subject,
       html: body.replace(/\n/g, '<br>')
     })
+    
+    console.log('📬 Resend response:', { data, error })
 
     if (error) {
+      console.error('❌ Resend error:', error)
       return new Response(JSON.stringify({ success: false, error }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
       })
     }
 
+    console.log('✅ Email sent successfully:', data)
     return new Response(JSON.stringify({ success: true, data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (error) {
+    console.error('💥 Exception:', error)
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500
