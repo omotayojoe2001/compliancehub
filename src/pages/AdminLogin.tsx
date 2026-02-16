@@ -61,7 +61,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@compliancehub.com"
+              placeholder="Enter admin email"
               className="border-red-200 focus:border-red-500"
               required
             />
@@ -106,12 +106,6 @@ export default function AdminLogin() {
             {loading ? 'Authenticating...' : 'Access Admin Panel'}
           </Button>
         </form>
-
-        <div className="mt-6 p-4 bg-red-50 rounded border border-red-200">
-          <p className="text-xs text-red-600 font-medium">Development Credentials:</p>
-          <p className="text-xs text-red-700">Email: admin@compliancehub.com</p>
-          <p className="text-xs text-red-700">Password: admin123</p>
-        </div>
       </Card>
     </div>
   );
