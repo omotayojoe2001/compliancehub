@@ -37,17 +37,7 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      // Fetch profiles data
       const profilesResponse = await fetch(`${supabaseService.supabaseUrl}/rest/v1/profiles?select=*`, {
-        headers: {
-          'apikey': supabaseService.supabaseKey,
-          'Authorization': `Bearer ${supabaseService.supabaseKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      // Fetch company profiles data
-      const companyResponse = await fetch(`${supabaseService.supabaseUrl}/rest/v1/company_profiles?select=*`, {
         headers: {
           'apikey': supabaseService.supabaseKey,
           'Authorization': `Bearer ${supabaseService.supabaseKey}`,
@@ -57,21 +47,17 @@ export default function AdminUsers() {
       
       if (profilesResponse.ok) {
         const profilesData = await profilesResponse.json();
-        const companyData = companyResponse.ok ? await companyResponse.json() : [];
         
-        // Merge data from both tables
-        const enrichedUsers = profilesData.map(user => {
-          const companyProfile = companyData.find(c => c.user_id === user.id);
-          return {
-            ...user,
-            rc_number: companyProfile?.cac_number || 'Not provided',
-            tin: companyProfile?.tin || 'Not provided',
-            business_address: companyProfile?.address || 'Not provided',
-            business_phone: companyProfile?.phone || user.phone || 'Not provided',
-            email_notifications: false,
-            whatsapp_notifications: false
-          };
-        });
+        const enrichedUsers = profilesData.map(user => ({
+          ...user,
+          full_name: user.client_name || user.business_name || 'No Name',
+          rc_number: 'Not provided',
+          tin: 'Not provided',
+          business_address: 'Not provided',
+          business_phone: user.phone || 'Not provided',
+          email_notifications: false,
+          whatsapp_notifications: false
+        }));
         
         setUsers(enrichedUsers);
       }
@@ -79,6 +65,31 @@ export default function AdminUsers() {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    
+    try {
+      const response = await fetch(`${supabaseService.supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': supabaseService.supabaseKey,
+          'Authorization': `Bearer ${supabaseService.supabaseKey}`,
+        }
+      });
+      
+      if (response.ok) {
+        alert('User deleted successfully');
+        setSelectedUser(null);
+        fetchUsers();
+      } else {
+        alert('Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user');
     }
   };
 
@@ -278,6 +289,17 @@ export default function AdminUsers() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-4 border-t">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full"
+                    onClick={() => deleteUser(selectedUser.id)}
+                  >
+                    Delete User
+                  </Button>
                 </div>
               </div>
             ) : (
