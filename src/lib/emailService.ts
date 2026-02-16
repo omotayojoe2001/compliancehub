@@ -1,6 +1,4 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
+import { supabase } from './supabase';
 
 export const emailService = {
   sendEmail: async (data: { to: string; subject: string; body: string }) => {
@@ -8,11 +6,8 @@ export const emailService = {
       console.log('📧 Sending email to:', data.to);
       console.log('📧 Subject:', data.subject);
       
-      const { data: result, error } = await resend.emails.send({
-        from: 'TaxandCompliance <noreply@taxandcompliance.com.ng>',
-        to: data.to,
-        subject: data.subject,
-        html: data.body.replace(/\n/g, '<br>')
+      const { data: result, error } = await supabase.functions.invoke('send-email', {
+        body: { to: data.to, subject: data.subject, body: data.body }
       });
       
       if (error) {
