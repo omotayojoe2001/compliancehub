@@ -39,10 +39,23 @@ export default function AutomationManagement() {
   const [scheduleType, setScheduleType] = useState<'now' | 'scheduled'>('now');
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
+  const [users, setUsers] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
     loadTemplates();
+    loadUsers();
   }, []);
+
+  const loadUsers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('email, phone, business_name, client_name')
+      .order('client_name');
+    
+    if (data) setUsers(data);
+  };
 
   const loadTemplates = async () => {
     const { data, error } = await supabase
@@ -432,26 +445,75 @@ export default function AutomationManagement() {
                 </div>
 
                 {sendTarget === 'individual' && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Email</label>
-                      <input
-                        type="email"
-                        value={sendEmail}
-                        onChange={(e) => setSendEmail(e.target.value)}
-                        className="w-full border rounded-md px-3 py-2"
-                        placeholder="user@example.com"
-                      />
+                      <label className="block text-sm font-medium mb-2">Search User</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={searchTerm}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setShowUserDropdown(true);
+                          }}
+                          onFocus={() => setShowUserDropdown(true)}
+                          className="w-full border rounded-md px-3 py-2"
+                          placeholder="Search by name, email, or phone..."
+                        />
+                        {showUserDropdown && searchTerm && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            {users
+                              .filter(u => 
+                                u.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                u.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                u.phone?.includes(searchTerm)
+                              )
+                              .map((user, idx) => (
+                                <div
+                                  key={idx}
+                                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                  onClick={() => {
+                                    setSendEmail(user.email);
+                                    setSendPhone(user.phone);
+                                    setSearchTerm(user.client_name || user.business_name || user.email);
+                                    setShowUserDropdown(false);
+                                  }}
+                                >
+                                  <div className="font-medium">{user.client_name || user.business_name}</div>
+                                  <div className="text-sm text-gray-600">{user.email}</div>
+                                  {user.phone && <div className="text-xs text-gray-500">{user.phone}</div>}
+                                </div>
+                              ))
+                            }
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        value={sendPhone}
-                        onChange={(e) => setSendPhone(e.target.value)}
-                        className="w-full border rounded-md px-3 py-2"
-                        placeholder="2348012345678"
-                      />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Email</label>
+                        <input
+                          type="email"
+                          value={sendEmail}
+                          onChange={(e) => setSendEmail(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 bg-gray-50"
+                          placeholder="user@example.com"
+                          readOnly
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Phone</label>
+                        <input
+                          type="tel"
+                          value={sendPhone}
+                          onChange={(e) => setSendPhone(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 bg-gray-50"
+                          placeholder="2348012345678"
+                          readOnly
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
