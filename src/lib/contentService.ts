@@ -78,7 +78,7 @@ const defaultContent: SiteContent = {
         name: 'Enterprise',
         monthlyPrice: 12500,
         annualPrice: 150000,
-        features: ['Unlimited Business Profiles', 'WhatsApp Reminders', 'Email Reminders', 'Advanced Tax Calculator', 'API Access', 'Multi-user Access', 'Dedicated Account Manager']
+        features: ['Everything in Basic and Pro', 'Unlimited Business Profiles', 'Advanced Tax Calculator', 'Multi-user Access', 'Dedicated Account Manager']
       }
     },
     filingCharges: {
