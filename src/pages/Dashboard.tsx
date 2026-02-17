@@ -7,6 +7,7 @@ import { RecentReminders } from "@/components/dashboard/RecentReminders";
 import { AddTaxObligation } from "@/components/dashboard/AddTaxObligation";
 import { ComplianceReadiness } from "@/components/dashboard/ComplianceReadiness";
 import { WelcomePopup } from "@/components/onboarding/WelcomePopup";
+import { PhoneValidationAlert } from "@/components/PhoneValidationAlert";
 import { useProfileSimple } from "@/hooks/useProfileSimple";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCompany } from "@/contexts/CompanyContext";
@@ -136,6 +137,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
+      <PhoneValidationAlert />
       <WelcomePopup />
       <div className="space-y-6">
         {/* Page Header */}
