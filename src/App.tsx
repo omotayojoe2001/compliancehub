@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContextClean";
 import { CompanyProvider } from "@/contexts/CompanyContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminRoute } from "@/components/auth/AdminRoute";
-import { scheduledMessageService } from "@/lib/scheduledMessageService";
 import AdminLogin from "./pages/AdminLogin";
 import PublicLanding from "./pages/PublicLanding";
 import TaxCalculator from "./pages/TaxCalculator";
@@ -44,9 +43,6 @@ import AutomationManagement from "./pages/AutomationManagement";
 import AdminPricing from "./pages/AdminPricing";
 
 const queryClient = new QueryClient();
-
-// Start scheduled message processor
-scheduledMessageService.start();
 
 function AppContent() {
   const { user, loading } = useAuth();
