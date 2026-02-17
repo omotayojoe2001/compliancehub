@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { whatsappService } from './whatsappService';
+import { emailService } from './emailService';
 
 class ScheduledMessageService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -38,20 +39,42 @@ class ScheduledMessageService {
 
       for (const message of messages) {
         try {
+          let emailSent = false;
+          let whatsappSent = false;
+
+          // Send email if requested
+          if (message.send_via_email && message.target_email) {
+            console.log(`📧 Sending email to ${message.target_email}`);
+            const result = await emailService.sendEmail({
+              to: message.target_email,
+              subject: message.email_subject || 'Notification',
+              body: message.message_body
+            });
+            emailSent = result.success;
+            if (!emailSent) {
+              console.error('Email send failed:', result.error);
+            }
+          }
+
+          // Send WhatsApp if requested
           if (message.send_via_whatsapp && message.target_phone) {
             console.log(`📱 Sending WhatsApp to ${message.target_phone}`);
             await whatsappService.sendMessage(message.target_phone, message.message_body);
+            whatsappSent = true;
           }
 
+          // Update status
+          const allSent = (!message.send_via_email || emailSent) && (!message.send_via_whatsapp || whatsappSent);
+          
           await supabase
             .from('scheduled_messages')
             .update({ 
-              status: 'sent', 
+              status: allSent ? 'sent' : 'failed', 
               sent_at: new Date().toISOString() 
             })
             .eq('id', message.id);
 
-          console.log(`✅ Message ${message.id} sent successfully`);
+          console.log(`✅ Message ${message.id} processed - Email: ${emailSent}, WhatsApp: ${whatsappSent}`);
         } catch (msgError) {
           console.error(`❌ Failed to send message ${message.id}:`, msgError);
           
