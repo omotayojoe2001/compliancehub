@@ -3,6 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Building2, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextClean";
+import { validation } from "@/lib/validation";
 
 export default function Register() {
   const [step, setStep] = useState(1);
@@ -22,6 +23,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ valid: false, message: '' });
   const { signUp, user } = useAuth();
 
   if (user) {
@@ -56,6 +58,12 @@ export default function Register() {
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords don't match");
+      setLoading(false);
+      return;
+    }
+
+    if (!passwordStrength.valid) {
+      setError(passwordStrength.message);
       setLoading(false);
       return;
     }
@@ -312,7 +320,11 @@ export default function Register() {
                       type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const pwd = e.target.value;
+                        setFormData({ ...formData, password: pwd });
+                        setPasswordStrength(validation.isStrongPassword(pwd));
+                      }}
                       placeholder="Create a password"
                       required
                       className="w-full border border-border bg-background px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -325,6 +337,11 @@ export default function Register() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {formData.password && (
+                    <p className={`mt-1 text-xs ${passwordStrength.valid ? 'text-green-600' : 'text-red-600'}`}>
+                      {passwordStrength.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>

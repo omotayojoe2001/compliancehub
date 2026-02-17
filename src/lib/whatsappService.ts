@@ -1,8 +1,12 @@
 import { supabase } from './supabase';
 
 // WhatsApp service using direct Wawp API
-const WAWP_INSTANCE = 'C5A0B44DFCA6';
-const WAWP_ACCESS_TOKEN = 'mBV1vrB8zxaMNX';
+const WAWP_INSTANCE = import.meta.env.VITE_WAWP_INSTANCE;
+const WAWP_ACCESS_TOKEN = import.meta.env.VITE_WAWP_ACCESS_TOKEN;
+
+if (!WAWP_INSTANCE || !WAWP_ACCESS_TOKEN) {
+  throw new Error('Missing WhatsApp API credentials. Check your .env file.');
+}
 
 interface WhatsAppMessage {
   phone: string; // Format: 2348012345678 (country code + number, no +)

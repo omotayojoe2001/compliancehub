@@ -3,6 +3,8 @@ import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Building2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextClean";
+import { validation } from "@/lib/validation";
+import { rateLimiter } from "@/lib/rateLimiter";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,19 +24,39 @@ export default function Login() {
     setLoading(true);
     setError("");
 
+    // Validate email format
+    if (!validation.isValidEmail(email)) {
+      setError('Invalid email format');
+      setLoading(false);
+      return;
+    }
+
+    // Rate limiting: 5 attempts per 15 minutes
+    const rateLimitKey = `login:${email.toLowerCase()}`;
+    if (!rateLimiter.isAllowed(rateLimitKey, 5, 15 * 60 * 1000)) {
+      const resetTime = Math.ceil(rateLimiter.getResetTime(rateLimitKey) / 1000 / 60);
+      setError(`Too many login attempts. Try again in ${resetTime} minutes`);
+      setLoading(false);
+      return;
+    }
+
+    // Sanitize email input
+    const sanitizedEmail = email.trim().toLowerCase();
+
     try {
-      const { data, error } = await signIn(email, password);
+      const { data, error } = await signIn(sanitizedEmail, password);
       
       if (error) {
-        setError(error.message);
+        setError('Invalid email or password');
         return;
       }
       
       if (data.user) {
+        rateLimiter.clear(rateLimitKey);
         navigate('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
