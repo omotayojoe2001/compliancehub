@@ -3,15 +3,30 @@ import { whatsappService } from './whatsappService';
 import { emailService } from './emailService';
 
 class ScheduledMessageService {
+  private static instance: ScheduledMessageService;
   private intervalId: NodeJS.Timeout | null = null;
   private processing = false;
+  private started = false;
+
+  private constructor() {}
+
+  static getInstance(): ScheduledMessageService {
+    if (!ScheduledMessageService.instance) {
+      ScheduledMessageService.instance = new ScheduledMessageService();
+    }
+    return ScheduledMessageService.instance;
+  }
 
   start() {
-    if (this.intervalId) return;
+    if (this.started || this.intervalId) {
+      console.log('📅 Scheduled message service already running');
+      return;
+    }
     
+    this.started = true;
     console.log('📅 Starting scheduled message service...');
     this.processMessages();
-    this.intervalId = setInterval(() => this.processMessages(), 60000); // Check every minute
+    this.intervalId = setInterval(() => this.processMessages(), 60000);
   }
 
   stop() {
@@ -109,4 +124,4 @@ class ScheduledMessageService {
   }
 }
 
-export const scheduledMessageService = new ScheduledMessageService();
+export const scheduledMessageService = ScheduledMessageService.getInstance();
