@@ -67,6 +67,22 @@ const howItWorks = [
 
 const pricing = [
   {
+    name: "Free Forever",
+    monthlyPrice: "₦0",
+    annualPrice: "₦0",
+    period: "/month",
+    annualPeriod: "/year",
+    description: "Perfect for getting started",
+    features: [
+      "1 Business Profile",
+      "Email Reminders",
+      "Tax Calculator Access",
+      "Filing Guides",
+      "Up to 3 tax obligations",
+    ],
+    popular: false,
+  },
+  {
     name: "Basic",
     monthlyPrice: "₦1,250",
     annualPrice: "₦15,000",
@@ -111,7 +127,6 @@ const pricing = [
     features: [
       "Unlimited Business Profiles",
       "Priority Support",
-      "Custom Integrations",
       "Dedicated Account Manager",
       "Advanced Analytics",
       "API Access",
@@ -257,7 +272,7 @@ export default function Landing() {
       period: "/month",
       annualPeriod: "/year",
       description: "For large organizations",
-      features: ["Unlimited Business Profiles", "Priority Support", "Custom Integrations", "Dedicated Account Manager", "Advanced Analytics", "API Access", "Digital Cashbook", "E-invoice", "Everything in Pro and Basic"],
+      features: ["Unlimited Business Profiles", "Priority Support", "Dedicated Account Manager", "Advanced Analytics", "API Access", "Digital Cashbook", "E-invoice", "Everything in Pro and Basic"],
       popular: false,
     },
   ];
@@ -347,7 +362,7 @@ export default function Landing() {
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
-                Try It Free
+                Try It Free Forever
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <a href="#calculator">
@@ -459,7 +474,7 @@ export default function Landing() {
               </p>
             </div>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-4">
             {pricing.map((plan) => (
               <div
                 key={plan.name}
