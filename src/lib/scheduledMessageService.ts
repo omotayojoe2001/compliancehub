@@ -4,6 +4,7 @@ import { emailService } from './emailService';
 
 class ScheduledMessageService {
   private intervalId: NodeJS.Timeout | null = null;
+  private processing = false;
 
   start() {
     if (this.intervalId) return;
@@ -22,6 +23,9 @@ class ScheduledMessageService {
   }
 
   private async processMessages() {
+    if (this.processing) return;
+    this.processing = true;
+    
     try {
       const now = new Date().toISOString();
       
@@ -33,18 +37,31 @@ class ScheduledMessageService {
         .limit(10);
 
       if (error) throw error;
-      if (!messages || messages.length === 0) return;
+      if (!messages || messages.length === 0) {
+        this.processing = false;
+        return;
+      }
 
       console.log(`📅 Processing ${messages.length} scheduled messages`);
 
       for (const message of messages) {
         try {
+          // Mark as processing first to prevent duplicates
+          const { error: lockError } = await supabase
+            .from('scheduled_messages')
+            .update({ status: 'processing' })
+            .eq('id', message.id)
+            .eq('status', 'pending');
+          
+          if (lockError) continue;
+
           let emailSent = false;
           let whatsappSent = false;
 
           // Send email if requested
           if (message.send_via_email && message.target_email) {
             console.log(`📧 Sending email to ${message.target_email}`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limit delay
             const result = await emailService.sendEmail({
               to: message.target_email,
               subject: message.email_subject || 'Notification',
@@ -86,6 +103,8 @@ class ScheduledMessageService {
       }
     } catch (error) {
       console.error('❌ Error processing scheduled messages:', error);
+    } finally {
+      this.processing = false;
     }
   }
 }
